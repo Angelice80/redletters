@@ -35,8 +35,11 @@ from redletters.ingest.demo_data import (
     DEMO_SPEECH_SPANS,
     DEMO_TOKENS,
 )
-from redletters.ingest.fetch import get_source_path, SOURCES
-from redletters.ingest.morphgnt_parser import parse_directory as parse_morphgnt
+from redletters.ingest.fetch import (
+    get_source_path,
+    get_source_spec,
+    list_available_sources,
+)
 from redletters.ingest.strongs_parser import parse_strongs_directory
 
 
@@ -46,6 +49,8 @@ class LoadReport:
 
     This is the provenance record - what was loaded, from where,
     and whether it matched expectations.
+
+    Constitutional constraint: all heuristics (like delimiter detection) must be surfaced.
     """
 
     source_key: str
@@ -56,6 +61,7 @@ class LoadReport:
     warnings: list[str] = field(default_factory=list)
     success: bool = True
     error: str | None = None
+    delimiter_detected: str | None = None  # "TAB" | "SPACE" for MorphGNT
 
 
 class LoaderError(Exception):
@@ -178,10 +184,11 @@ def load_source(
     # Ensure schema is ready
     ensure_schema(conn)
 
-    # Get source spec
-    if source_key not in SOURCES:
-        raise LoaderError(f"Unknown source: {source_key}")
-    spec = SOURCES[source_key]
+    # Get source spec from catalog
+    try:
+        spec = get_source_spec(source_key)
+    except ValueError as e:
+        raise LoaderError(str(e)) from e
 
     # Find source directory
     source_dir = get_source_path(source_key, data_dir)
@@ -207,16 +214,21 @@ def load_source(
                     k, v = line.strip().split("=", 1)
                     metadata[k] = v
 
-    # Register source in database
+    # Register source in database with full provenance
     retrieved_at = metadata.get("retrieved_at", datetime.now(timezone.utc).isoformat())
+    git_commit = metadata.get("git_commit")
+    git_tag = metadata.get("git_tag")
+
     source_id = register_source(
         conn,
         name=spec.name,
         version=spec.version,
         license_=spec.license,
-        url=spec.url,
+        url=spec.url or spec.repo or "",  # Prefer url, fallback to repo
         retrieved_at=retrieved_at,
         sha256=sha256_actual,
+        git_commit=git_commit,  # 40-char commit for reproducibility
+        git_tag=git_tag,  # Release tag if available
         notes=spec.notes,
     )
 
@@ -232,6 +244,9 @@ def load_source(
     try:
         if source_key == "morphgnt-sblgnt":
             counts = load_morphgnt(conn, source_id, source_dir)
+            # Surface detected delimiter in report (constitutional constraint)
+            if "delimiter_detected" in counts:
+                report.delimiter_detected = str(counts.pop("delimiter_detected"))
         elif source_key == "strongs-greek":
             counts = load_strongs(conn, source_id, source_dir)
         else:
@@ -254,25 +269,33 @@ def load_morphgnt(
     conn: sqlite3.Connection,
     source_id: int,
     source_dir: Path,
-) -> dict[str, int]:
+) -> dict[str, int | str]:
     """
     Load MorphGNT tokens into the database.
 
     Every token is validated for required fields before insertion.
 
     Returns:
-        Dict with counts: {"tokens": N, "unique_lemmas": M}
+        Dict with counts and delimiter: {"tokens": N, "unique_lemmas": M, "delimiter_detected": "TAB"|"SPACE"}
     """
+    from redletters.ingest.morphgnt_parser import parse_directory_with_report
+
     # Find the actual data directory (may be nested in archive structure)
     morphgnt_dir = source_dir
     if (source_dir / "sblgnt-master").exists():
         morphgnt_dir = source_dir / "sblgnt-master"
 
-    # Parse all files
-    tokens = parse_morphgnt(morphgnt_dir)
+    # Parse all files with provenance tracking
+    parse_report = parse_directory_with_report(morphgnt_dir)
+    tokens = parse_report.tokens
 
     if not tokens:
         raise LoaderError(f"No tokens parsed from {morphgnt_dir}")
+
+    # Surface any parser warnings
+    if parse_report.warnings:
+        for warning in parse_report.warnings:
+            print(f"  Warning: {warning}")
 
     # Validate required fields for each token
     required_fields = [
@@ -313,6 +336,7 @@ def load_morphgnt(
     return {
         "tokens": len(tokens),
         "unique_lemmas": len(unique_lemmas),
+        "delimiter_detected": parse_report.delimiter_detected,
     }
 
 
@@ -378,7 +402,7 @@ def load_all(
     """
     reports = []
 
-    for source_key in SOURCES:
+    for source_key in list_available_sources():
         try:
             # Skip UBS for now (requires additional handling)
             if source_key == "ubs-dictionary":

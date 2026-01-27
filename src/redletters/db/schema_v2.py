@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS schema_meta (
 );
 
 -- sources: provenance backbone (anti-smuggling)
+-- Identity = sha256 (integrity) + git_commit/git_tag (reproducibility)
 CREATE TABLE IF NOT EXISTS sources (
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL UNIQUE,
@@ -25,6 +26,8 @@ CREATE TABLE IF NOT EXISTS sources (
     url TEXT NOT NULL,
     retrieved_at TEXT NOT NULL,
     sha256 TEXT,
+    git_commit TEXT,  -- 40-char commit hash for reproducibility
+    git_tag TEXT,     -- release tag if available
     notes TEXT
 );
 
@@ -131,27 +134,52 @@ def register_source(
     url: str,
     retrieved_at: str,
     sha256: str | None = None,
+    git_commit: str | None = None,
+    git_tag: str | None = None,
     notes: str | None = None,
 ) -> int:
     """
     Register a data source and return its ID.
 
     This is the provenance entry point - all data must trace to a source.
+
+    Args:
+        name: Unique source identifier (e.g., "MorphGNT-SBLGNT")
+        version: Version string (e.g., "6.12")
+        license_: License identifier (e.g., "CC-BY-SA-3.0")
+        url: Source URL
+        retrieved_at: ISO timestamp of retrieval
+        sha256: Content hash for integrity verification
+        git_commit: 40-char commit hash for reproducibility
+        git_tag: Release tag if available
+        notes: Additional metadata
     """
     cursor = conn.execute(
         """
-        INSERT INTO sources (name, version, license, url, retrieved_at, sha256, notes)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO sources (name, version, license, url, retrieved_at, sha256, git_commit, git_tag, notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(name) DO UPDATE SET
             version = excluded.version,
             license = excluded.license,
             url = excluded.url,
             retrieved_at = excluded.retrieved_at,
             sha256 = excluded.sha256,
+            git_commit = excluded.git_commit,
+            git_tag = excluded.git_tag,
             notes = excluded.notes
         RETURNING id
         """,
-        (name, version, license_, url, retrieved_at, sha256, notes),
+        (
+            name,
+            version,
+            license_,
+            url,
+            retrieved_at,
+            sha256,
+            git_commit,
+            git_tag,
+            notes,
+        ),
     )
     return cursor.fetchone()[0]
 
@@ -167,7 +195,7 @@ def list_sources(conn) -> list[dict]:
     """List all registered sources with their metadata."""
     cursor = conn.execute(
         """
-        SELECT id, name, version, license, url, retrieved_at, sha256, notes
+        SELECT id, name, version, license, url, retrieved_at, sha256, git_commit, git_tag, notes
         FROM sources
         ORDER BY name
         """
@@ -181,7 +209,9 @@ def list_sources(conn) -> list[dict]:
             "url": row[4],
             "retrieved_at": row[5],
             "sha256": row[6],
-            "notes": row[7],
+            "git_commit": row[7],
+            "git_tag": row[8],
+            "notes": row[9],
         }
         for row in cursor
     ]

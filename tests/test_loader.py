@@ -19,7 +19,7 @@ from redletters.ingest.loader import (
     compute_sha256,
     load_source,
 )
-from redletters.ingest.morphgnt_parser import parse_file
+from redletters.ingest.morphgnt_parser import parse_file_with_delimiter
 from redletters.ingest.strongs_parser import parse_strongs_xml
 
 
@@ -34,7 +34,7 @@ class TestMorphGNTParserEmitsRequiredFields:
 
     def test_all_tokens_have_required_fields(self):
         """Parse sample file and verify all required fields are present."""
-        tokens = parse_file(MORPHGNT_SAMPLE)
+        tokens, _delimiter = parse_file_with_delimiter(MORPHGNT_SAMPLE)
 
         assert len(tokens) > 0, "Should parse at least one token"
 
@@ -59,7 +59,7 @@ class TestMorphGNTParserEmitsRequiredFields:
 
     def test_nfc_normalization_verified(self):
         """Greek text should be NFC normalized."""
-        tokens = parse_file(MORPHGNT_SAMPLE)
+        tokens, _delimiter = parse_file_with_delimiter(MORPHGNT_SAMPLE)
 
         for token in tokens:
             # Verify Greek fields are NFC normalized
@@ -73,7 +73,7 @@ class TestMorphGNTParserEmitsRequiredFields:
 
     def test_ref_format_is_canonical(self):
         """References should be in Book.Chapter.Verse.Position format."""
-        tokens = parse_file(MORPHGNT_SAMPLE)
+        tokens, _delimiter = parse_file_with_delimiter(MORPHGNT_SAMPLE)
 
         for token in tokens:
             parts = token.ref.split(".")
@@ -87,7 +87,7 @@ class TestMorphGNTParserEmitsRequiredFields:
 
     def test_parse_code_is_8_characters(self):
         """Parse codes should be exactly 8 characters."""
-        tokens = parse_file(MORPHGNT_SAMPLE)
+        tokens, _delimiter = parse_file_with_delimiter(MORPHGNT_SAMPLE)
 
         for token in tokens:
             assert len(token.parse_code) == 8, (

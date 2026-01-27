@@ -1,0 +1,26 @@
+# MorphGNT SBLGNT Snapshot for Integration Testing
+# This is a pinned copy for deterministic testing, not live data.
+
+source:
+  name: MorphGNT-SBLGNT
+  repository: https://github.com/morphgnt/sblgnt
+  commit: b4d1e66a22c389aae24fe6e4e80db34e1e5c0b11
+  branch: master
+  retrieved_at: "2026-01-27T00:00:00Z"
+
+files:
+  - name: 61-Mt-morphgnt.txt
+    description: Gospel of Matthew (full book, 18329 tokens)
+    sha256: 95b360228bedd1c2d06655469111d3f028a4ce1d46939d440ed549feee8b73ec
+    lines: 18329
+
+license:
+  name: CC-BY-SA-3.0
+  url: https://creativecommons.org/licenses/by-sa/3.0/
+
+notes: |
+  This snapshot is used for integration testing to catch edge cases not
+  visible in curated fixtures: enclitics, quotations, elision, participles
+  at scale, rare POS codes, etc.
+
+  DO NOT use for production. Fetch fresh data with provenance tracking.

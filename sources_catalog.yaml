@@ -1,0 +1,76 @@
+# Sources Catalog - Pinned, Deterministic Fetches
+#
+# This file pins exact commits for reproducible data fetching.
+# NO GitHub API calls. Raw URLs built from commit hashes.
+#
+# IMPORTANT: Only full 40-char SHA commits are accepted as "pinned".
+# Branch names, tags, and abbreviated SHAs are rejected by default.
+#
+# To update a source:
+# 1. Find the new commit hash on GitHub
+# 2. Update the commit field here (full 40-char SHA)
+# 3. Run: redletters data fetch --force <source>
+# 4. Verify SHA256 in .fetched marker
+# 5. Update tests/data snapshots if needed
+
+morphgnt-sblgnt:
+  name: "MorphGNT-SBLGNT"
+  repo: "https://github.com/morphgnt/sblgnt"
+  commit: "b4d1e66a22c389aae24fe6e4e80db34e1e5c0b11"
+  git_tag: ""
+  version: "6.12"
+  license: "CC-BY-SA-3.0"
+  files:
+    - "61-Mt-morphgnt.txt"
+    - "62-Mk-morphgnt.txt"
+    - "63-Lk-morphgnt.txt"
+    - "64-Jn-morphgnt.txt"
+    - "65-Ac-morphgnt.txt"
+    - "66-Ro-morphgnt.txt"
+    - "67-1Co-morphgnt.txt"
+    - "68-2Co-morphgnt.txt"
+    - "69-Ga-morphgnt.txt"
+    - "70-Eph-morphgnt.txt"
+    - "71-Php-morphgnt.txt"
+    - "72-Col-morphgnt.txt"
+    - "73-1Th-morphgnt.txt"
+    - "74-2Th-morphgnt.txt"
+    - "75-1Ti-morphgnt.txt"
+    - "76-2Ti-morphgnt.txt"
+    - "77-Tit-morphgnt.txt"
+    - "78-Phm-morphgnt.txt"
+    - "79-Heb-morphgnt.txt"
+    - "80-Jas-morphgnt.txt"
+    - "81-1Pe-morphgnt.txt"
+    - "82-2Pe-morphgnt.txt"
+    - "83-1Jn-morphgnt.txt"
+    - "84-2Jn-morphgnt.txt"
+    - "85-3Jn-morphgnt.txt"
+    - "86-Jud-morphgnt.txt"
+    - "87-Re-morphgnt.txt"
+  notes: "Morphology+lemmatization over SBLGNT text. Commit-pinned fetch."
+
+strongs-greek:
+  name: "Strongs Greek Dictionary"
+  repo: "https://github.com/morphgnt/strongs-dictionary-xml"
+  commit: "d3064c59e6c8a6dbc315dc9f7e5a0f7a8a9e3b8c"
+  git_tag: ""
+  version: "2016-06"
+  license: "CC0-1.0"
+  files:
+    - "strongsgreek.xml"
+  notes: "Public domain (CC0). Single XML file."
+
+# UBS data requires manual license acceptance - instructions only
+ubs-dictionary:
+  name: "UBS Greek Dictionary"
+  repo: "https://github.com/ubsicap/ubs-open-license"
+  commit: ""  # Requires manual download - see notes
+  git_tag: ""
+  version: "2023"
+  license: "CC-BY-SA-4.0"
+  files: []
+  notes: |
+    Louw-Nida derived semantic domains. Share-alike license.
+    Requires manual download due to license acceptance.
+    See: https://github.com/ubsicap/ubs-open-license
