@@ -1,0 +1,68 @@
+# Greenfield Feature Workflow - Red Letters
+id: greenfield-feature
+name: "New Feature Development"
+description: "For adding new capabilities to Red Letters"
+
+phases:
+  1_discover:
+    name: "Discovery"
+    agent: analyst
+    outputs:
+      - "User story with acceptance criteria"
+      - "Data requirements analysis"
+    tasks:
+      - Elicit requirements
+      - Define acceptance criteria
+      - Identify data dependencies
+
+  2_design:
+    name: "Design"
+    agent: architect
+    outputs:
+      - "ADR document"
+      - "Schema changes (if any)"
+      - "Interface definitions"
+    tasks:
+      - Create ADR
+      - Design schema changes
+      - Define plugin interfaces (if needed)
+
+  3_implement:
+    name: "Implementation"
+    agent: dev
+    outputs:
+      - "Passing tests (TDD)"
+      - "Implementation code"
+      - "API endpoints (if needed)"
+    tasks:
+      - Write failing tests first
+      - Implement minimal code
+      - Iterate to passing tests
+
+  4_verify:
+    name: "Verification"
+    agent: qa
+    outputs:
+      - "Acceptance test results"
+      - "Coverage report"
+    tasks:
+      - Run acceptance tests
+      - Verify all criteria met
+      - Check for regressions
+
+  5_release:
+    name: "Release"
+    agent: pm
+    outputs:
+      - "Updated PROGRESS.md"
+      - "Release notes"
+    tasks:
+      - Update documentation
+      - Update roadmap status
+      - Prepare release notes
+
+examples:
+  - "Add variant provider support"
+  - "Implement Syriac witness overlay"
+  - "Add new rendering style"
+  - "Build React frontend"

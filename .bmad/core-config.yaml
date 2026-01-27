@@ -1,0 +1,87 @@
+# BMad Core Configuration - Red Letters Project
+# Version: 1.0.0
+
+project:
+  name: "Red Letters Source Reader"
+  description: "Multi-reading Greek NT tool with interpretive receipts"
+  version: "0.1.0"
+  language: "python"
+  framework: "fastapi"
+
+paths:
+  source: "src/redletters"
+  tests: "tests"
+  docs: "docs"
+  api: "src/redletters/api"
+
+conventions:
+  branch_prefix: "feature/"
+  commit_style: "conventional"
+  test_pattern: "test_*.py"
+
+quality:
+  min_coverage: 80
+  required_tests: true
+  lint_on_commit: true
+
+agents:
+  - id: analyst
+    name: "Requirements Analyst"
+    focus: "Linguistic requirements, data model analysis, lexicon specifications"
+  - id: architect
+    name: "System Architect"
+    focus: "Database schema, plugin interfaces, API design"
+  - id: dev
+    name: "Developer"
+    focus: "Python implementation, TDD, FastAPI endpoints"
+  - id: qa
+    name: "QA Engineer"
+    focus: "Test coverage, acceptance tests, edge cases"
+  - id: pm
+    name: "Project Manager"
+    focus: "Sprint planning, roadmap tracking, release coordination"
+  - id: po
+    name: "Product Owner"
+    focus: "Feature prioritization, user stories, acceptance criteria"
+
+workflows:
+  - id: greenfield-feature
+    name: "New Feature Development"
+    description: "For adding new capabilities (variant support, Syriac overlay, etc.)"
+  - id: data-integration
+    name: "Data Source Integration"
+    description: "For integrating real data (SBLGNT, MorphGNT, BDAG, etc.)"
+  - id: bug-fix
+    name: "Bug Fix"
+    description: "For fixing issues with minimal diff"
+  - id: refactor
+    name: "Refactor"
+    description: "Structure-only changes preserving behavior"
+
+current_phase: "Phase 2 - Real Data Integration"
+
+roadmap:
+  phase_2:
+    name: "Real Data Integration"
+    items:
+      - "SBLGNT/MorphGNT ingestion pipeline"
+      - "BDAG/Louw-Nida sense database import"
+      - "Full NT token coverage"
+  phase_3:
+    name: "Variant Support"
+    items:
+      - "Implement VariantProvider with NA28 apparatus"
+      - "Variant-aware rendering"
+      - "Manuscript witness confidence weighting"
+  phase_4:
+    name: "Syriac Overlay"
+    items:
+      - "Peshitta text database"
+      - "Syriac-Greek alignment"
+      - "Retroversion mappings"
+  phase_5:
+    name: "UI"
+    items:
+      - "React/Next.js frontend"
+      - "Side-by-side rendering comparison"
+      - "Interactive receipt exploration"

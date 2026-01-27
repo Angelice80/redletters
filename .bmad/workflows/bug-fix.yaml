@@ -1,0 +1,55 @@
+# Bug Fix Workflow - Red Letters
+id: bug-fix
+name: "Bug Fix"
+description: "For fixing issues with minimal diff and root cause analysis"
+
+phases:
+  1_reproduce:
+    name: "Reproduce"
+    agent: qa
+    outputs:
+      - "Reproduction steps"
+      - "Failing test case"
+    tasks:
+      - Confirm bug exists
+      - Write failing test
+      - Document reproduction steps
+
+  2_analyze:
+    name: "Root Cause Analysis"
+    agent: dev
+    outputs:
+      - "Root cause identified"
+      - "Impact assessment"
+    tasks:
+      - Trace through code
+      - Identify root cause
+      - Assess fix impact
+
+  3_fix:
+    name: "Fix"
+    agent: dev
+    outputs:
+      - "Minimal fix"
+      - "Passing tests"
+    tasks:
+      - Implement minimal fix
+      - Verify test passes
+      - Check for regressions
+
+  4_verify:
+    name: "Verify"
+    agent: qa
+    outputs:
+      - "All tests passing"
+      - "No regressions"
+    tasks:
+      - Run full test suite
+      - Verify original issue fixed
+      - Check related functionality
+
+principles:
+  - Minimal diff principle
+  - Fix root cause, not symptoms
+  - Always add regression test
+  - Document fix rationale

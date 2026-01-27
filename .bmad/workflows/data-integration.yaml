@@ -1,0 +1,78 @@
+# Data Integration Workflow - Red Letters
+id: data-integration
+name: "Data Source Integration"
+description: "For integrating real lexicon, morphology, or text data"
+
+phases:
+  1_research:
+    name: "Research"
+    agent: analyst
+    outputs:
+      - "Data source analysis"
+      - "Schema mapping document"
+      - "Licensing/provenance notes"
+    tasks:
+      - Analyze data source format
+      - Map to existing schema
+      - Document provenance requirements
+      - Identify edge cases
+
+  2_design:
+    name: "Design"
+    agent: architect
+    outputs:
+      - "ADR for data integration"
+      - "Schema additions (if any)"
+      - "Parser interface design"
+    tasks:
+      - Create integration ADR
+      - Design parser architecture
+      - Plan migration strategy
+
+  3_implement:
+    name: "Implementation"
+    agent: dev
+    outputs:
+      - "Parser implementation"
+      - "Loader scripts"
+      - "Validation tests"
+    tasks:
+      - Build parser with tests
+      - Implement loader
+      - Add validation checks
+      - Handle edge cases
+
+  4_validate:
+    name: "Validation"
+    agent: qa
+    outputs:
+      - "Data integrity report"
+      - "Coverage analysis"
+    tasks:
+      - Verify data integrity
+      - Check reference coverage
+      - Validate provenance tracking
+
+  5_document:
+    name: "Documentation"
+    agent: pm
+    outputs:
+      - "Updated sources catalog"
+      - "Integration guide"
+    tasks:
+      - Update sources_catalog.yaml
+      - Document usage instructions
+      - Update roadmap
+
+target_sources:
+  morphology:
+    - "MorphGNT"
+    - "SBLGNT"
+  lexicon:
+    - "BDAG"
+    - "Louw-Nida"
+    - "LSJ"
+  apparatus:
+    - "NA28"
+  witnesses:
+    - "Peshitta"
