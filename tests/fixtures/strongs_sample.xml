@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entries>
+  <entry>
+    <strongs>G0932</strongs>
+    <greek unicode="βασιλεία" translit="basileia">βασιλεία</greek>
+    <pronunciation strongs="bas-il-i'-ah"/>
+    <strongs_derivation>from <strongs_ref language="GREEK" strongs="G935">G935</strongs_ref>;</strongs_derivation>
+    <strongs_def>royalty, i.e. (abstractly) rule, or (concretely) a realm (literally or figuratively); kingdom, + reign.</strongs_def>
+  </entry>
+  <entry>
+    <strongs>G3340</strongs>
+    <greek unicode="μετανοέω" translit="metanoeo">μετανοέω</greek>
+    <pronunciation strongs="met-an-o-eh'-o"/>
+    <strongs_derivation>from <strongs_ref language="GREEK" strongs="G3326">G3326</strongs_ref> and <strongs_ref language="GREEK" strongs="G3539">G3539</strongs_ref>;</strongs_derivation>
+    <strongs_def>to think differently or afterwards, i.e. reconsider (morally, feel compunction); repent.</strongs_def>
+  </entry>
+  <entry>
+    <strongs>G3772</strongs>
+    <greek unicode="οὐρανός" translit="ouranos">οὐρανός</greek>
+    <pronunciation strongs="oo-ran-os'"/>
+    <strongs_derivation>perhaps from the same as <strongs_ref language="GREEK" strongs="G3735">G3735</strongs_ref> (through the idea of elevation);</strongs_derivation>
+    <strongs_def>the sky; by extension, heaven (as the abode of God); by implication, happiness, power, eternity; specifically, the Gospel (Christianity); air, heaven(-ly), sky.</strongs_def>
+  </entry>
+  <entry>
+    <strongs>G1448</strongs>
+    <greek unicode="ἐγγίζω" translit="eggizo">ἐγγίζω</greek>
+    <pronunciation strongs="eng-id'-zo"/>
+    <strongs_derivation>from <strongs_ref language="GREEK" strongs="G1451">G1451</strongs_ref>;</strongs_derivation>
+    <strongs_def>to make near, i.e. (reflexively) approach; approach, be at hand, come (draw) near, be (come, draw) nigh.</strongs_def>
+  </entry>
+  <entry>
+    <strongs>G3107</strongs>
+    <greek unicode="μακάριος" translit="makarios">μακάριος</greek>
+    <pronunciation strongs="mak-ar'-ee-os"/>
+    <strongs_derivation>a prolonged form of the poetical μάκαρ (meaning the same);</strongs_derivation>
+    <strongs_def>supremely blest; by extension, fortunate, well off; blessed, happy(× -ier).</strongs_def>
+  </entry>
+  <entry>
+    <strongs>G4434</strongs>
+    <greek unicode="πτωχός" translit="ptochos">πτωχός</greek>
+    <pronunciation strongs="pto-khos'"/>
+    <strongs_derivation>from πτώσσω (to crouch);</strongs_derivation>
+    <strongs_def>a beggar (as cringing), i.e. pauper (strictly denoting absolute or public mendicancy); figuratively, distressed; beggar(-ly), poor.</strongs_def>
+  </entry>
+  <entry>
+    <strongs>G4151</strongs>
+    <greek unicode="πνεῦμα" translit="pneuma">πνεῦμα</greek>
+    <pronunciation strongs="pnyoo'-mah"/>
+    <strongs_derivation>from <strongs_ref language="GREEK" strongs="G4154">G4154</strongs_ref>;</strongs_derivation>
+    <strongs_def>a current of air, i.e. breath (blast) or a breeze; by analogy or figuratively, a spirit; ghost, life, spirit(-ual, -ually), mind.</strongs_def>
+  </entry>
+  <entry>
+    <strongs>G1510</strongs>
+    <greek unicode="εἰμί" translit="eimi">εἰμί</greek>
+    <pronunciation strongs="i-mee'"/>
+    <strongs_derivation>the first person singular present indicative;</strongs_derivation>
+    <strongs_def>a prolonged form of a primary and defective verb; I exist (used only when emphatic); am, have been, × it is I, was.</strongs_def>
+  </entry>
+  <entry>
+    <strongs>G2784</strongs>
+    <greek unicode="κηρύσσω" translit="kerusso">κηρύσσω</greek>
+    <pronunciation strongs="kay-roos'-so"/>
+    <strongs_derivation>of uncertain affinity;</strongs_derivation>
+    <strongs_def>to herald (as a public crier), especially divine truth (the gospel); preach(-er), proclaim, publish.</strongs_def>
+  </entry>
+  <entry>
+    <strongs>G3004</strongs>
+    <greek unicode="λέγω" translit="lego">λέγω</greek>
+    <pronunciation strongs="leg'-o"/>
+    <strongs_derivation>a primary verb;</strongs_derivation>
+    <strongs_def>properly, to "lay" forth, i.e. (figuratively) relate (in words); by implication, to mean; ask, bid, boast, call, describe, give out, name, put forth, say(-ing, on), shew, speak, tell, utter.</strongs_def>
+  </entry>
+</entries>
