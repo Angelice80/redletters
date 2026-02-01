@@ -1,5 +1,7 @@
 """Deterministic ranking heuristic for candidate renderings."""
 
+from __future__ import annotations
+
 import sqlite3
 from redletters.engine.generator import CandidateRendering
 from redletters.config import Settings

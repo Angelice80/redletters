@@ -1,7 +1,10 @@
 """API route definitions."""
 
+from __future__ import annotations
+
 from fastapi import APIRouter, HTTPException, Query
-from typing import Annotated
+from typing import Annotated, Literal
+from pydantic import BaseModel, Field
 
 from redletters.config import Settings
 from redletters.db.connection import get_connection
@@ -130,3 +133,143 @@ async def get_tokens(ref: Annotated[str, Query(description="Scripture reference"
     conn.close()
 
     return {"reference": ref, "tokens": tokens}
+
+
+# Pydantic models for translate endpoint
+
+
+class TranslateRequestModel(BaseModel):
+    """Request body for translate endpoint.
+
+    Accepts human references ("John 1:18", "Jn 1:18-19") or verse_ids ("John.1.18").
+    """
+
+    reference: str | None = Field(
+        None, description="Scripture reference (e.g., 'John 1:18', 'John 1:18-19')"
+    )
+    verse_id: str | None = Field(
+        None, description="Verse ID for backward compatibility (e.g., 'John.1.18')"
+    )
+    mode: Literal["readable", "traceable"] = Field(
+        default="readable", description="Enforcement mode"
+    )
+    session_id: str = Field(
+        default="api-default", description="Session ID for tracking"
+    )
+    translator: Literal["fake", "literal", "fluent"] = Field(
+        default="literal", description="Translator type to use"
+    )
+    options: dict = Field(default_factory=dict, description="Additional options")
+
+
+class AcknowledgeRequestModel(BaseModel):
+    """Request body for acknowledge endpoint."""
+
+    session_id: str = Field(..., description="Session ID")
+    variant_ref: str = Field(..., description="Variant reference (e.g., 'John.1.18')")
+    reading_index: int = Field(..., description="Index of chosen reading")
+
+
+@router.post("/translate")
+async def translate_reference(request: TranslateRequestModel):
+    """
+    Translate a scripture passage with receipt-grade output.
+
+    Accepts either:
+    - {"reference": "John 1:18-19"} - human reference (preferred)
+    - {"verse_id": "John.1.18"} - verse_id format (backward compatible)
+
+    Returns either:
+    - GateResponse: If a gate requires acknowledgement (variant or escalation)
+    - TranslateResponse: Full translation with claims, confidence, provenance
+
+    The response includes:
+    - SBLGNT text (canonical spine, always marked as default)
+    - Variants side-by-side (never buried in footnotes)
+    - Claims with type classification and enforcement results
+    - Layered confidence (textual/grammatical/lexical/interpretive)
+    - Explicit dependencies for traceable mode
+    - Full provenance and receipts
+    - Per-verse blocks for multi-verse passages
+    - session_id for session tracking
+    """
+    from redletters.pipeline import (
+        translate_passage,
+        GateResponsePayload,
+        get_translator,
+    )
+
+    # Determine reference to use (prefer reference, fall back to verse_id)
+    ref = request.reference or request.verse_id
+    if not ref:
+        raise HTTPException(
+            status_code=400,
+            detail="Either 'reference' or 'verse_id' must be provided",
+        )
+
+    conn = get_connection(settings.db_path)
+
+    # Get the appropriate translator
+    translator_instance = get_translator(
+        translator_type=request.translator,
+        source_id="api",
+        source_license="",
+    )
+
+    try:
+        result = translate_passage(
+            conn=conn,
+            reference=ref,
+            mode=request.mode,
+            session_id=request.session_id,
+            options=request.options,
+            translator=translator_instance,
+        )
+    except ValueError as e:
+        conn.close()
+        raise HTTPException(status_code=400, detail=str(e))
+
+    conn.close()
+
+    # Add session_id and translator_type to result before returning
+    if isinstance(result, GateResponsePayload):
+        result.session_id = request.session_id
+        return result.to_dict()
+    else:
+        result.session_id = request.session_id
+        result.translator_type = request.translator
+        return result.to_dict()
+
+
+@router.post("/acknowledge")
+async def acknowledge_reading(request: AcknowledgeRequestModel):
+    """
+    Acknowledge a variant reading for a session.
+
+    This must be called before translate will proceed past a variant gate.
+    The acknowledgement is persisted for the session.
+    """
+    from redletters.pipeline.orchestrator import acknowledge_variant
+
+    conn = get_connection(settings.db_path)
+
+    try:
+        acknowledge_variant(
+            conn=conn,
+            session_id=request.session_id,
+            variant_ref=request.variant_ref,
+            reading_index=request.reading_index,
+            context="api-acknowledge",
+        )
+    except Exception as e:
+        conn.close()
+        raise HTTPException(status_code=400, detail=str(e))
+
+    conn.close()
+
+    return {
+        "success": True,
+        "session_id": request.session_id,
+        "variant_ref": request.variant_ref,
+        "reading_index": request.reading_index,
+    }

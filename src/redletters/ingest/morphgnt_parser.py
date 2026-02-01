@@ -33,6 +33,8 @@ IMPORTANT: Parse code field semantics depend on POS:
 - Indeclinables (C-, D-, P-, I-, X-): all parse fields should be '-'
 """
 
+from __future__ import annotations
+
 import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path

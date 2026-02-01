@@ -7,6 +7,8 @@ This schema implements ADR-002, adding:
 - lexicon_entries replacing lexeme_senses (inventory, not truth)
 """
 
+from __future__ import annotations
+
 SCHEMA_VERSION = 2
 
 SCHEMA_SQL = """

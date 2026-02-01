@@ -1,0 +1,64 @@
+{
+  "John.1.18": {
+    "text": "Θεὸν οὐδεὶς ἑώρακεν πώποτε· μονογενὴς θεὸς ὁ ὢν εἰς τὸν κόλπον τοῦ πατρὸς ἐκεῖνος ἐξηγήσατο.",
+    "tokens": [
+      {"position": 1, "surface_text": "Θεὸν", "word": "Θεὸν", "lemma": "θεός", "pos": "N-", "parse_code": "----ASM-"},
+      {"position": 2, "surface_text": "οὐδεὶς", "word": "οὐδεὶς", "lemma": "οὐδείς", "pos": "RI", "parse_code": "----NSM-"},
+      {"position": 3, "surface_text": "ἑώρακεν", "word": "ἑώρακεν", "lemma": "ὁράω", "pos": "V-", "parse_code": "3XAI-S--"},
+      {"position": 4, "surface_text": "πώποτε·", "word": "πώποτε", "lemma": "πώποτε", "pos": "D-", "parse_code": "--------"},
+      {"position": 5, "surface_text": "μονογενὴς", "word": "μονογενὴς", "lemma": "μονογενής", "pos": "A-", "parse_code": "----NSM-"},
+      {"position": 6, "surface_text": "θεὸς", "word": "θεὸς", "lemma": "θεός", "pos": "N-", "parse_code": "----NSM-"},
+      {"position": 7, "surface_text": "ὁ", "word": "ὁ", "lemma": "ὁ", "pos": "RA", "parse_code": "----NSM-"},
+      {"position": 8, "surface_text": "ὢν", "word": "ὢν", "lemma": "εἰμί", "pos": "V-", "parse_code": "-PAPNSM-"},
+      {"position": 9, "surface_text": "εἰς", "word": "εἰς", "lemma": "εἰς", "pos": "P-", "parse_code": "--------"},
+      {"position": 10, "surface_text": "τὸν", "word": "τὸν", "lemma": "ὁ", "pos": "RA", "parse_code": "----ASM-"},
+      {"position": 11, "surface_text": "κόλπον", "word": "κόλπον", "lemma": "κόλπος", "pos": "N-", "parse_code": "----ASM-"},
+      {"position": 12, "surface_text": "τοῦ", "word": "τοῦ", "lemma": "ὁ", "pos": "RA", "parse_code": "----GSM-"},
+      {"position": 13, "surface_text": "πατρὸς", "word": "πατρὸς", "lemma": "πατήρ", "pos": "N-", "parse_code": "----GSM-"},
+      {"position": 14, "surface_text": "ἐκεῖνος", "word": "ἐκεῖνος", "lemma": "ἐκεῖνος", "pos": "RD", "parse_code": "----NSM-"},
+      {"position": 15, "surface_text": "ἐξηγήσατο.", "word": "ἐξηγήσατο", "lemma": "ἐξηγέομαι", "pos": "V-", "parse_code": "3AMI-S--"}
+    ]
+  },
+  "John.3.16": {
+    "text": "Οὕτως γὰρ ἠγάπησεν ὁ θεὸς τὸν κόσμον, ὥστε τὸν υἱὸν τὸν μονογενῆ ἔδωκεν, ἵνα πᾶς ὁ πιστεύων εἰς αὐτὸν μὴ ἀπόληται ἀλλ᾽ ἔχῃ ζωὴν αἰώνιον.",
+    "tokens": [
+      {"position": 1, "surface_text": "Οὕτως", "word": "Οὕτως", "lemma": "οὕτως", "pos": "D-", "parse_code": "--------"},
+      {"position": 2, "surface_text": "γὰρ", "word": "γὰρ", "lemma": "γάρ", "pos": "C-", "parse_code": "--------"},
+      {"position": 3, "surface_text": "ἠγάπησεν", "word": "ἠγάπησεν", "lemma": "ἀγαπάω", "pos": "V-", "parse_code": "3AAI-S--"},
+      {"position": 4, "surface_text": "ὁ", "word": "ὁ", "lemma": "ὁ", "pos": "RA", "parse_code": "----NSM-"},
+      {"position": 5, "surface_text": "θεὸς", "word": "θεὸς", "lemma": "θεός", "pos": "N-", "parse_code": "----NSM-"},
+      {"position": 6, "surface_text": "τὸν", "word": "τὸν", "lemma": "ὁ", "pos": "RA", "parse_code": "----ASM-"},
+      {"position": 7, "surface_text": "κόσμον,", "word": "κόσμον", "lemma": "κόσμος", "pos": "N-", "parse_code": "----ASM-"},
+      {"position": 8, "surface_text": "ὥστε", "word": "ὥστε", "lemma": "ὥστε", "pos": "C-", "parse_code": "--------"},
+      {"position": 9, "surface_text": "τὸν", "word": "τὸν", "lemma": "ὁ", "pos": "RA", "parse_code": "----ASM-"},
+      {"position": 10, "surface_text": "υἱὸν", "word": "υἱὸν", "lemma": "υἱός", "pos": "N-", "parse_code": "----ASM-"},
+      {"position": 11, "surface_text": "τὸν", "word": "τὸν", "lemma": "ὁ", "pos": "RA", "parse_code": "----ASM-"},
+      {"position": 12, "surface_text": "μονογενῆ", "word": "μονογενῆ", "lemma": "μονογενής", "pos": "A-", "parse_code": "----ASM-"},
+      {"position": 13, "surface_text": "ἔδωκεν,", "word": "ἔδωκεν", "lemma": "δίδωμι", "pos": "V-", "parse_code": "3AAI-S--"},
+      {"position": 14, "surface_text": "ἵνα", "word": "ἵνα", "lemma": "ἵνα", "pos": "C-", "parse_code": "--------"},
+      {"position": 15, "surface_text": "πᾶς", "word": "πᾶς", "lemma": "πᾶς", "pos": "A-", "parse_code": "----NSM-"},
+      {"position": 16, "surface_text": "ὁ", "word": "ὁ", "lemma": "ὁ", "pos": "RA", "parse_code": "----NSM-"},
+      {"position": 17, "surface_text": "πιστεύων", "word": "πιστεύων", "lemma": "πιστεύω", "pos": "V-", "parse_code": "-PAPNSM-"},
+      {"position": 18, "surface_text": "εἰς", "word": "εἰς", "lemma": "εἰς", "pos": "P-", "parse_code": "--------"},
+      {"position": 19, "surface_text": "αὐτὸν", "word": "αὐτὸν", "lemma": "αὐτός", "pos": "RP", "parse_code": "----ASM-"},
+      {"position": 20, "surface_text": "μὴ", "word": "μὴ", "lemma": "μή", "pos": "X-", "parse_code": "--------"},
+      {"position": 21, "surface_text": "ἀπόληται", "word": "ἀπόληται", "lemma": "ἀπόλλυμι", "pos": "V-", "parse_code": "3AMS-S--"},
+      {"position": 22, "surface_text": "ἀλλ᾽", "word": "ἀλλ᾽", "lemma": "ἀλλά", "pos": "C-", "parse_code": "--------"},
+      {"position": 23, "surface_text": "ἔχῃ", "word": "ἔχῃ", "lemma": "ἔχω", "pos": "V-", "parse_code": "3PAS-S--"},
+      {"position": 24, "surface_text": "ζωὴν", "word": "ζωὴν", "lemma": "ζωή", "pos": "N-", "parse_code": "----ASF-"},
+      {"position": 25, "surface_text": "αἰώνιον.", "word": "αἰώνιον", "lemma": "αἰώνιος", "pos": "A-", "parse_code": "----ASF-"}
+    ]
+  },
+  "Matthew.3.2": {
+    "text": "Μετανοεῖτε, ἤγγικεν γὰρ ἡ βασιλεία τῶν οὐρανῶν.",
+    "tokens": [
+      {"position": 1, "surface_text": "Μετανοεῖτε,", "word": "Μετανοεῖτε", "lemma": "μετανοέω", "pos": "V-", "parse_code": "2PAD-P--"},
+      {"position": 2, "surface_text": "ἤγγικεν", "word": "ἤγγικεν", "lemma": "ἐγγίζω", "pos": "V-", "parse_code": "3XAI-S--"},
+      {"position": 3, "surface_text": "γὰρ", "word": "γὰρ", "lemma": "γάρ", "pos": "C-", "parse_code": "--------"},
+      {"position": 4, "surface_text": "ἡ", "word": "ἡ", "lemma": "ὁ", "pos": "RA", "parse_code": "----NSF-"},
+      {"position": 5, "surface_text": "βασιλεία", "word": "βασιλεία", "lemma": "βασιλεία", "pos": "N-", "parse_code": "----NSF-"},
+      {"position": 6, "surface_text": "τῶν", "word": "τῶν", "lemma": "ὁ", "pos": "RA", "parse_code": "----GPM-"},
+      {"position": 7, "surface_text": "οὐρανῶν.", "word": "οὐρανῶν", "lemma": "οὐρανός", "pos": "N-", "parse_code": "----GPM-"}
+    ]
+  }
+}

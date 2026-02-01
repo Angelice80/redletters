@@ -10,6 +10,8 @@ Supports two fetch modes:
 All fetches produce a .fetched marker with stable key ordering for provenance.
 """
 
+from __future__ import annotations
+
 import hashlib
 import re
 import shutil

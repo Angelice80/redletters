@@ -3,7 +3,7 @@ name = "redletters"
 version = "0.1.0"
 description = "Multi-reading Greek NT source reader with interpretive receipts"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.8"
 license = {text = "MIT"}
 authors = [
     {name = "Red Letters Project"}
@@ -17,6 +17,9 @@ dependencies = [
     "click>=8.1.0",
     "rich>=13.7.0",
     "pyyaml>=6.0",
+    "sse-starlette>=1.6.0",
+    "keyring>=24.0.0",
+    "httpx>=0.26.0",
 ]
 
 [project.optional-dependencies]
@@ -24,6 +27,7 @@ dev = [
     "pytest>=7.4.0",
     "pytest-asyncio>=0.23.0",
     "httpx>=0.26.0",
+    "ruff>=0.1.0",
 ]
 
 [project.scripts]
@@ -35,4 +39,20 @@ build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"  # Explicit: avoid future pytest-asyncio default changes
 testpaths = ["tests"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
+# Warnings policy: OUR code fails on warnings, upstream stays noisy but visible
+filterwarnings = [
+    # Promote our own warnings to errors (catch regressions immediately)
+    "error::DeprecationWarning:redletters.*",
+    "error::PendingDeprecationWarning:redletters.*",
+    "error::FutureWarning:redletters.*",
+    "error::UserWarning:redletters.*",
+    "error::ResourceWarning:redletters.*",
+    # Let upstream deprecations stay warnings (don't whack-a-mole pydantic/httpx)
+    "default::DeprecationWarning:pydantic.*",
+    "default::DeprecationWarning:httpx.*",
+]

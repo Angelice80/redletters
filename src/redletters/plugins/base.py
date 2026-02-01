@@ -1,5 +1,7 @@
 """Base classes and protocols for plugins."""
 
+from __future__ import annotations
+
 from typing import Protocol, runtime_checkable
 from dataclasses import dataclass
 

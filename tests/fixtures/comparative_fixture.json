@@ -1,0 +1,19 @@
+{
+  "_metadata": {
+    "description": "Test comparative edition with deliberate variants from SBLGNT",
+    "edition": "test-wh",
+    "notes": "Simulates Westcott-Hort style variants for testing"
+  },
+  "John.1.18": {
+    "text": "Θεὸν οὐδεὶς ἑώρακεν πώποτε· μονογενὴς υἱὸς ὁ ὢν εἰς τὸν κόλπον τοῦ πατρὸς ἐκεῖνος ἐξηγήσατο.",
+    "_variant_note": "μονογενὴς υἱὸς instead of μονογενὴς θεὸς - MAJOR significance (theological)"
+  },
+  "John.3.16": {
+    "text": "Οὕτως γὰρ ἠγάπησεν ὁ θεὸς τὸν κόσμον, ὥστε τὸν υἱὸν αὐτοῦ τὸν μονογενῆ ἔδωκεν, ἵνα πᾶς ὁ πιστεύων εἰς αὐτὸν μὴ ἀπόληται ἀλλ᾽ ἔχῃ ζωὴν αἰώνιον.",
+    "_variant_note": "Added αὐτοῦ after υἱὸν - MINOR addition"
+  },
+  "Matthew.3.2": {
+    "text": "Μετανοεῖτε, ἤγγικεν γὰρ ἡ βασιλεία τῶν οὐρανῶν.",
+    "_variant_note": "Identical to SBLGNT - no variant"
+  }
+}

@@ -9,6 +9,8 @@ Strong's is CC0 (public domain) so there are no share-alike obligations,
 but we still track provenance for transparency.
 """
 
+from __future__ import annotations
+
 import unicodedata
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass

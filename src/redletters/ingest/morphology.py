@@ -1,5 +1,7 @@
 """Morphology code parsing utilities."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from redletters.config import (
     MORPH_PARTS_OF_SPEECH,

@@ -8,6 +8,8 @@ Receipts are the system's epistemic disclosure mechanism. They show:
 No scolding. No persuasion. Just provenance + constraint posture.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 
 

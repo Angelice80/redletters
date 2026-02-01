@@ -244,7 +244,6 @@ class TestCategoryCollapseAtScale:
         """All verbs should have valid tense/voice/mood combinations."""
         verb_tokens = [t for t in matthew_tokens if t.pos in VERBAL_POS]
 
-        invalid = []
         for token in verb_tokens:
             result = decode_parse_code(token.parse_code, token.pos)
             # Verbs must have tense, voice, mood (except rare edge cases)

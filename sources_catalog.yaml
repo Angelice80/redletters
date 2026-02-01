@@ -6,12 +6,20 @@
 # IMPORTANT: Only full 40-char SHA commits are accepted as "pinned".
 # Branch names, tags, and abbreviated SHAs are rejected by default.
 #
+# Per ADR-007: SBLGNT is the canonical spine (hub + default).
+# All token positions, morphological tags, and query results default to SBLGNT.
+# Other textual traditions are represented as divergences from SBLGNT baseline.
+#
 # To update a source:
 # 1. Find the new commit hash on GitHub
 # 2. Update the commit field here (full 40-char SHA)
 # 3. Run: redletters data fetch --force <source>
 # 4. Verify SHA256 in .fetched marker
 # 5. Update tests/data snapshots if needed
+
+# =============================================================================
+# CANONICAL SPINE (ADR-007)
+# =============================================================================
 
 morphgnt-sblgnt:
   name: "MorphGNT-SBLGNT"
@@ -20,6 +28,8 @@ morphgnt-sblgnt:
   git_tag: ""
   version: "6.12"
   license: "CC-BY-SA-3.0"
+  license_url: "https://creativecommons.org/licenses/by-sa/3.0/"
+  role: "canonical_spine"  # ADR-007: Hub + default text
   files:
     - "61-Mt-morphgnt.txt"
     - "62-Mk-morphgnt.txt"
@@ -48,7 +58,15 @@ morphgnt-sblgnt:
     - "85-3Jn-morphgnt.txt"
     - "86-Jud-morphgnt.txt"
     - "87-Re-morphgnt.txt"
-  notes: "Morphology+lemmatization over SBLGNT text. Commit-pinned fetch."
+  notes: |
+    Morphology+lemmatization over SBLGNT text.
+    SBLGNT = SBL Greek New Testament (Michael Holmes, SBL Press 2010).
+    This is the canonical text spine per ADR-007.
+    All token positions reference MorphGNT word indices.
+
+# =============================================================================
+# LEXICON SOURCES
+# =============================================================================
 
 strongs-greek:
   name: "Strongs Greek Dictionary"
@@ -57,9 +75,14 @@ strongs-greek:
   git_tag: ""
   version: "2016-06"
   license: "CC0-1.0"
+  license_url: "https://creativecommons.org/publicdomain/zero/1.0/"
+  role: "lexicon_secondary"  # Sense inventory, not primary authority
   files:
     - "strongsgreek.xml"
-  notes: "Public domain (CC0). Single XML file."
+  notes: |
+    Public domain (CC0). Single XML file.
+    Used for sense inventory, not as primary lexical authority.
+    Prefer LSJ/BDAG semantic ranges; Strong's provides concordance links.
 
 # UBS data requires manual license acceptance - instructions only
 ubs-dictionary:
@@ -69,8 +92,77 @@ ubs-dictionary:
   git_tag: ""
   version: "2023"
   license: "CC-BY-SA-4.0"
+  role: "lexicon_semantic_domains"
   files: []
   notes: |
     Louw-Nida derived semantic domains. Share-alike license.
     Requires manual download due to license acceptance.
     See: https://github.com/ubsicap/ubs-open-license
+
+# =============================================================================
+# COMPARATIVE TEXT LAYER (ADR-007 - variants from SBLGNT baseline)
+# =============================================================================
+
+westcott-hort:
+  name: "Westcott-Hort Greek NT"
+  repo: "https://github.com/morphgnt/tischendorf-data"  # Contains W-H aligned data
+  commit: ""  # TBD - pending source verification
+  git_tag: ""
+  version: "1881"
+  license: "Public Domain"
+  role: "comparative_layer"
+  files: []
+  notes: |
+    Public domain (1881). Useful for variant comparison.
+    Superseded by post-1881 manuscript discoveries (P66, P75).
+    Used as comparative layer only; SBLGNT remains canonical spine.
+    Source repo TBD - multiple options exist.
+
+# =============================================================================
+# MANUSCRIPT EVIDENCE ANCHORS (ADR-008 - witness data)
+# =============================================================================
+
+# These are "evidence checkpoints" for variant attestation, not full corpus.
+
+codex-sinaiticus:
+  name: "Codex Sinaiticus Transcription"
+  repo: ""  # Manual curation from codexsinaiticus.org
+  commit: ""
+  git_tag: ""
+  version: "2009"
+  license: "Academic use"
+  license_url: "https://codexsinaiticus.org/en/project/transcription.aspx"
+  role: "witness_anchor"
+  files: []
+  notes: |
+    Primary uncial witness (4th century).
+    Transcription available at codexsinaiticus.org.
+    Used for variant attestation, not as base text.
+    Manual curation required; no automated fetch.
+
+# Open Greek NT Project (community collations)
+open-greek-nt:
+  name: "Open Greek NT Project"
+  repo: "https://github.com/eliranwong/OpenGNT"
+  commit: ""  # TBD - select stable release commit
+  git_tag: ""
+  version: ""
+  license: "MIT"
+  role: "variant_collation"
+  files: []
+  notes: |
+    Community-driven variant collations.
+    Useful for variant data where NA28 apparatus is restricted.
+    Commit to be pinned after source verification.
+
+# =============================================================================
+# ROLE DEFINITIONS
+# =============================================================================
+#
+# canonical_spine:     Hub text (SBLGNT). All positions/queries default here.
+# lexicon_primary:     Primary lexical authority (LSJ for classical range).
+# lexicon_secondary:   Secondary lexicon (Strong's for concordance links).
+# lexicon_semantic_domains: Semantic domain classification (Louw-Nida).
+# comparative_layer:   Text tradition for variant comparison (W-H, Byzantine).
+# witness_anchor:      Manuscript evidence for attestation (Sinaiticus, P66).
+# variant_collation:   Apparatus data for variant surfacing.

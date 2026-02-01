@@ -18,6 +18,7 @@ from redletters.ingest.loader import load_demo_data
 from redletters.engine.query import parse_reference, get_tokens_for_reference
 from redletters.engine.generator import CandidateGenerator
 from redletters.engine.ranker import RenderingRanker
+from redletters.engine_spine.cli import register_cli_commands
 
 if TYPE_CHECKING:
     from redletters.ingest.loader import LoadReport
@@ -122,6 +123,341 @@ def query(reference: str, style: str | None, output: str | None):
                     )
 
     conn.close()
+
+
+@cli.command()
+@click.argument("reference")
+@click.option(
+    "--mode",
+    "-m",
+    type=click.Choice(["readable", "traceable"]),
+    default="readable",
+    help="Enforcement mode (readable restricts claim types)",
+)
+@click.option(
+    "--session",
+    "-s",
+    default="cli-default",
+    help="Session ID for acknowledgement tracking",
+)
+@click.option(
+    "--ack",
+    type=str,
+    multiple=True,
+    help="Acknowledge variant (format: ref:reading_index). Can be repeated or comma-separated.",
+)
+@click.option("--output", "-o", type=click.Path(), help="Output JSON to file")
+@click.option(
+    "--scenario",
+    default="default",
+    help="Translator scenario (default/high_inference/epistemic_pressure/clean)",
+)
+@click.option(
+    "--translator",
+    "-t",
+    type=click.Choice(["fake", "literal", "fluent"]),
+    default=None,
+    help="Translator type (fake=test data, literal=real glosses, fluent=readable English)",
+)
+@click.option(
+    "--data-root",
+    type=click.Path(),
+    help="Override data root for installed sources",
+)
+def translate(
+    reference: str,
+    mode: str,
+    session: str,
+    ack: tuple[str, ...],
+    output: str | None,
+    scenario: str,
+    translator: str | None,
+    data_root: str | None,
+):
+    """Translate a passage with receipt-grade output.
+
+    Accepts human references like "John 1:18", "Jn 1:18-19", or verse_ids.
+    Returns SBLGNT text, variants side-by-side, claims with enforcement,
+    layered confidence scoring, and full provenance.
+
+    If a gate is triggered (variant acknowledgement or mode escalation),
+    the command returns a gate response instead of a translation.
+
+    Examples:
+        redletters translate "John 1:18"
+        redletters translate "John 1:18-19"
+        redletters translate "Jn 1:18–19"  # with en-dash
+        redletters translate "John 1:18" --mode traceable
+        redletters translate "John 1:18" --translator literal
+        redletters translate "John 1:18" --ack "John.1.18:0"
+        redletters translate "John 1:18-19" --ack "John.1.18:0" --ack "John.1.19:0"
+        redletters translate "John 1:18-19" --ack "John.1.18:0,John.1.19:0"
+    """
+    from redletters.pipeline import (
+        translate_passage,
+        GateResponsePayload,
+        get_translator,
+    )
+    from redletters.pipeline.orchestrator import acknowledge_variant
+    from redletters.sources import (
+        SourceInstaller,
+        InstalledSpineProvider,
+        SpineMissingError,
+    )
+
+    conn = get_connection(settings.db_path)
+
+    # Handle acknowledgements if provided (supports multiple --ack or comma-separated)
+    if ack:
+        # Flatten comma-separated values
+        ack_items = []
+        for a in ack:
+            ack_items.extend([item.strip() for item in a.split(",") if item.strip()])
+
+        for ack_item in ack_items:
+            try:
+                ref_part, reading_str = ack_item.rsplit(":", 1)
+                reading_index = int(reading_str)
+                acknowledge_variant(conn, session, ref_part, reading_index, "cli-ack")
+                console.print(
+                    f"[green]✓ Acknowledged {ref_part} reading {reading_index}[/green]"
+                )
+            except (ValueError, IndexError) as e:
+                console.print(f"[red]Invalid --ack format for '{ack_item}': {e}[/red]")
+                console.print(
+                    "[dim]Expected format: ref:reading_index (e.g., 'John.1.18:0')[/dim]"
+                )
+                sys.exit(1)
+
+    # Determine translator and spine provider
+    spine_provider = None
+    translator_instance = None
+    source_id = ""
+    source_license = ""
+
+    if translator in ("literal", "fluent"):
+        # Need installed spine for literal/fluent translation
+        try:
+            installer = SourceInstaller(data_root=data_root)
+
+            # Try to find an installed spine
+            for spine_id in ["morphgnt-sblgnt", "open-greek-nt"]:
+                if installer.is_installed(spine_id):
+                    installed = installer.get_installed(spine_id)
+                    source_id = installed.source_id
+                    source_license = installed.license
+                    spine_provider = InstalledSpineProvider(
+                        source_id=spine_id,
+                        data_root=data_root,
+                        require_installed=True,
+                    )
+                    break
+
+            if spine_provider is None:
+                console.print("[red]Error: No spine data installed.[/red]")
+                console.print(
+                    f"\nTo use --translator {translator}, install spine data first:\n"
+                )
+                console.print("  redletters sources install morphgnt-sblgnt")
+                console.print("  # OR for open-license alternative:")
+                console.print("  redletters sources install open-greek-nt\n")
+                conn.close()
+                sys.exit(1)
+
+            translator_instance = get_translator(
+                translator_type=translator,
+                source_id=source_id,
+                source_license=source_license,
+            )
+        except SpineMissingError as e:
+            console.print(f"[red]Error: {e}[/red]")
+            conn.close()
+            sys.exit(1)
+    else:
+        # Use fake translator
+        translator_instance = get_translator(
+            translator_type="fake",
+            scenario=scenario,
+        )
+
+    # Build options
+    options = {"scenario": scenario}
+    if spine_provider:
+        options["spine_provider"] = spine_provider
+
+    # Run translate_passage
+    try:
+        result = translate_passage(
+            conn=conn,
+            reference=reference,
+            mode=mode,  # type: ignore
+            session_id=session,
+            options=options,
+            translator=translator_instance,
+        )
+    except ValueError as e:
+        console.print(f"[red]Error: {e}[/red]")
+        conn.close()
+        sys.exit(1)
+
+    conn.close()
+
+    # Handle gate response
+    if isinstance(result, GateResponsePayload):
+        console.print(
+            Panel(
+                f"[bold yellow]{result.title}[/bold yellow]\n\n"
+                f"{result.message}\n\n"
+                f"[dim]{result.prompt}[/dim]",
+                title="Gate Required",
+                border_style="yellow",
+            )
+        )
+
+        # Show required acks for multi-verse passages
+        if result.required_acks and len(result.required_acks) > 1:
+            console.print("\n[bold]Required Acknowledgements:[/bold]")
+            for ra in result.required_acks:
+                console.print(
+                    f"  [yellow]•[/yellow] {ra.variant_ref} ({ra.significance})"
+                )
+                console.print(f"    [dim]{ra.message}[/dim]")
+
+        # Show variants side-by-side
+        if result.variants_side_by_side:
+            console.print("\n[bold]Variants at this passage:[/bold]")
+            for v in result.variants_side_by_side:
+                ack_marker = (
+                    "[green]✓[/green]" if v.acknowledged else "[yellow]?[/yellow]"
+                )
+                console.print(
+                    f"\n  {ack_marker} [cyan]{v.ref}[/cyan] ({v.significance})"
+                )
+                console.print(f"    [bold]SBLGNT:[/bold] {v.sblgnt_reading}")
+                console.print(f"    [dim]Witnesses: {v.sblgnt_witnesses}[/dim]")
+                for alt in v.alternate_readings:
+                    console.print(
+                        f"    [yellow]Alt {alt['index']}:[/yellow] {alt['surface_text']}"
+                    )
+                    console.print(f"    [dim]Witnesses: {alt['witnesses']}[/dim]")
+
+        # Show options
+        console.print("\n[bold]Options:[/bold]")
+        for opt in result.options:
+            default = " [green](default)[/green]" if opt.is_default else ""
+            console.print(f"  • [cyan]{opt.id}[/cyan]{default}: {opt.label}")
+            console.print(f"    [dim]{opt.description}[/dim]")
+
+        console.print("\n[dim]To acknowledge, re-run with --ack option:[/dim]")
+        if result.gate_type == "variant":
+            # Build ack command suggestion
+            if result.required_acks:
+                ack_args = " ".join(
+                    f'--ack "{ra.variant_ref}:{ra.reading_index or 0}"'
+                    for ra in result.required_acks
+                )
+                console.print(f'  redletters translate "{reference}" {ack_args}')
+            elif result.variants_side_by_side:
+                console.print(
+                    f'  redletters translate "{reference}" --ack "{result.variants_side_by_side[0].ref}:0"'
+                )
+
+            # GUI hint for easier workflow
+            console.print(
+                "\n[cyan]Tip:[/cyan] Use the GUI for an easier acknowledgement workflow:"
+            )
+            console.print("  redletters serve  # Start API server")
+            console.print("  # Then open GUI and navigate to Translate screen")
+        elif result.gate_type == "escalation":
+            console.print(f'  redletters translate "{reference}" --mode traceable')
+
+        if output:
+            Path(output).write_text(
+                json.dumps(result.to_dict(), indent=2, ensure_ascii=False)
+            )
+            console.print(f"\n[green]✓ Gate response written to {output}[/green]")
+
+        sys.exit(2)  # Exit code 2 indicates gate required
+
+    # Handle translation response
+    result_dict = result.to_dict()
+
+    if output:
+        Path(output).write_text(json.dumps(result_dict, indent=2, ensure_ascii=False))
+        console.print(f"[green]✓ Output written to {output}[/green]")
+    else:
+        # Show passage info
+        display_ref = result.normalized_ref if result.normalized_ref else reference
+        verse_count = len(result.verse_ids) if result.verse_ids else 1
+
+        # Pretty print
+        console.print(
+            Panel(
+                f"[bold]{display_ref}[/bold] ({mode} mode, {verse_count} verse{'s' if verse_count > 1 else ''})\n\n"
+                f"[cyan]SBLGNT:[/cyan] {result.sblgnt_text}\n\n"
+                f"[green]Translation:[/green] {result.translation_text}",
+                title="Translation",
+            )
+        )
+
+        # Show per-verse blocks for multi-verse passages
+        if result.verse_blocks and len(result.verse_blocks) > 1:
+            console.print("\n[bold]Per-Verse Breakdown:[/bold]")
+            for vb in result.verse_blocks:
+                console.print(f"\n  [cyan]{vb.verse_id}[/cyan]")
+                console.print(f"    Greek: {vb.sblgnt_text}")
+                if vb.confidence:
+                    console.print(
+                        f"    [dim]Confidence: {vb.confidence.composite:.2f}[/dim]"
+                    )
+
+        # Variants
+        if result.variants:
+            console.print("\n[bold]Variants (side-by-side):[/bold]")
+            for v in result.variants:
+                ack_marker = "[green]✓[/green]" if v.acknowledged else ""
+                console.print(
+                    f"  {ack_marker} [cyan]{v.ref}[/cyan]: {v.sblgnt_reading} ({v.significance})"
+                )
+                for alt in v.alternate_readings:
+                    console.print(f"    [yellow]Alt:[/yellow] {alt['surface_text']}")
+
+        # Claims
+        console.print("\n[bold]Claims:[/bold]")
+        for c in result.claims:
+            status = "[green]✓[/green]" if c.enforcement_allowed else "[red]✗[/red]"
+            console.print(
+                f"  {status} [{c.claim_type_label}] {c.content[:60]}{'...' if len(c.content) > 60 else ''}"
+            )
+            if c.warnings:
+                for w in c.warnings[:2]:
+                    console.print(f"    [yellow]⚠ {w}[/yellow]")
+            if not c.enforcement_allowed:
+                console.print(f"    [red]{c.enforcement_reason}[/red]")
+
+        # Confidence
+        if result.confidence:
+            conf = result.confidence
+            console.print(
+                f"\n[bold]Confidence:[/bold] {conf.composite:.2f} (weakest: {conf.weakest_layer})"
+            )
+            console.print(
+                f"  Textual:      {conf.textual.score:.2f} - {conf.textual.rationale[:50]}..."
+            )
+            console.print(
+                f"  Grammatical:  {conf.grammatical.score:.2f} - {conf.grammatical.rationale[:50]}..."
+            )
+            console.print(
+                f"  Lexical:      {conf.lexical.score:.2f} - {conf.lexical.rationale[:50]}..."
+            )
+            console.print(
+                f"  Interpretive: {conf.interpretive.score:.2f} - {conf.interpretive.rationale[:50]}..."
+            )
+
+        # Receipts summary
+        console.print(
+            f"\n[dim]Checks run: {len(result.receipts.checks_run)} | Gates satisfied: {len(result.receipts.gates_satisfied)} | Verses: {', '.join(result.verse_ids)}[/dim]"
+        )
 
 
 @cli.command("list-spans")
@@ -337,6 +673,444 @@ def licenses():
     from redletters.ingest.fetch import print_license_report
 
     print_license_report()
+
+
+# ============================================================================
+# Source Pack commands (Sprint 2)
+# ============================================================================
+
+
+@cli.group()
+def sources():
+    """Manage source packs from sources_catalog.yaml."""
+    pass
+
+
+@sources.command("list")
+@click.option("--json", "as_json", is_flag=True, help="Output as JSON")
+def sources_list(as_json: bool):
+    """List all configured sources and their status."""
+    from redletters.sources.catalog import SourceCatalog
+    from redletters.sources.resolver import SourceResolver
+
+    catalog = SourceCatalog.load()
+    resolver = SourceResolver(catalog)
+
+    if as_json:
+        import json as json_lib
+
+        output = []
+        for key, source in catalog.sources.items():
+            resolved = resolver.resolve(key)
+            output.append(
+                {
+                    **source.to_dict(),
+                    "exists": resolved.exists,
+                    "is_complete": resolved.is_complete,
+                    "root_path": str(resolved.root_path),
+                }
+            )
+        console.print(json_lib.dumps(output, indent=2, ensure_ascii=False))
+        return
+
+    table = Table(title="Source Packs")
+    table.add_column("Key", style="cyan")
+    table.add_column("Name")
+    table.add_column("Role", style="yellow")
+    table.add_column("License")
+    table.add_column("Status")
+
+    for key, source in catalog.sources.items():
+        resolved = resolver.resolve(key)
+        if resolved.is_complete:
+            status = "[green]✓ Ready[/green]"
+        elif resolved.exists:
+            status = "[yellow]⚠ Partial[/yellow]"
+        else:
+            status = "[dim]Not installed[/dim]"
+
+        role_display = source.role.value.replace("_", " ").title()
+        table.add_row(key, source.name, role_display, source.license, status)
+
+    console.print(table)
+
+    # Show spine info
+    spine = catalog.spine
+    if spine:
+        console.print(f"\n[bold]Canonical Spine (ADR-007):[/bold] {spine.key}")
+
+
+@sources.command("validate")
+def sources_validate():
+    """Validate sources_catalog.yaml structure and completeness."""
+    from redletters.sources.catalog import SourceCatalog, CatalogValidationError
+
+    try:
+        catalog = SourceCatalog.load()
+    except CatalogValidationError as e:
+        console.print(f"[red]Catalog validation failed:[/red] {e}")
+        sys.exit(1)
+    except FileNotFoundError as e:
+        console.print(f"[red]Catalog not found:[/red] {e}")
+        sys.exit(1)
+
+    warnings = catalog.validate()
+
+    if warnings:
+        console.print("[yellow]Validation warnings:[/yellow]")
+        for warning in warnings:
+            console.print(f"  [yellow]⚠[/yellow] {warning}")
+    else:
+        console.print("[green]✓ Catalog valid[/green]")
+
+    # Summary
+    console.print("\n[bold]Summary:[/bold]")
+    console.print(f"  Total sources: {len(catalog.sources)}")
+    console.print(f"  Spine: {catalog.spine.key if catalog.spine else 'MISSING'}")
+    console.print(f"  Comparative editions: {len(catalog.comparative_editions)}")
+
+
+@sources.command("info")
+@click.argument("pack_id")
+@click.option("--json", "as_json", is_flag=True, help="Output as JSON")
+def sources_info(pack_id: str, as_json: bool):
+    """Show detailed info about a source pack."""
+    from redletters.sources.catalog import SourceCatalog
+    from redletters.sources.resolver import SourceResolver
+
+    catalog = SourceCatalog.load()
+    source = catalog.get(pack_id)
+
+    if not source:
+        console.print(f"[red]Source not found: {pack_id}[/red]")
+        console.print(f"[dim]Available: {', '.join(catalog.sources.keys())}[/dim]")
+        sys.exit(1)
+
+    resolver = SourceResolver(catalog)
+    resolved = resolver.resolve(pack_id)
+
+    if as_json:
+        import json as json_lib
+
+        output = {
+            **source.to_dict(),
+            "resolved": {
+                "root_path": str(resolved.root_path),
+                "exists": resolved.exists,
+                "is_complete": resolved.is_complete,
+                "files": [str(f) for f in resolved.files],
+                "missing_files": resolved.missing_files,
+            },
+        }
+        console.print(json_lib.dumps(output, indent=2, ensure_ascii=False))
+        return
+
+    console.print(
+        Panel(f"[bold]{source.name}[/bold]\n{source.key}", title="Source Pack")
+    )
+    console.print(f"  [cyan]Role:[/cyan] {source.role.value}")
+    console.print(f"  [cyan]License:[/cyan] {source.license}")
+    if source.version:
+        console.print(f"  [cyan]Version:[/cyan] {source.version}")
+    if source.repo:
+        console.print(f"  [cyan]Repository:[/cyan] {source.repo}")
+    if source.commit:
+        pin_status = (
+            "[green]pinned[/green]"
+            if source.has_pinned_commit
+            else "[yellow]not pinned[/yellow]"
+        )
+        console.print(f"  [cyan]Commit:[/cyan] {source.commit[:12]}... ({pin_status})")
+
+    console.print("\n[bold]Resolution:[/bold]")
+    console.print(f"  [cyan]Path:[/cyan] {resolved.root_path}")
+    console.print(f"  [cyan]Exists:[/cyan] {'Yes' if resolved.exists else 'No'}")
+    if resolved.files:
+        console.print(f"  [cyan]Files found:[/cyan] {len(resolved.files)}")
+    if resolved.missing_files:
+        console.print(
+            f"  [yellow]Missing files:[/yellow] {len(resolved.missing_files)}"
+        )
+        for f in resolved.missing_files[:5]:
+            console.print(f"    - {f}")
+
+    if source.notes:
+        console.print(f"\n[bold]Notes:[/bold]\n{source.notes.strip()}")
+
+
+@sources.command("install")
+@click.argument("source_id")
+@click.option(
+    "--data-root",
+    type=click.Path(),
+    help="Override data root directory",
+)
+@click.option(
+    "--accept-eula",
+    is_flag=True,
+    help="Accept EULA for licensed content",
+)
+@click.option(
+    "--force",
+    is_flag=True,
+    help="Reinstall even if already installed",
+)
+def sources_install(
+    source_id: str,
+    data_root: str | None,
+    accept_eula: bool,
+    force: bool,
+):
+    """Install a source pack.
+
+    Downloads and installs data from the configured source.
+    EULA-licensed sources require --accept-eula flag.
+
+    Examples:
+        redletters sources install morphgnt-sblgnt
+        redletters sources install open-greek-nt --accept-eula
+    """
+    from redletters.sources.installer import SourceInstaller
+
+    installer = SourceInstaller(data_root=data_root)
+    result = installer.install(source_id, accept_eula=accept_eula, force=force)
+
+    if result.success:
+        console.print(f"[green]✓ {result.message}[/green]")
+        if result.eula_required:
+            console.print(
+                "[dim]EULA accepted. License terms apply to usage of this data.[/dim]"
+            )
+    else:
+        if result.needs_eula:
+            console.print("[yellow]⚠ EULA Required[/yellow]")
+            console.print(f"\n{result.message}")
+            sys.exit(2)  # Exit code 2 indicates EULA required
+        else:
+            console.print(f"[red]✗ {result.message}[/red]")
+            sys.exit(1)
+
+
+@sources.command("status")
+@click.option(
+    "--data-root",
+    type=click.Path(),
+    help="Override data root directory",
+)
+@click.option("--json", "as_json", is_flag=True, help="Output as JSON")
+def sources_status(data_root: str | None, as_json: bool):
+    """Show installation status of all sources."""
+    from redletters.sources.installer import SourceInstaller
+
+    installer = SourceInstaller(data_root=data_root)
+    status = installer.status()
+
+    if as_json:
+        import json as json_lib
+
+        console.print(json_lib.dumps(status, indent=2, ensure_ascii=False))
+        return
+
+    console.print(f"[bold]Data Root:[/bold] {status['data_root']}")
+    console.print(f"[bold]Manifest:[/bold] {status['manifest_path']}\n")
+
+    table = Table(title="Source Installation Status")
+    table.add_column("Source ID", style="cyan")
+    table.add_column("Name")
+    table.add_column("License")
+    table.add_column("EULA?")
+    table.add_column("Status")
+
+    for source_id, info in status["sources"].items():
+        if info["installed"]:
+            install_status = "[green]✓ Installed[/green]"
+            if info.get("eula_accepted"):
+                install_status += " [dim](EULA accepted)[/dim]"
+        else:
+            install_status = "[dim]Not installed[/dim]"
+
+        eula = "[yellow]Yes[/yellow]" if info["requires_eula"] else "No"
+
+        table.add_row(
+            source_id,
+            info["name"],
+            info["license"],
+            eula,
+            install_status,
+        )
+
+    console.print(table)
+
+    # Show installed details
+    installed_count = sum(1 for info in status["sources"].values() if info["installed"])
+    if installed_count > 0:
+        console.print(f"\n[bold]Installed sources:[/bold] {installed_count}")
+
+
+@sources.command("uninstall")
+@click.argument("source_id")
+@click.option(
+    "--data-root",
+    type=click.Path(),
+    help="Override data root directory",
+)
+@click.option(
+    "--yes",
+    "-y",
+    is_flag=True,
+    help="Skip confirmation",
+)
+def sources_uninstall(source_id: str, data_root: str | None, yes: bool):
+    """Uninstall a source pack.
+
+    Removes the installed data for a source pack.
+
+    Examples:
+        redletters sources uninstall morphgnt-sblgnt
+    """
+    from redletters.sources.installer import SourceInstaller
+
+    installer = SourceInstaller(data_root=data_root)
+
+    if not installer.is_installed(source_id):
+        console.print(f"[yellow]Source not installed: {source_id}[/yellow]")
+        sys.exit(0)
+
+    installed = installer.get_installed(source_id)
+
+    if not yes:
+        console.print(f"[bold]Uninstall {source_id}?[/bold]")
+        console.print(f"  Path: {installed.install_path}")
+        if not click.confirm("Proceed?"):
+            console.print("[dim]Cancelled[/dim]")
+            sys.exit(0)
+
+    result = installer.uninstall(source_id)
+
+    if result.success:
+        console.print(f"[green]✓ {result.message}[/green]")
+    else:
+        console.print(f"[red]✗ {result.message}[/red]")
+        sys.exit(1)
+
+
+# ============================================================================
+# Variants commands (Sprint 2)
+# ============================================================================
+
+
+@cli.group()
+def variants():
+    """Build and manage textual variants."""
+    pass
+
+
+@variants.command("build")
+@click.argument("pack_id")
+@click.option(
+    "--edition", "-e", multiple=True, help="Edition(s) to compare against spine"
+)
+@click.option("--range", "verse_range", help="Verse range (e.g., John.1.1-John.1.18)")
+@click.option("--verse", "-v", help="Single verse (e.g., John.1.18)")
+@click.option("--json", "as_json", is_flag=True, help="Output as JSON")
+def variants_build(
+    pack_id: str,
+    edition: tuple,
+    verse_range: str | None,
+    verse: str | None,
+    as_json: bool,
+):
+    """Build variants by comparing editions against spine.
+
+    Examples:
+        redletters variants build morphgnt-sblgnt --verse John.1.18
+        redletters variants build morphgnt-sblgnt --range John.1.1-John.1.18
+    """
+    console.print(
+        "[yellow]Variant building from real editions not yet implemented.[/yellow]"
+    )
+    console.print(
+        "[dim]This command will compare edition texts against SBLGNT spine.[/dim]"
+    )
+    console.print(
+        "[dim]For now, use fixture-based tests to verify variant building.[/dim]"
+    )
+    sys.exit(0)
+
+
+@variants.command("list")
+@click.option("--verse", "-v", help="Filter by verse (e.g., John.1.18)")
+@click.option(
+    "--significance",
+    "-s",
+    type=click.Choice(["trivial", "minor", "significant", "major"]),
+)
+@click.option("--json", "as_json", is_flag=True, help="Output as JSON")
+def variants_list(verse: str | None, significance: str | None, as_json: bool):
+    """List variants in the database."""
+    from redletters.variants.store import VariantStore
+    from redletters.variants.models import SignificanceLevel
+
+    conn = get_connection(settings.db_path)
+    store = VariantStore(conn)
+
+    try:
+        store.init_schema()
+    except Exception:
+        pass
+
+    if verse:
+        variants_list = store.get_variants_for_verse(verse)
+    elif significance:
+        sig_level = SignificanceLevel(significance)
+        # Get all variants of this significance (simplified)
+        variants_list = store.get_significant_variants()
+        variants_list = [v for v in variants_list if v.significance == sig_level]
+    else:
+        # Get all significant variants
+        variants_list = store.get_significant_variants()
+
+    conn.close()
+
+    if as_json:
+        import json as json_lib
+
+        output = [v.to_dict() for v in variants_list]
+        console.print(json_lib.dumps(output, indent=2, ensure_ascii=False))
+        return
+
+    if not variants_list:
+        console.print("[dim]No variants found.[/dim]")
+        return
+
+    table = Table(title="Variants")
+    table.add_column("Reference", style="cyan")
+    table.add_column("Position")
+    table.add_column("Classification")
+    table.add_column("Significance", style="yellow")
+    table.add_column("Readings")
+
+    for v in variants_list:
+        sig_style = {
+            "major": "red",
+            "significant": "yellow",
+            "minor": "white",
+            "trivial": "dim",
+        }.get(v.significance.value, "white")
+
+        table.add_row(
+            v.ref,
+            str(v.position),
+            v.classification.value,
+            f"[{sig_style}]{v.significance.value}[/{sig_style}]",
+            str(v.reading_count),
+        )
+
+    console.print(table)
+
+
+# Register engine spine CLI commands
+register_cli_commands(cli)
 
 
 if __name__ == "__main__":

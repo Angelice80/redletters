@@ -1,0 +1,195 @@
+/**
+ * LogViewer component - Scrolling log viewer with pause and search.
+ */
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { JobLogEntry } from "../store";
+
+interface LogViewerProps {
+  logs: JobLogEntry[];
+  maxHeight?: string;
+}
+
+const LEVEL_COLORS: Record<string, string> = {
+  trace: "#6b7280",
+  debug: "#9ca3af",
+  info: "#3b82f6",
+  warn: "#f59e0b",
+  error: "#ef4444",
+};
+
+export function LogViewer({ logs, maxHeight = "400px" }: LogViewerProps) {
+  const [paused, setPaused] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Filter logs by search term
+  const filteredLogs = searchTerm
+    ? logs.filter(
+        (log) =>
+          log.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          log.subsystem.toLowerCase().includes(searchTerm.toLowerCase()),
+      )
+    : logs;
+
+  // Auto-scroll to bottom when not paused
+  useEffect(() => {
+    if (!paused && bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [logs, paused]);
+
+  const handleScroll = useCallback(() => {
+    if (!containerRef.current) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
+    const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
+
+    // Auto-pause when user scrolls up
+    if (!isAtBottom && !paused) {
+      setPaused(true);
+    }
+  }, [paused]);
+
+  const formatTimestamp = (timestamp: string) => {
+    try {
+      const date = new Date(timestamp);
+      return date.toLocaleTimeString("en-US", {
+        hour12: false,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        fractionalSecondDigits: 3,
+      });
+    } catch {
+      return timestamp;
+    }
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+      {/* Controls */}
+      <div
+        style={{
+          display: "flex",
+          gap: "12px",
+          alignItems: "center",
+          padding: "8px",
+          backgroundColor: "#2d2d44",
+          borderRadius: "4px",
+        }}
+      >
+        <button
+          onClick={() => {
+            setPaused(!paused);
+            if (paused && bottomRef.current) {
+              bottomRef.current.scrollIntoView({ behavior: "smooth" });
+            }
+          }}
+          style={{
+            padding: "4px 12px",
+            borderRadius: "4px",
+            border: "none",
+            backgroundColor: paused ? "#22c55e" : "#6b7280",
+            color: "white",
+            cursor: "pointer",
+            fontSize: "12px",
+            fontWeight: 500,
+          }}
+        >
+          {paused ? "Resume" : "Pause"}
+        </button>
+
+        <input
+          type="text"
+          placeholder="Search logs..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{
+            flex: 1,
+            padding: "4px 8px",
+            borderRadius: "4px",
+            border: "1px solid #4a4a6a",
+            backgroundColor: "#1a1a2e",
+            color: "#eaeaea",
+            fontSize: "12px",
+          }}
+        />
+
+        <span style={{ fontSize: "12px", color: "#9ca3af" }}>
+          {filteredLogs.length} / {logs.length} logs
+        </span>
+      </div>
+
+      {/* Log list */}
+      <div
+        ref={containerRef}
+        onScroll={handleScroll}
+        style={{
+          maxHeight,
+          overflowY: "auto",
+          backgroundColor: "#1a1a2e",
+          borderRadius: "4px",
+          fontFamily: "monospace",
+          fontSize: "12px",
+        }}
+      >
+        {filteredLogs.length === 0 ? (
+          <div
+            style={{ padding: "16px", color: "#6b7280", textAlign: "center" }}
+          >
+            {logs.length === 0 ? "No logs yet" : "No matching logs"}
+          </div>
+        ) : (
+          filteredLogs.map((log, index) => (
+            <div
+              key={`${log.sequenceNumber}-${index}`}
+              style={{
+                display: "flex",
+                padding: "4px 8px",
+                borderBottom: "1px solid #2d2d44",
+                gap: "8px",
+              }}
+            >
+              <span style={{ color: "#6b7280", minWidth: "85px" }}>
+                {formatTimestamp(log.timestamp)}
+              </span>
+              <span
+                style={{
+                  color: LEVEL_COLORS[log.level] ?? "#9ca3af",
+                  minWidth: "50px",
+                  textTransform: "uppercase",
+                  fontWeight: 600,
+                }}
+              >
+                {log.level}
+              </span>
+              <span style={{ color: "#8b5cf6", minWidth: "100px" }}>
+                [{log.subsystem}]
+              </span>
+              <span style={{ color: "#eaeaea", flex: 1 }}>{log.message}</span>
+            </div>
+          ))
+        )}
+        <div ref={bottomRef} />
+      </div>
+
+      {paused && (
+        <div
+          style={{
+            textAlign: "center",
+            padding: "4px",
+            backgroundColor: "#f59e0b",
+            color: "#1a1a2e",
+            borderRadius: "4px",
+            fontSize: "12px",
+            fontWeight: 500,
+          }}
+        >
+          Auto-scroll paused. Click Resume to continue.
+        </div>
+      )}
+    </div>
+  );
+}

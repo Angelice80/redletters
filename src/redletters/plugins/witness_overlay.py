@@ -1,5 +1,7 @@
 """Witness overlay plugin stub (future Syriac support)."""
 
+from __future__ import annotations
+
 from redletters.plugins.base import WitnessReading
 
 

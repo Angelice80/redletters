@@ -16,6 +16,8 @@ Fail fast if:
 - Parser emits rows without required fields
 """
 
+from __future__ import annotations
+
 import hashlib
 import sqlite3
 import unicodedata

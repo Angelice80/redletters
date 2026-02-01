@@ -302,14 +302,14 @@ class TestCatalogLoading:
 # =============================================================================
 
 # Import additional functions for hardening tests
-from redletters.ingest.fetch import (
+from redletters.ingest.fetch import (  # noqa: E402
     UnsupportedURLError,
     is_path_safe,
     is_tar_member_symlink,
     is_zip_member_symlink,
     parse_github_repo_url,
 )
-from redletters.ingest.morphgnt_parser import (
+from redletters.ingest.morphgnt_parser import (  # noqa: E402
     MorphGNTToken,
     parse_file_with_delimiter,
 )
