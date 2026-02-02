@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://redletters.dev/schemas/lockfile-v1.0.0.schema.json",
+  "title": "Pack Lockfile",
+  "description": "Schema for pack lockfile (v0.11.0) - reproducible scholarly environment specification",
+  "type": "object",
+  "required": [
+    "tool_version",
+    "schema_version",
+    "generated_at",
+    "packs"
+  ],
+  "properties": {
+    "tool_version": {
+      "type": "string",
+      "description": "Version of the redletters tool that generated this lockfile",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "schema_version": {
+      "type": "string",
+      "description": "Lockfile schema version",
+      "const": "1.0.0"
+    },
+    "generated_at": {
+      "type": "string",
+      "description": "ISO 8601 timestamp of lockfile generation (UTC)",
+      "format": "date-time"
+    },
+    "packs": {
+      "type": "array",
+      "description": "List of locked packs",
+      "items": {
+        "$ref": "#/$defs/locked_pack"
+      }
+    },
+    "lockfile_hash": {
+      "type": "string",
+      "description": "SHA-256 hash of the lockfile content (excluding this field)",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "$defs": {
+    "locked_pack": {
+      "type": "object",
+      "required": ["pack_id", "version", "role", "license", "content_hash"],
+      "properties": {
+        "pack_id": {
+          "type": "string",
+          "description": "Unique pack identifier"
+        },
+        "version": {
+          "type": "string",
+          "description": "Pack version string"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["spine", "comparative", "sense_pack"],
+          "description": "Pack role in the translation pipeline"
+        },
+        "license": {
+          "type": "string",
+          "description": "License identifier (SPDX or explicit)"
+        },
+        "content_hash": {
+          "type": "string",
+          "description": "SHA-256 hash of all pack content files (deterministic)",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "install_source": {
+          "$ref": "#/$defs/install_source"
+        }
+      }
+    },
+    "install_source": {
+      "type": "object",
+      "description": "Source from which pack can be installed",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["catalog", "local", "git", "zip"],
+          "description": "Type of installation source"
+        },
+        "catalog_id": {
+          "type": "string",
+          "description": "Catalog source identifier (if type=catalog)"
+        },
+        "path": {
+          "type": "string",
+          "description": "Local path (if type=local)"
+        },
+        "url": {
+          "type": "string",
+          "description": "Remote URL (if type=git or type=zip)"
+        },
+        "revision": {
+          "type": "string",
+          "description": "Git commit or tag (if type=git)"
+        }
+      },
+      "required": ["type"]
+    }
+  }
+}

@@ -1629,6 +1629,1655 @@ def packs_list(data_root: str | None, as_json: bool):
     )
 
 
+@packs.command("lock")
+@click.option(
+    "--out",
+    "-o",
+    type=click.Path(),
+    default="lock.json",
+    help="Output lockfile path (default: lock.json)",
+)
+@click.option(
+    "--data-root",
+    type=click.Path(),
+    help="Override data root directory",
+)
+@click.option("--json", "as_json", is_flag=True, help="Output as JSON to stdout")
+def packs_lock(out: str, data_root: str | None, as_json: bool):
+    """Generate a lockfile from installed packs.
+
+    Creates a reproducible environment specification with pack versions,
+    content hashes, and install sources.
+
+    Examples:
+        redletters packs lock
+        redletters packs lock --out myproject.lock.json
+        redletters packs lock --json
+    """
+    from pathlib import Path as PathLib
+
+    from redletters.sources.lockfile import LockfileGenerator
+
+    data_root_path = PathLib(data_root) if data_root else None
+    generator = LockfileGenerator(data_root=data_root_path)
+
+    if as_json:
+        lockfile = generator.generate()
+        console.print(lockfile.to_json(pretty=True))
+        return
+
+    output_path = PathLib(out)
+    lockfile = generator.save(output_path)
+
+    console.print(f"[green]✓ Lockfile generated:[/green] {output_path}")
+    console.print(f"  Tool version: {lockfile.tool_version}")
+    console.print(f"  Schema version: {lockfile.schema_version}")
+    console.print(f"  Packs: {len(lockfile.packs)}")
+    console.print(f"  Hash: {lockfile.lockfile_hash[:16]}...")
+
+    if lockfile.packs:
+        console.print("\n[bold]Locked packs:[/bold]")
+        for pack in lockfile.packs:
+            console.print(
+                f"  {pack.pack_id} ({pack.role}): {pack.version or 'unversioned'} [{pack.content_hash[:12]}...]"
+            )
+
+
+@packs.command("sync")
+@click.option(
+    "--lock",
+    "-l",
+    "lockfile_path",
+    type=click.Path(exists=True),
+    required=True,
+    help="Path to lockfile",
+)
+@click.option(
+    "--force",
+    is_flag=True,
+    help="Accept hash mismatches with audit record",
+)
+@click.option(
+    "--data-root",
+    type=click.Path(),
+    help="Override data root directory",
+)
+@click.option("--json", "as_json", is_flag=True, help="Output as JSON")
+def packs_sync(lockfile_path: str, force: bool, data_root: str | None, as_json: bool):
+    """Verify and sync installed packs to match a lockfile.
+
+    Checks that installed packs match the lockfile specification.
+    If --force is used, hash mismatches are accepted with an audit record.
+
+    Examples:
+        redletters packs sync --lock lock.json
+        redletters packs sync --lock lock.json --force
+    """
+    from pathlib import Path as PathLib
+
+    from redletters.sources.lockfile import Lockfile, LockfileSyncer
+
+    data_root_path = PathLib(data_root) if data_root else None
+    syncer = LockfileSyncer(data_root=data_root_path)
+
+    # Load lockfile
+    lockfile = Lockfile.load(PathLib(lockfile_path))
+
+    # Perform sync/verify
+    result = syncer.sync(lockfile, force=force)
+
+    if as_json:
+        import json as json_lib
+
+        console.print(json_lib.dumps(result.to_dict(), indent=2, ensure_ascii=False))
+        if not result.valid:
+            sys.exit(1)
+        return
+
+    # Display results
+    if result.valid:
+        console.print("[green]✓ Environment matches lockfile[/green]")
+    else:
+        console.print("[red]✗ Environment does not match lockfile[/red]")
+
+    console.print(f"\n  OK: {result.ok_count}")
+    if result.missing:
+        console.print(f"  [red]Missing: {len(result.missing)}[/red]")
+    if result.mismatched:
+        console.print(f"  [yellow]Hash mismatch: {len(result.mismatched)}[/yellow]")
+    if result.extra:
+        console.print(f"  [dim]Extra: {len(result.extra)}[/dim]")
+
+    if result.forced:
+        console.print(f"\n[yellow]⚠ Forced sync at {result.forced_at}[/yellow]")
+
+    # Show details for non-OK packs
+    non_ok = [p for p in result.packs if p.status != "ok"]
+    if non_ok:
+        console.print("\n[bold]Details:[/bold]")
+        for pack_status in non_ok:
+            status_color = {
+                "missing": "red",
+                "hash_mismatch": "yellow",
+                "extra": "dim",
+            }.get(pack_status.status, "white")
+            console.print(
+                f"  [{status_color}]{pack_status.pack_id}[/{status_color}]: {pack_status.status}"
+            )
+            if pack_status.message:
+                console.print(f"    {pack_status.message}")
+            if pack_status.expected_hash and pack_status.actual_hash:
+                console.print(f"    Expected: {pack_status.expected_hash[:16]}...")
+                console.print(f"    Actual:   {pack_status.actual_hash[:16]}...")
+
+    if not result.valid:
+        sys.exit(1)
+
+
+# ============================================================================
+# Gates commands (Sprint 11 - v0.3)
+# ============================================================================
+
+
+@cli.group()
+def gates():
+    """Manage variant acknowledgement gates."""
+    pass
+
+
+@gates.command("acknowledge")
+@click.argument("reference")
+@click.option(
+    "--reason",
+    "-r",
+    required=True,
+    help="Reason for acknowledgement (audit trail)",
+)
+@click.option(
+    "--reading",
+    "-i",
+    default=0,
+    type=int,
+    help="Reading index to acknowledge (default: 0 = spine reading)",
+)
+@click.option(
+    "--session-id",
+    default="cli-default",
+    help="Session ID for tracking (default: cli-default)",
+)
+@click.option("--json", "as_json", is_flag=True, help="Output as JSON")
+def gates_acknowledge(
+    reference: str,
+    reason: str,
+    reading: int,
+    session_id: str,
+    as_json: bool,
+):
+    """Acknowledge a variant gate without translating.
+
+    Records acknowledgement for audit trail. Use this when you've reviewed
+    a variant and want to record your decision before translation.
+
+    Examples:
+        redletters gates acknowledge "John 1:1" --reason "Reviewed, prefer SBLGNT"
+        redletters gates acknowledge "John.1.18" -r "WH reading preferred" -i 1
+        redletters gates acknowledge "John 1:1" --reason "Variant reviewed" --session-id my-session
+    """
+    from redletters.gates.state import AcknowledgementStore
+
+    conn = get_connection(settings.db_path)
+
+    # Normalize reference format (support both "John 1:1" and "John.1.1")
+    ref_normalized = reference.replace(" ", ".").replace(":", ".")
+
+    # Initialize acknowledgement store
+    store = AcknowledgementStore(conn)
+    store.init_schema()
+
+    # Load or create session state
+    state = store.load_session_state(session_id)
+
+    # Record the acknowledgement
+    ack = state.acknowledge_variant(
+        ref=ref_normalized,
+        reading_chosen=reading,
+        context=f"gates acknowledge CLI: {reason}",
+        notes=reason,
+    )
+
+    # Persist to database
+    ack_id = store.persist_variant_ack(ack)
+
+    conn.close()
+
+    if as_json:
+        import json as json_lib
+
+        output = {
+            "acknowledged": True,
+            "id": ack_id,
+            "reference": ref_normalized,
+            "reading_index": reading,
+            "reason": reason,
+            "session_id": session_id,
+            "timestamp": ack.timestamp.isoformat(),
+        }
+        console.print(json_lib.dumps(output, indent=2, ensure_ascii=False))
+    else:
+        console.print("[green]✓ Gate acknowledged[/green]")
+        console.print(f"  Reference: {ref_normalized}")
+        console.print(f"  Reading: {reading}")
+        console.print(f"  Reason: {reason}")
+        console.print(f"  Session: {session_id}")
+
+
+@gates.command("list")
+@click.option(
+    "--session-id",
+    default="cli-default",
+    help="Session ID to query (default: cli-default)",
+)
+@click.option("--json", "as_json", is_flag=True, help="Output as JSON")
+def gates_list(session_id: str, as_json: bool):
+    """List acknowledged gates for a session.
+
+    Examples:
+        redletters gates list
+        redletters gates list --session-id my-session --json
+    """
+    from redletters.gates.state import AcknowledgementStore
+
+    conn = get_connection(settings.db_path)
+
+    store = AcknowledgementStore(conn)
+    store.init_schema()
+
+    state = store.load_session_state(session_id)
+
+    conn.close()
+
+    if as_json:
+        import json as json_lib
+
+        acks = [ack.to_dict() for ack in state.acknowledged_variants.values()]
+        console.print(json_lib.dumps(acks, indent=2, ensure_ascii=False))
+    else:
+        if not state.acknowledged_variants:
+            console.print(f"[dim]No acknowledged gates for session: {session_id}[/dim]")
+            return
+
+        table = Table(title=f"Acknowledged Gates (session: {session_id})")
+        table.add_column("Reference", style="cyan")
+        table.add_column("Reading", justify="center")
+        table.add_column("Timestamp")
+        table.add_column("Notes")
+
+        for ref, ack in sorted(state.acknowledged_variants.items()):
+            table.add_row(
+                ref,
+                str(ack.reading_chosen),
+                ack.timestamp.strftime("%Y-%m-%d %H:%M"),
+                ack.notes or "",
+            )
+
+        console.print(table)
+
+
+@gates.command("pending")
+@click.argument("reference")
+@click.option(
+    "--session-id",
+    default="cli-default",
+    help="Session ID to check against",
+)
+@click.option("--json", "as_json", is_flag=True, help="Output as JSON")
+def gates_pending(reference: str, session_id: str, as_json: bool):
+    """Show pending (unacknowledged) gates for a reference.
+
+    Lists variants that require acknowledgement before translation can proceed.
+
+    Examples:
+        redletters gates pending "John 1"
+        redletters gates pending "John.1.18" --json
+    """
+    from redletters.variants.store import VariantStore
+    from redletters.gates.state import AcknowledgementStore
+
+    conn = get_connection(settings.db_path)
+
+    # Load variant store
+    var_store = VariantStore(conn)
+    var_store.init_schema()
+
+    # Load acknowledgement state
+    ack_store = AcknowledgementStore(conn)
+    ack_store.init_schema()
+    state = ack_store.load_session_state(session_id)
+
+    # Get all variants for reference
+    ref_normalized = reference.replace(" ", ".").replace(":", ".")
+
+    # Determine if this is a verse, chapter, or book reference
+    parts = ref_normalized.split(".")
+    if len(parts) >= 3:
+        # Verse reference (e.g., "John.1.1")
+        variants = var_store.get_variants_for_verse(ref_normalized)
+    elif len(parts) == 2:
+        # Chapter reference (e.g., "John.1")
+        variants = var_store.get_significant_variants(
+            book=parts[0], chapter=int(parts[1])
+        )
+    else:
+        # Book reference (e.g., "John")
+        variants = var_store.get_significant_variants(book=parts[0])
+
+    # Filter to unacknowledged significant variants (significant or major)
+    from redletters.variants.models import SignificanceLevel
+
+    pending = []
+    for v in variants:
+        if v.significance in (SignificanceLevel.SIGNIFICANT, SignificanceLevel.MAJOR):
+            if not state.has_acknowledged_variant(v.ref):
+                pending.append(v)
+
+    conn.close()
+
+    if as_json:
+        import json as json_lib
+
+        output = {
+            "reference": ref_normalized,
+            "session_id": session_id,
+            "pending_count": len(pending),
+            "pending": [
+                {
+                    "variant_ref": p.ref,
+                    "significance": p.significance.value,
+                    "spine_reading": p.sblgnt_reading.surface_text
+                    if p.sblgnt_reading
+                    else "",
+                    "readings_count": len(p.readings) if p.readings else 0,
+                }
+                for p in pending
+            ],
+        }
+        console.print(json_lib.dumps(output, indent=2, ensure_ascii=False))
+    else:
+        if not pending:
+            console.print(
+                f"[green]✓ No pending gates for {ref_normalized}[/green] (session: {session_id})"
+            )
+            return
+
+        console.print(f"[yellow]Pending gates for {ref_normalized}:[/yellow]")
+        for p in pending:
+            spine_text = p.sblgnt_reading.surface_text if p.sblgnt_reading else "?"
+            console.print(
+                f"  [yellow]?[/yellow] {p.ref} ({p.significance.value}): {spine_text}"
+            )
+
+        console.print("\n[dim]To acknowledge, use:[/dim]")
+        for p in pending:
+            console.print(
+                f'  redletters gates acknowledge "{p.ref}" --reason "<your reason>"'
+            )
+
+
+# ============================================================================
+# Quote command (v0.9.0 - Quote friction)
+# ============================================================================
+
+
+@cli.command()
+@click.argument("reference")
+@click.option(
+    "--mode",
+    "-m",
+    type=click.Choice(["readable", "traceable"]),
+    default="readable",
+    help="Output mode for quote",
+)
+@click.option(
+    "--out",
+    "-o",
+    "output_path",
+    type=click.Path(),
+    help="Output JSON file path (optional; prints to stdout if not provided)",
+)
+@click.option(
+    "--session-id",
+    default="cli-default",
+    help="Session ID for gate acknowledgement checking",
+)
+@click.option(
+    "--force",
+    is_flag=True,
+    help="Generate quote even with pending gates (marks forced_responsibility)",
+)
+@click.option(
+    "--data-root",
+    type=click.Path(),
+    help="Override data root for installed sources",
+)
+def quote(
+    reference: str,
+    mode: str,
+    output_path: str | None,
+    session_id: str,
+    force: bool,
+    data_root: str | None,
+):
+    """Generate a citeable quote for a reference (v0.9.0).
+
+    Produces structured JSON intended for citation/quoting with:
+    - Reference and mode
+    - Spine text
+    - Confidence bucket summary
+    - Provenance (packs used)
+    - Gate status
+
+    GATE FRICTION: Fails with PendingGatesError unless gates are cleared
+    or --force is used. If forced, marks forced_responsibility: true.
+
+    Example:
+        redletters quote "John 1:1" --out out/quote.json
+        redletters quote "John 1:1" --force --out out/quote.json
+    """
+    from datetime import datetime, timezone
+    from redletters.export.apparatus import check_pending_gates
+    from redletters.export import PendingGatesError
+    from redletters.export.schema_versions import QUOTE_SCHEMA_VERSION
+    from redletters.sources.installer import SourceInstaller
+    from redletters.variants.store import VariantStore
+
+    # Set up data root
+    if data_root:
+        data_root_path = Path(data_root)
+    else:
+        data_root_path = Path.home() / ".redletters" / "data"
+
+    # Get database connection
+    db_path = data_root_path / "redletters.db"
+    if not db_path.exists():
+        console.print(
+            "[red]Error: Database not found. Run 'redletters init' first.[/red]"
+        )
+        sys.exit(1)
+
+    conn = get_connection(db_path)
+
+    # Initialize stores
+    variant_store = VariantStore(conn)
+
+    # Normalize reference
+    ref_normalized = reference.replace(" ", ".").replace(":", ".")
+    parts = ref_normalized.split(".")
+    if len(parts) < 3:
+        console.print(
+            "[red]Error: Reference must be in format Book.Chapter.Verse[/red]"
+        )
+        sys.exit(1)
+
+    # Check for pending gates (gate friction)
+    pending_gates = check_pending_gates(conn, reference, session_id, variant_store)
+
+    if pending_gates and not force:
+        # Fail with gate friction
+        error = PendingGatesError(
+            reference=reference,
+            session_id=session_id,
+            pending_gates=pending_gates,
+        )
+        console.print(f"[red]Error: {error}[/red]")
+        console.print("\n[yellow]Pending gates:[/yellow]")
+        for gate in pending_gates:
+            console.print(
+                f"  - {gate.variant_ref} ({gate.significance}): "
+                f"{gate.spine_reading} ({gate.readings_count} readings)"
+            )
+        console.print(
+            "\n[dim]Use --force to generate quote with forced_responsibility marked.[/dim]"
+        )
+        sys.exit(1)
+
+    # Get spine text (SBLGNT)
+    installer = SourceInstaller(data_root=data_root_path)
+    spine_text = ""
+
+    if installer.is_installed("morphgnt-sblgnt"):
+        try:
+            from redletters.sources.spine import SpineLoader
+
+            spine_path = data_root_path / "sources" / "morphgnt-sblgnt"
+            loader = SpineLoader(spine_path)
+            tokens = loader.get_tokens_for_verse(ref_normalized)
+            if tokens:
+                spine_text = " ".join(t.get("surface", "") for t in tokens)
+        except Exception:
+            pass
+
+    # Get provenance (installed packs)
+    installed_packs = []
+    try:
+        from redletters.sources.catalog import list_sources
+
+        for source in list_sources():
+            if installer.is_installed(source.source_id):
+                installed_packs.append(source.source_id)
+    except Exception:
+        pass
+
+    # Determine gates_cleared (based on pending gates check above)
+    gates_cleared = len(pending_gates) == 0
+    forced_responsibility = force and len(pending_gates) > 0
+
+    # Build quote output
+    quote_output = {
+        "reference": reference,
+        "reference_normalized": ref_normalized,
+        "mode": mode,
+        "spine_text": spine_text,
+        "provenance": {
+            "packs_used": installed_packs,
+            "session_id": session_id,
+        },
+        "gate_status": {
+            "gates_cleared": gates_cleared,
+            "forced_responsibility": forced_responsibility,
+        },
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "schema_version": QUOTE_SCHEMA_VERSION,  # v0.10.0: centralized
+    }
+
+    # If forced with pending gates, include them
+    if forced_responsibility:
+        quote_output["gate_status"]["pending_gates"] = [
+            {
+                "variant_ref": g.variant_ref,
+                "significance": g.significance,
+                "spine_reading": g.spine_reading,
+                "readings_count": g.readings_count,
+            }
+            for g in pending_gates
+        ]
+
+    # Get confidence summary (aggregate across variants in scope)
+    variants = variant_store.get_variants_for_verse(ref_normalized)
+    if variants:
+        # Count significance levels
+        sig_counts = {"trivial": 0, "minor": 0, "significant": 0, "major": 0}
+        for v in variants:
+            sig_counts[v.significance.value] = (
+                sig_counts.get(v.significance.value, 0) + 1
+            )
+        quote_output["confidence_summary"] = {
+            "variants_in_scope": len(variants),
+            "significance_breakdown": sig_counts,
+        }
+    else:
+        quote_output["confidence_summary"] = {
+            "variants_in_scope": 0,
+            "significance_breakdown": {},
+        }
+
+    conn.close()
+
+    # Output
+    output_json = json.dumps(quote_output, indent=2, ensure_ascii=False)
+
+    if output_path:
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+        Path(output_path).write_text(output_json, encoding="utf-8")
+        if forced_responsibility:
+            console.print(
+                "[yellow]⚠ Quote generated with forced_responsibility=true[/yellow]"
+            )
+            console.print(
+                f"[yellow]  {len(pending_gates)} pending gate(s) were bypassed[/yellow]"
+            )
+        else:
+            console.print(f"[green]✓ Quote generated: {output_path}[/green]")
+    else:
+        console.print(output_json)
+
+
+# ============================================================================
+# Export commands (v0.5.0 - Reproducible Scholar Exports)
+# ============================================================================
+
+
+@cli.group()
+def export():
+    """Export datasets for scholarly reproducibility."""
+    pass
+
+
+@export.command("apparatus")
+@click.argument("reference")
+@click.option(
+    "--format",
+    "-f",
+    "output_format",
+    type=click.Choice(["jsonl"]),
+    default="jsonl",
+    help="Output format (default: jsonl)",
+)
+@click.option(
+    "--out",
+    "-o",
+    "output_path",
+    type=click.Path(),
+    required=True,
+    help="Output file path",
+)
+@click.option(
+    "--session-id",
+    default="cli-default",
+    help="Session ID for gate checking (v0.8.0)",
+)
+@click.option(
+    "--force",
+    is_flag=True,
+    help="Export even with pending gates (records them in metadata)",
+)
+def export_apparatus(
+    reference: str,
+    output_format: str,
+    output_path: str,
+    session_id: str,
+    force: bool,
+):
+    """Export variant apparatus dataset.
+
+    Exports variant units with readings, support sets, and provenance
+    in JSONL format for scholarly analysis.
+
+    v0.8.0: Export now checks for pending gates. If unacknowledged significant
+    variants exist, export is blocked unless --force is used.
+
+    Each line contains one variant unit with:
+    - Stable variant_unit_id and reading_id
+    - All readings with normalized text
+    - Support entries with witness details
+    - Provenance (source packs)
+    - Gate requirements
+
+    Examples:
+        redletters export apparatus "John 1:1-18" --out apparatus.jsonl
+        redletters export apparatus "John.1" --out john1_apparatus.jsonl
+        redletters export apparatus "John.1.18" --out test.jsonl --force
+    """
+    from redletters.variants.store import VariantStore
+    from redletters.export.apparatus import ApparatusExporter, check_pending_gates
+
+    conn = get_connection(settings.db_path)
+
+    try:
+        store = VariantStore(conn)
+        store.init_schema()
+    except Exception:
+        pass
+
+    # v0.8.0: Check for pending gates
+    pending = check_pending_gates(conn, reference, session_id, store)
+    forced_export = False
+    pending_gates_at_export = []
+
+    if pending and not force:
+        # Block export
+        conn.close()
+        console.print("[yellow]Export blocked: pending gates[/yellow]")
+        console.print(f"  Reference: {reference}")
+        console.print(f"  Session: {session_id}")
+        console.print(f"  Pending: {len(pending)}")
+        for p in pending[:5]:
+            console.print(f"    - {p.variant_ref} ({p.significance})")
+        if len(pending) > 5:
+            console.print(f"    ... and {len(pending) - 5} more")
+        console.print("\n[dim]To acknowledge gates:[/dim]")
+        console.print(f'  redletters gates acknowledge "<ref>" --session {session_id}')
+        console.print("\n[dim]To force export anyway:[/dim]")
+        console.print(
+            f'  redletters export apparatus "{reference}" --out {output_path} --force'
+        )
+        sys.exit(2)
+    elif pending and force:
+        forced_export = True
+        pending_gates_at_export = [
+            {"variant_ref": p.variant_ref, "significance": p.significance}
+            for p in pending
+        ]
+        console.print(
+            f"[yellow]Warning: Exporting with {len(pending)} pending gate(s)[/yellow]"
+        )
+
+    exporter = ApparatusExporter(store)
+
+    try:
+        result = exporter.export_to_file(reference, output_path)
+
+        # Add force metadata if applicable
+        if forced_export:
+            result["forced_export"] = True
+            result["pending_gates_at_export"] = pending_gates_at_export
+
+        conn.close()
+
+        console.print("[green]✓ Apparatus exported[/green]")
+        console.print(f"  Reference: {result['reference']}")
+        console.print(f"  Rows: {result['row_count']}")
+        console.print(f"  Output: {result['output_path']}")
+        console.print(f"  Schema: {result['schema_version']}")
+        if forced_export:
+            console.print(
+                f"  [yellow]Forced: {len(pending_gates_at_export)} pending gates[/yellow]"
+            )
+    except Exception as e:
+        conn.close()
+        console.print(f"[red]✗ Export failed: {e}[/red]")
+        sys.exit(1)
+
+
+@export.command("translation")
+@click.argument("reference")
+@click.option(
+    "--format",
+    "-f",
+    "output_format",
+    type=click.Choice(["jsonl"]),
+    default="jsonl",
+    help="Output format (default: jsonl)",
+)
+@click.option(
+    "--out",
+    "-o",
+    "output_path",
+    type=click.Path(),
+    required=True,
+    help="Output file path",
+)
+@click.option(
+    "--data-root",
+    type=click.Path(),
+    help="Override data root for installed sources",
+)
+@click.option(
+    "--session-id",
+    default="export",
+    help="Session ID for gate checking (v0.8.0)",
+)
+@click.option(
+    "--force",
+    is_flag=True,
+    help="Export even with pending gates (records them in metadata)",
+)
+def export_translation(
+    reference: str,
+    output_format: str,
+    output_path: str,
+    data_root: str | None,
+    session_id: str,
+    force: bool,
+):
+    """Export translation dataset with token ledger.
+
+    Runs traceable translation and exports token-level data
+    in JSONL format for scholarly analysis.
+
+    v0.8.0: Export now checks for pending gates. If unacknowledged significant
+    variants exist, export is blocked unless --force is used.
+
+    Each line contains one verse with:
+    - Token-level ledger (surface, lemma, morph, gloss)
+    - Confidence scores (T/G/L/I layers)
+    - Provenance (spine + comparative sources)
+
+    Examples:
+        redletters export translation "John 1:1-18" --out translation.jsonl
+        redletters export translation "John.1.18" --out j118_translation.jsonl
+        redletters export translation "John.1.18" --out test.jsonl --force
+    """
+    from redletters.pipeline import translate_passage, get_translator
+    from redletters.sources import SourceInstaller, InstalledSpineProvider
+    from redletters.export.translation import TranslationExporter
+    from redletters.export.apparatus import check_pending_gates
+    from redletters.variants.store import VariantStore
+
+    conn = get_connection(settings.db_path)
+
+    # Get spine provider
+    installer = SourceInstaller(data_root=data_root)
+    spine_provider = None
+    source_id = ""
+    source_license = ""
+
+    for spine_id in ["morphgnt-sblgnt", "open-greek-nt"]:
+        if installer.is_installed(spine_id):
+            installed = installer.get_installed(spine_id)
+            source_id = installed.source_id
+            source_license = installed.license
+            spine_provider = InstalledSpineProvider(
+                source_id=spine_id,
+                data_root=data_root,
+                require_installed=True,
+            )
+            break
+
+    if spine_provider is None:
+        console.print("[red]Error: No spine data installed.[/red]")
+        console.print("[dim]Run: redletters sources install morphgnt-sblgnt[/dim]")
+        conn.close()
+        sys.exit(1)
+
+    # v0.8.0: Check for pending gates
+    var_store = VariantStore(conn)
+    var_store.init_schema()
+    pending = check_pending_gates(conn, reference, session_id, var_store)
+    forced_export = False
+    pending_gates_at_export = []
+
+    if pending and not force:
+        # Block export
+        conn.close()
+        console.print("[yellow]Export blocked: pending gates[/yellow]")
+        console.print(f"  Reference: {reference}")
+        console.print(f"  Session: {session_id}")
+        console.print(f"  Pending: {len(pending)}")
+        for p in pending[:5]:
+            console.print(f"    - {p.variant_ref} ({p.significance})")
+        if len(pending) > 5:
+            console.print(f"    ... and {len(pending) - 5} more")
+        console.print("\n[dim]To acknowledge gates:[/dim]")
+        console.print(f'  redletters gates acknowledge "<ref>" --session {session_id}')
+        console.print("\n[dim]To force export anyway:[/dim]")
+        console.print(
+            f'  redletters export translation "{reference}" --out {output_path} --force'
+        )
+        sys.exit(2)
+    elif pending and force:
+        forced_export = True
+        pending_gates_at_export = [
+            {"variant_ref": p.variant_ref, "significance": p.significance}
+            for p in pending
+        ]
+        console.print(
+            f"[yellow]Warning: Exporting with {len(pending)} pending gate(s)[/yellow]"
+        )
+
+    # Get traceable translator
+    translator = get_translator(
+        translator_type="traceable",
+        source_id=source_id,
+        source_license=source_license,
+    )
+
+    # Build options
+    options = {"spine_provider": spine_provider}
+
+    try:
+        # Run translation
+        result = translate_passage(
+            conn=conn,
+            reference=reference,
+            mode="traceable",
+            session_id=session_id,
+            options=options,
+            translator=translator,
+        )
+
+        conn.close()
+
+        # Check if we got a gate response instead of translation
+        from redletters.pipeline import GateResponsePayload
+
+        if isinstance(result, GateResponsePayload):
+            if not force:
+                console.print("[yellow]Export blocked: gate required[/yellow]")
+                console.print(f"  {result.message}")
+                console.print("\n[dim]To force export anyway:[/dim]")
+                console.print(
+                    f'  redletters export translation "{reference}" --out {output_path} --force'
+                )
+                sys.exit(2)
+            else:
+                console.print(
+                    "[yellow]Warning: Gate required - exporting empty ledger[/yellow]"
+                )
+                console.print(f"  {result.message}")
+
+                # Export empty ledger with warning
+                exporter = TranslationExporter()
+                export_result = exporter.export_to_file([], output_path, reference)
+                export_result["forced_export"] = True
+                export_result["gate_message"] = result.message
+
+                console.print("[yellow]Translation exported (no ledger data)[/yellow]")
+                console.print(f"  Reference: {reference}")
+                console.print(f"  Rows: {export_result['row_count']}")
+                console.print(f"  Output: {export_result['output_path']}")
+                return
+
+        # Extract ledger data
+        result_dict = result.to_dict()
+        ledger_data = TranslationExporter.from_translate_response(result_dict)
+
+        # Export
+        exporter = TranslationExporter()
+        export_result = exporter.export_to_file(ledger_data, output_path, reference)
+
+        # Add force metadata if applicable
+        if forced_export:
+            export_result["forced_export"] = True
+            export_result["pending_gates_at_export"] = pending_gates_at_export
+
+        console.print("[green]✓ Translation exported[/green]")
+        console.print(f"  Reference: {export_result['reference']}")
+        console.print(f"  Rows: {export_result['row_count']}")
+        console.print(f"  Output: {export_result['output_path']}")
+        console.print(f"  Schema: {export_result['schema_version']}")
+        if forced_export:
+            console.print(
+                f"  [yellow]Forced: {len(pending_gates_at_export)} pending gates[/yellow]"
+            )
+
+    except Exception as e:
+        conn.close()
+        console.print(f"[red]✗ Export failed: {e}[/red]")
+        sys.exit(1)
+
+
+@export.command("snapshot")
+@click.option(
+    "--out",
+    "-o",
+    "output_path",
+    type=click.Path(),
+    required=True,
+    help="Output file path",
+)
+@click.option(
+    "--inputs",
+    "-i",
+    "input_files",
+    multiple=True,
+    help="Export files to include in hash verification (can be repeated)",
+)
+@click.option(
+    "--include-citations",
+    is_flag=True,
+    help="Auto-generate and include citations.json in snapshot",
+)
+@click.option(
+    "--data-root",
+    type=click.Path(),
+    help="Override data root for installed sources",
+)
+def export_snapshot(
+    output_path: str,
+    input_files: tuple[str, ...],
+    include_citations: bool,
+    data_root: str | None,
+):
+    """Generate reproducibility snapshot.
+
+    Creates a JSON file containing:
+    - Tool version and schema version
+    - Git commit (if available)
+    - Installed pack metadata (IDs, versions, licenses, hashes)
+    - Export file hashes for verification
+
+    Examples:
+        redletters export snapshot --out snapshot.json
+        redletters export snapshot --out snapshot.json -i apparatus.jsonl -i translation.jsonl
+        redletters export snapshot --out snapshot.json --include-citations
+    """
+    from pathlib import Path as PathLib
+
+    from redletters.export.snapshot import SnapshotGenerator
+
+    generator = SnapshotGenerator(data_root=data_root)
+
+    # Flatten comma-separated inputs
+    all_inputs = []
+    for inp in input_files:
+        all_inputs.extend([i.strip() for i in inp.split(",") if i.strip()])
+
+    citations_path = None
+    try:
+        # Auto-generate citations if requested
+        if include_citations:
+            from redletters.export.citations import CitationsExporter
+
+            # Generate citations file alongside snapshot
+            output_dir = PathLib(output_path).parent
+            citations_path = output_dir / "citations.json"
+
+            # Get database connection for sense packs
+            conn = get_connection(settings.db_path)
+            exporter = CitationsExporter(conn=conn, data_root=data_root)
+            citations_result = exporter.export_to_file(citations_path, format="csljson")
+            conn.close()
+
+            console.print("[green]✓ Citations exported[/green]")
+            console.print(f"  Entries: {citations_result['entries_count']}")
+            console.print(f"  Hash: {citations_result['content_hash'][:16]}...")
+
+            # Add citations file to inputs
+            all_inputs.append(str(citations_path))
+
+        snapshot = generator.save(output_path, export_files=all_inputs or None)
+
+        console.print("[green]✓ Snapshot created[/green]")
+        console.print(f"  Tool version: {snapshot.tool_version}")
+        console.print(f"  Schema version: {snapshot.schema_version}")
+        console.print(f"  Git commit: {snapshot.git_commit or '(not in git repo)'}")
+        console.print(f"  Packs: {len(snapshot.packs)}")
+        for p in snapshot.packs:
+            console.print(f"    - {p.pack_id} ({p.version}, {p.license})")
+        if snapshot.export_hashes:
+            console.print(f"  Export hashes: {len(snapshot.export_hashes)}")
+            for fname, fhash in snapshot.export_hashes.items():
+                console.print(f"    - {fname}: {fhash[:16]}...")
+        console.print(f"  Output: {output_path}")
+
+    except Exception as e:
+        console.print(f"[red]✗ Snapshot failed: {e}[/red]")
+        sys.exit(1)
+
+
+@export.command("verify")
+@click.option(
+    "--snapshot",
+    "-s",
+    "snapshot_path",
+    type=click.Path(exists=True),
+    required=True,
+    help="Snapshot file to verify against",
+)
+@click.option(
+    "--inputs",
+    "-i",
+    "input_files",
+    required=True,
+    help="Export files to verify (comma-separated or repeated)",
+)
+def export_verify(snapshot_path: str, input_files: str):
+    """Verify export files against snapshot.
+
+    Recomputes hashes of input files and compares against
+    hashes recorded in the snapshot. Returns non-zero exit
+    code if verification fails.
+
+    Examples:
+        redletters export verify --snapshot snapshot.json --inputs apparatus.jsonl,translation.jsonl
+        redletters export verify -s snapshot.json -i apparatus.jsonl -i translation.jsonl
+    """
+    from redletters.export.snapshot import SnapshotVerifier
+
+    verifier = SnapshotVerifier()
+
+    # Parse input files (comma-separated)
+    all_inputs = [i.strip() for i in input_files.split(",") if i.strip()]
+
+    try:
+        result = verifier.verify(snapshot_path, all_inputs)
+
+        if result.valid:
+            console.print("[green]✓ Verification passed[/green]")
+        else:
+            console.print("[red]✗ Verification failed[/red]")
+
+        # Show file hashes
+        if result.file_hashes:
+            console.print("\n[bold]File hashes:[/bold]")
+            for fname, info in result.file_hashes.items():
+                if info.get("match") is True:
+                    status = "[green]✓[/green]"
+                elif info.get("match") is False:
+                    status = "[red]✗[/red]"
+                else:
+                    status = "[yellow]?[/yellow]"
+
+                console.print(f"  {status} {fname}")
+                if info.get("expected"):
+                    console.print(f"      Expected: {info['expected'][:32]}...")
+                console.print(f"      Actual:   {info['current'][:32]}...")
+
+        # Show warnings
+        if result.warnings:
+            console.print("\n[yellow]Warnings:[/yellow]")
+            for w in result.warnings:
+                console.print(f"  [yellow]⚠[/yellow] {w}")
+
+        # Show errors
+        if result.errors:
+            console.print("\n[red]Errors:[/red]")
+            for e in result.errors:
+                console.print(f"  [red]✗[/red] {e}")
+
+        if not result.valid:
+            sys.exit(1)
+
+    except Exception as e:
+        console.print(f"[red]✗ Verification failed: {e}[/red]")
+        sys.exit(1)
+
+
+@export.command("citations")
+@click.option(
+    "--format",
+    "-f",
+    "output_format",
+    type=click.Choice(["csljson", "full"]),
+    default="csljson",
+    help="Output format: csljson (standard) or full (with metadata)",
+)
+@click.option(
+    "--out",
+    "-o",
+    "output_path",
+    type=click.Path(),
+    required=True,
+    help="Output file path",
+)
+@click.option(
+    "--data-root",
+    type=click.Path(),
+    help="Override data root for installed sources",
+)
+def export_citations(output_format: str, output_path: str, data_root: str | None):
+    """Export bibliography of all installed packs.
+
+    Creates a CSL-JSON file containing bibliographic metadata for
+    all installed packs (spine, comparative, sense packs).
+
+    CSL-JSON is the standard format for citation managers (Zotero,
+    Mendeley, etc.) and can be imported directly.
+
+    Output includes:
+    - source_id, title, edition, publisher, year
+    - License information
+    - Pack role and version
+
+    Deterministic: same packs = identical output.
+
+    Examples:
+        redletters export citations --out citations.json
+        redletters export citations --format full --out citations_full.json
+    """
+    from redletters.export.citations import CitationsExporter
+
+    conn = get_connection(settings.db_path)
+
+    try:
+        exporter = CitationsExporter(conn=conn, data_root=data_root)
+        result = exporter.export_to_file(output_path, format=output_format)
+        conn.close()
+
+        console.print("[green]✓ Citations exported[/green]")
+        console.print(f"  Format: {result['format']}")
+        console.print(f"  Entries: {result['entries_count']}")
+        console.print(f"  Schema: {result['schema_version']}")
+        console.print(f"  Hash: {result['content_hash'][:16]}...")
+        console.print(f"  Output: {result['output_path']}")
+
+    except Exception as e:
+        conn.close()
+        console.print(f"[red]✗ Export failed: {e}[/red]")
+        sys.exit(1)
+
+
+# ============================================================================
+# Validate commands (v0.10.0 - Schema Contracts + Validation)
+# ============================================================================
+
+
+@cli.group()
+def validate():
+    """Validate generated outputs against schema contracts."""
+    pass
+
+
+@validate.command("output")
+@click.argument("file_path", type=click.Path(exists=True))
+@click.option(
+    "--type",
+    "-t",
+    "artifact_type",
+    type=click.Choice(
+        [
+            "apparatus",
+            "translation",
+            "snapshot",
+            "citations",
+            "quote",
+            "dossier",
+            "auto",
+        ]
+    ),
+    default="auto",
+    help="Artifact type (auto-detect if not specified)",
+)
+@click.option("--json", "as_json", is_flag=True, help="Output result as JSON")
+def validate_output_cmd(file_path: str, artifact_type: str, as_json: bool):
+    """Validate a generated output file against its schema.
+
+    Performs deterministic validation with stable error messages.
+    No network calls.
+
+    Validates:
+    - Required fields present
+    - Schema version format
+    - Artifact-specific structure (readings, tokens, etc.)
+
+    Returns exit code 0 if valid, 1 if invalid.
+
+    Examples:
+        redletters validate output out/apparatus.jsonl
+        redletters validate output out/snapshot.json --type snapshot
+        redletters validate output out/quote.json --json
+    """
+    from redletters.export.validator import validate_output
+
+    # Handle auto-detect
+    type_arg = None if artifact_type == "auto" else artifact_type
+
+    result = validate_output(file_path, artifact_type=type_arg)
+
+    if as_json:
+        import json
+
+        console.print(json.dumps(result.to_dict(), indent=2))
+    else:
+        # Pretty output
+        if result.valid:
+            console.print(f"[green]✓ Valid {result.artifact_type}[/green]")
+            console.print(f"  File: {result.file_path}")
+            console.print(f"  Records: {result.records_checked}")
+            if result.schema_version_found:
+                console.print(f"  Schema: {result.schema_version_found}")
+            if result.warnings:
+                console.print("\n[yellow]Warnings:[/yellow]")
+                for w in result.warnings:
+                    console.print(f"  - {w}")
+        else:
+            console.print(f"[red]✗ Invalid {result.artifact_type}[/red]")
+            console.print(f"  File: {result.file_path}")
+            console.print("\n[red]Errors:[/red]")
+            for e in result.errors:
+                console.print(f"  - {e}")
+            if result.warnings:
+                console.print("\n[yellow]Warnings:[/yellow]")
+                for w in result.warnings:
+                    console.print(f"  - {w}")
+
+    sys.exit(0 if result.valid else 1)
+
+
+@validate.command("schemas")
+def validate_schemas_cmd():
+    """List all schema versions and their artifact types.
+
+    Shows the current schema version for each artifact type.
+    Useful for understanding compatibility and planning migrations.
+    """
+    from redletters.export.schema_versions import get_all_schema_versions
+
+    versions = get_all_schema_versions()
+
+    console.print("\n[bold]Schema Versions[/bold]\n")
+    for artifact, version in sorted(versions.items()):
+        console.print(f"  {artifact:<20} {version}")
+    console.print()
+
+
+# ============================================================================
+# Senses commands (v0.7.0 - Pack Explainability)
+# ============================================================================
+
+
+@cli.group()
+def senses():
+    """Explain sense resolution and detect conflicts across packs."""
+    pass
+
+
+@senses.command("explain")
+@click.argument("lemma")
+@click.option("--json", "as_json", is_flag=True, help="Output as JSON")
+def senses_explain(lemma: str, as_json: bool):
+    """Explain why a specific sense was chosen for a lemma.
+
+    Shows deterministic audit trail:
+    - Normalized lemma key used for lookup
+    - Packs consulted in precedence order
+    - All matches found across packs
+    - Chosen sense with full citation fields
+
+    Examples:
+        redletters senses explain μετανοέω
+        redletters senses explain "λόγος" --json
+    """
+    from redletters.senses.explain import SenseExplainer
+
+    conn = get_connection(settings.db_path)
+
+    try:
+        explainer = SenseExplainer(conn)
+        result = explainer.explain(lemma)
+        conn.close()
+
+        if as_json:
+            import json as json_lib
+
+            console.print(
+                json_lib.dumps(result.to_dict(), indent=2, ensure_ascii=False)
+            )
+            return
+
+        # Pretty print
+        console.print(
+            Panel(
+                f"[bold]Input:[/bold] {result.lemma_input}\n"
+                f"[bold]Normalized:[/bold] {result.lemma_normalized}",
+                title="Sense Resolution",
+            )
+        )
+
+        console.print(f"\n[bold]Packs consulted:[/bold] {len(result.packs_consulted)}")
+        for pack_id in result.packs_consulted:
+            console.print(f"  • {pack_id}")
+
+        console.print(f"\n[bold]Matches found:[/bold] {len(result.matches)}")
+        for i, match in enumerate(result.matches):
+            is_chosen = result.chosen and match == result.chosen
+            marker = "[green]→[/green]" if is_chosen else " "
+            console.print(
+                f"  {marker} [{match.pack_id}] {match.gloss} "
+                f"(weight={match.weight:.2f}, sense={match.sense_id})"
+            )
+            console.print(f"      Source: {match.source_id} - {match.source_title}")
+
+        console.print(f"\n[bold]Reason:[/bold] {result.reason}")
+
+        if result.chosen:
+            console.print("\n[bold green]✓ Chosen sense:[/bold green]")
+            console.print(f"  Gloss: {result.chosen.gloss}")
+            console.print(
+                f"  Pack: {result.chosen.pack_id}@{result.chosen.pack_version}"
+            )
+            console.print(f"  Citation: {result.chosen.citation_string()}")
+        else:
+            console.print("\n[yellow]⚠ No matching sense found[/yellow]")
+
+    except Exception as e:
+        conn.close()
+        console.print(f"[red]✗ Error: {e}[/red]")
+        sys.exit(1)
+
+
+@senses.command("conflicts")
+@click.argument("lemma")
+@click.option("--json", "as_json", is_flag=True, help="Output as JSON")
+def senses_conflicts(lemma: str, as_json: bool):
+    """Show all senses for a lemma across installed packs.
+
+    Detects where packs agree or disagree on glosses:
+    - Lists all sense entries from all packs
+    - Shows pack_id@version for each entry
+    - Highlights conflicts when primary glosses differ
+
+    Examples:
+        redletters senses conflicts λόγος
+        redletters senses conflicts "πίστις" --json
+    """
+    from redletters.senses.conflicts import SenseConflictDetector
+
+    conn = get_connection(settings.db_path)
+
+    try:
+        detector = SenseConflictDetector(conn)
+        result = detector.detect(lemma)
+        conn.close()
+
+        if as_json:
+            import json as json_lib
+
+            console.print(
+                json_lib.dumps(result.to_dict(), indent=2, ensure_ascii=False)
+            )
+            return
+
+        # Pretty print
+        console.print(
+            Panel(
+                f"[bold]Input:[/bold] {result.lemma_input}\n"
+                f"[bold]Normalized:[/bold] {result.lemma_normalized}",
+                title="Sense Conflicts",
+            )
+        )
+
+        console.print(f"\n[bold]Packs checked:[/bold] {len(result.packs_checked)}")
+        console.print(
+            f"[bold]Packs with matches:[/bold] {len(result.packs_with_matches)}"
+        )
+
+        if result.has_conflict:
+            console.print("\n[red bold]⚠ CONFLICT DETECTED[/red bold]")
+        else:
+            console.print("\n[green]✓ No conflict[/green]")
+
+        console.print(f"[dim]{result.conflict_summary}[/dim]")
+
+        if result.entries:
+            console.print(f"\n[bold]All entries ({len(result.entries)}):[/bold]")
+
+            table = Table()
+            table.add_column("Pack", style="cyan")
+            table.add_column("Version")
+            table.add_column("Gloss", style="green")
+            table.add_column("Weight")
+            table.add_column("Source ID")
+
+            for entry in result.entries:
+                table.add_row(
+                    entry.pack_id,
+                    entry.pack_version,
+                    entry.gloss,
+                    f"{entry.weight:.2f}",
+                    entry.source_id,
+                )
+
+            console.print(table)
+
+            console.print(
+                f"\n[bold]Unique glosses:[/bold] {', '.join(result.unique_glosses)}"
+            )
+
+    except Exception as e:
+        conn.close()
+        console.print(f"[red]✗ Error: {e}[/red]")
+        sys.exit(1)
+
+
+@senses.command("list-packs")
+@click.option("--json", "as_json", is_flag=True, help="Output as JSON")
+def senses_list_packs(as_json: bool):
+    """List installed sense packs in precedence order.
+
+    Shows sense packs with their priority (lower = higher precedence),
+    source citation info, and sense count.
+
+    Examples:
+        redletters senses list-packs
+        redletters senses list-packs --json
+    """
+    from redletters.senses.conflicts import SenseConflictDetector
+
+    conn = get_connection(settings.db_path)
+
+    try:
+        detector = SenseConflictDetector(conn)
+        packs = detector.list_packs()
+        conn.close()
+
+        if as_json:
+            import json as json_lib
+
+            console.print(json_lib.dumps(packs, indent=2, ensure_ascii=False))
+            return
+
+        if not packs:
+            console.print("[dim]No sense packs installed[/dim]")
+            console.print(
+                "[dim]Install a sense pack with: redletters sources install <pack>[/dim]"
+            )
+            return
+
+        table = Table(title="Installed Sense Packs (Precedence Order)")
+        table.add_column("Priority", justify="right")
+        table.add_column("Pack ID", style="cyan")
+        table.add_column("Version")
+        table.add_column("Source ID", style="yellow")
+        table.add_column("Senses", justify="right")
+        table.add_column("License")
+
+        for pack in packs:
+            table.add_row(
+                str(pack["priority"]),
+                pack["pack_id"],
+                pack["version"],
+                pack["source_id"],
+                str(pack["sense_count"]),
+                pack["license"],
+            )
+
+        console.print(table)
+        console.print(
+            "\n[dim]Lower priority number = consulted first for sense resolution[/dim]"
+        )
+
+    except Exception as e:
+        conn.close()
+        console.print(f"[red]✗ Error: {e}[/red]")
+        sys.exit(1)
+
+
+# v0.8.0: Claims analyzer CLI group
+@cli.group()
+def claims():
+    """Analyze theological claims for textual uncertainty (v0.8.0)."""
+    pass
+
+
+@claims.command("analyze")
+@click.argument("input_file", type=click.Path(exists=True))
+@click.option(
+    "--session-id", "-s", default="default", help="Session ID for gate checks"
+)
+@click.option("--json", "as_json", is_flag=True, help="Output as JSON")
+@click.option("--out", "-o", type=click.Path(), help="Output file path")
+def claims_analyze(input_file: str, session_id: str, as_json: bool, out: str | None):
+    """Analyze claims file for textual uncertainty.
+
+    Reads a JSON file containing theological claims with scripture dependencies
+    and reports where textual uncertainty exists.
+
+    Input format:
+    {
+        "claims": [
+            {"label": "id", "text": "claim content", "dependencies": ["John.1.18"]}
+        ]
+    }
+
+    Examples:
+        redletters claims analyze claims.json
+        redletters claims analyze claims.json --json
+        redletters claims analyze claims.json --out results.json
+    """
+    from redletters.analysis import ClaimsAnalyzer
+    from redletters.variants.store import VariantStore
+
+    conn = get_connection(settings.db_path)
+    variant_store = VariantStore(conn)
+    variant_store.init_schema()
+
+    try:
+        # Load input file
+        with open(input_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        # Analyze claims
+        analyzer = ClaimsAnalyzer(conn, variant_store)
+        results = analyzer.analyze_from_dict(data, session_id)
+
+        # Build output
+        output_data = {
+            "input_file": str(input_file),
+            "session_id": session_id,
+            "claims_analyzed": len(results),
+            "claims_with_uncertainty": sum(1 for r in results if r.has_uncertainty),
+            "results": [r.to_dict() for r in results],
+        }
+
+        if out:
+            Path(out).write_text(
+                json.dumps(output_data, indent=2, ensure_ascii=False),
+                encoding="utf-8",
+            )
+            console.print(f"[green]✓ Output written to {out}[/green]")
+        elif as_json:
+            console.print(json.dumps(output_data, indent=2, ensure_ascii=False))
+        else:
+            # Pretty print
+            console.print(
+                Panel(
+                    f"[bold]Claims analyzed:[/bold] {len(results)}\n"
+                    f"[bold]With uncertainty:[/bold] {sum(1 for r in results if r.has_uncertainty)}",
+                    title="Claims Analysis",
+                )
+            )
+
+            for result in results:
+                color = {
+                    "high": "red",
+                    "medium": "yellow",
+                    "low": "blue",
+                    "none": "green",
+                }.get(result.uncertainty_score, "white")
+
+                console.print(
+                    f"\n[bold {color}]{result.label}[/bold {color}] "
+                    f"(uncertainty: {result.uncertainty_score})"
+                )
+                console.print(f"  [dim]{result.text}[/dim]")
+
+                if result.dependency_analyses:
+                    console.print(f"  Dependencies ({result.dependencies_analyzed}):")
+                    for dep in result.dependency_analyses:
+                        status = "✓" if not dep.has_pending_gates else "!"
+                        variant_info = ""
+                        if dep.has_significant_variants:
+                            variant_info = (
+                                f" [{dep.significant_variant_count} variant(s)]"
+                            )
+                        console.print(f"    {status} {dep.reference}{variant_info}")
+
+                if result.summary_notes:
+                    console.print("  [dim]Notes:[/dim]")
+                    for note in result.summary_notes:
+                        console.print(f"    • {note}")
+
+    except json.JSONDecodeError as e:
+        console.print(f"[red]✗ Invalid JSON in input file: {e}[/red]")
+        sys.exit(1)
+    except Exception as e:
+        console.print(f"[red]✗ Error: {e}[/red]")
+        sys.exit(1)
+    finally:
+        conn.close()
+
+
 # Register engine spine CLI commands
 register_cli_commands(cli)
 
