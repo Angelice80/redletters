@@ -327,9 +327,9 @@ class TestVariantBuilderIdempotency:
         result1 = builder.build_verse("John.1.18")
         result2 = builder.build_verse("John.1.18")
 
-        # First creates, second updates
+        # First creates, second updates or unchanged (Sprint 9 merge mode)
         assert result1.variants_created == 1
-        assert result2.variants_updated == 1
+        assert result2.variants_updated == 1 or result2.variants_unchanged == 1
 
         # Only one variant exists
         variants = store.get_variants_for_verse("John.1.18")

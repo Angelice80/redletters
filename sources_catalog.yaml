@@ -118,6 +118,96 @@ westcott-hort:
     Used as comparative layer only; SBLGNT remains canonical spine.
     Source repo TBD - multiple options exist.
 
+# Sprint 7: Real open-license comparative pack
+westcott-hort-john:
+  name: "Westcott-Hort John (Pack)"
+  repo: ""  # Local pack - no repo fetch needed
+  commit: ""
+  git_tag: ""
+  version: "1.0.0"
+  license: "Public Domain"
+  role: "comparative_layer"
+  format: "pack"  # Indicates this is a local data pack
+  format_version: "1.1"  # Sprint 8: Pack Spec v1.1
+  pack_path: "data/packs/westcott-hort-john"  # Relative to project root
+  siglum: "WH"
+  witness_siglum: "WH"
+  witness_type: "edition"
+  coverage:
+    - "John"
+  century_range: [19, 19]
+  date_range: [19, 19]
+  files:
+    - "manifest.json"
+    - "John/chapter_01.tsv"
+  notes: |
+    Westcott-Hort 1881 John chapters 1-2.
+    Public domain. Local pack format (no fetch required).
+    Contains key textual variants from SBLGNT baseline:
+    - John 1:18: μονογενὴς υἱός vs θεός (MAJOR)
+    - John 1:34: ὁ ἐκλεκτός vs ὁ υἱός (SIGNIFICANT)
+    Used as comparative layer for variant building.
+
+# Sprint 8: Byzantine/Majority Text pack (same book, different tradition)
+byzantine-john:
+  name: "Byzantine Textform (John)"
+  repo: ""
+  commit: ""
+  git_tag: ""
+  version: "1.0.0"
+  license: "Public Domain"
+  role: "comparative_layer"
+  format: "pack"
+  format_version: "1.1"
+  pack_path: "data/packs/byzantine-john"
+  siglum: "Byz"
+  witness_siglum: "Byz"
+  witness_type: "edition"
+  coverage:
+    - "John"
+  century_range: [21, 21]
+  date_range: [21, 21]
+  files:
+    - "manifest.json"
+    - "John/chapter_01.tsv"
+  notes: |
+    Robinson-Pierpont Byzantine Textform (2018).
+    Public domain. John chapter 1.
+    Represents majority manuscript tradition readings.
+    Key variants from SBLGNT:
+    - John 1:18: μονογενὴς υἱός (Son) vs θεός (God)
+    - John 1:28: Βηθαβαρᾷ (Bethabara) vs Βηθανίᾳ (Bethany)
+    - John 1:34: ὁ υἱός (Son) vs ὁ ἐκλεκτός (Chosen One)
+    Produces non-trivial variants for testing.
+
+# Sprint 8: Tischendorf pack (different book)
+tischendorf-mark:
+  name: "Tischendorf 8th Edition (Mark)"
+  repo: ""
+  commit: ""
+  git_tag: ""
+  version: "1.0.0"
+  license: "Public Domain"
+  role: "comparative_layer"
+  format: "pack"
+  format_version: "1.1"
+  pack_path: "data/packs/tischendorf-mark"
+  siglum: "Tisch"
+  witness_siglum: "Tisch"
+  witness_type: "edition"
+  coverage:
+    - "Mark"
+  century_range: [19, 19]
+  date_range: [19, 19]
+  files:
+    - "manifest.json"
+    - "Mark/chapter_01.tsv"
+  notes: |
+    Tischendorf 8th critical edition (1869-1872).
+    Public domain. Mark chapter 1 (45 verses).
+    Notable for incorporating Codex Sinaiticus readings.
+    Demonstrates pack coverage expansion to another book.
+
 # =============================================================================
 # MANUSCRIPT EVIDENCE ANCHORS (ADR-008 - witness data)
 # =============================================================================

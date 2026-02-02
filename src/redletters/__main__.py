@@ -1006,36 +1006,243 @@ def variants():
 
 
 @variants.command("build")
-@click.argument("pack_id")
+@click.argument("reference")
 @click.option(
-    "--edition", "-e", multiple=True, help="Edition(s) to compare against spine"
+    "--scope",
+    type=click.Choice(["verse", "chapter", "book"]),
+    default="chapter",
+    help="Build scope (default: chapter)",
 )
-@click.option("--range", "verse_range", help="Verse range (e.g., John.1.1-John.1.18)")
-@click.option("--verse", "-v", help="Single verse (e.g., John.1.18)")
+@click.option(
+    "--all-installed",
+    is_flag=True,
+    default=True,
+    help="Use all installed comparative packs (default: True)",
+)
+@click.option(
+    "--pack",
+    "-p",
+    multiple=True,
+    help="Specific pack(s) to use (overrides --all-installed)",
+)
 @click.option("--json", "as_json", is_flag=True, help="Output as JSON")
 def variants_build(
-    pack_id: str,
-    edition: tuple,
-    verse_range: str | None,
-    verse: str | None,
+    reference: str,
+    scope: str,
+    all_installed: bool,
+    pack: tuple,
     as_json: bool,
 ):
-    """Build variants by comparing editions against spine.
+    """Build variants by comparing editions against spine (Sprint 9: B5).
+
+    Uses all installed comparative packs by default to aggregate variants.
+    Identical readings from multiple packs are merged with combined support sets.
 
     Examples:
-        redletters variants build morphgnt-sblgnt --verse John.1.18
-        redletters variants build morphgnt-sblgnt --range John.1.1-John.1.18
+        redletters variants build "John.1" --scope chapter
+        redletters variants build "John.1.18" --scope verse
+        redletters variants build "John" --scope book
+        redletters variants build "John.1" --pack westcott-hort-john --pack byzantine-john
     """
-    console.print(
-        "[yellow]Variant building from real editions not yet implemented.[/yellow]"
+    from redletters.variants.store import VariantStore
+    from redletters.variants.builder import VariantBuilder
+    from redletters.sources.installer import SourceInstaller
+    from redletters.sources.pack_loader import PackLoader
+    from redletters.sources.spine import SBLGNTSpine, PackSpineAdapter
+
+    conn = get_connection(settings.db_path)
+
+    try:
+        # Initialize variant store
+        variant_store = VariantStore(conn)
+        variant_store.init_schema()
+
+        # Get spine
+        installer = SourceInstaller()
+        spine_source = installer.catalog.spine
+        if not spine_source or not installer.is_installed(spine_source.key):
+            console.print("[red]Error: Spine not installed.[/red]")
+            console.print("[dim]Run: redletters sources install morphgnt-sblgnt[/dim]")
+            conn.close()
+            sys.exit(1)
+
+        spine_installed = installer.get_installed(spine_source.key)
+        spine = SBLGNTSpine(spine_installed.install_path, spine_source.key)
+
+        # Initialize variant builder
+        builder = VariantBuilder(spine, variant_store)
+
+        # Determine which packs to use
+        packs_to_use = []
+        if pack:
+            # Specific packs requested
+            packs_to_use = list(pack)
+        elif all_installed:
+            # All installed comparative packs
+            for source in installer.catalog.comparative_editions:
+                if installer.is_installed(source.key):
+                    packs_to_use.append(source.key)
+
+        if not packs_to_use:
+            console.print("[yellow]No comparative packs installed.[/yellow]")
+            console.print("[dim]Install packs first, e.g.:[/dim]")
+            console.print("  redletters sources install westcott-hort-john")
+            conn.close()
+            sys.exit(0)
+
+        # Add editions from packs
+        packs_loaded = 0
+        for pack_id in packs_to_use:
+            source = installer.catalog.get(pack_id)
+            if not source:
+                console.print(f"[yellow]Pack not found: {pack_id}[/yellow]")
+                continue
+
+            installed = installer.get_installed(pack_id)
+            if not installed:
+                console.print(f"[yellow]Pack not installed: {pack_id}[/yellow]")
+                continue
+
+            if source.is_pack:
+                pack_loader = PackLoader(installed.install_path)
+                if pack_loader.load():
+                    pack_spine = PackSpineAdapter(pack_loader, source.key)
+                    builder.add_edition(
+                        edition_key=source.key,
+                        edition_spine=pack_spine,
+                        witness_siglum=source.witness_siglum or source.key,
+                        date_range=source.date_range,
+                        source_pack_id=source.key,
+                    )
+                    packs_loaded += 1
+                    if not as_json:
+                        console.print(f"  [dim]Loaded: {source.key}[/dim]")
+
+        if packs_loaded == 0:
+            console.print("[red]No packs could be loaded.[/red]")
+            conn.close()
+            sys.exit(1)
+
+        if not as_json:
+            console.print(
+                f"[bold blue]Building variants for {reference} ({scope})...[/bold blue]"
+            )
+            console.print(f"[dim]Using {packs_loaded} comparative pack(s)[/dim]")
+
+        # Build based on scope
+        if scope == "book":
+            book = reference.split()[0] if " " in reference else reference.split(".")[0]
+            result = builder.build_book(book)
+        elif scope == "chapter":
+            parts = reference.replace(".", " ").split()
+            book = parts[0]
+            chapter = int(parts[1]) if len(parts) > 1 else 1
+            result = builder.build_chapter(book, chapter)
+        else:
+            result = builder.build_verse(reference)
+
+        conn.close()
+
+        if as_json:
+            import json as json_lib
+
+            output = {
+                "reference": reference,
+                "scope": scope,
+                "packs_used": packs_to_use,
+                "verses_processed": result.verses_processed,
+                "variants_created": result.variants_created,
+                "variants_updated": result.variants_updated,
+                "variants_unchanged": result.variants_unchanged,
+                "errors": result.errors,
+            }
+            console.print(json_lib.dumps(output, indent=2))
+        else:
+            console.print("\n[green]✓ Build complete[/green]")
+            console.print(f"  Verses processed: {result.verses_processed}")
+            console.print(f"  Variants created: {result.variants_created}")
+            console.print(f"  Variants updated: {result.variants_updated}")
+            console.print(f"  Variants unchanged: {result.variants_unchanged}")
+            if result.errors:
+                console.print(f"\n[yellow]Errors ({len(result.errors)}):[/yellow]")
+                for err in result.errors[:5]:
+                    console.print(f"  [yellow]⚠[/yellow] {err}")
+
+    except Exception as e:
+        conn.close()
+        console.print(f"[red]Error: {e}[/red]")
+        sys.exit(1)
+
+
+@variants.command("dossier")
+@click.argument("reference")
+@click.option(
+    "--scope",
+    type=click.Choice(["verse", "passage", "chapter", "book"]),
+    default="verse",
+    help="Scope of dossier (default: verse)",
+)
+@click.option("--session-id", help="Session ID for ack state")
+@click.option("--output", "-o", type=click.Path(), help="Output file")
+@click.option("--json", "as_json", is_flag=True, help="Output as JSON (default)")
+def variants_dossier(
+    reference: str,
+    scope: str,
+    session_id: str | None,
+    output: str | None,
+    as_json: bool,
+):
+    """Export variant dossier for a reference.
+
+    Creates a detailed dossier with:
+    - Spine reading (SBLGNT) marked default
+    - All readings side-by-side with witness support
+    - Reason fields and gating requirements
+    - Acknowledgement state (if session_id provided)
+    - Provenance (which packs contributed each reading)
+
+    Examples:
+        redletters variants dossier "John.1.18"
+        redletters variants dossier "John.1.18" --scope verse
+        redletters variants dossier "John.1" --scope chapter
+        redletters variants dossier "John.1.18" --session-id abc123 -o dossier.json
+    """
+    from redletters.variants.store import VariantStore
+    from redletters.variants.dossier import generate_dossier
+
+    conn = get_connection(settings.db_path)
+    store = VariantStore(conn)
+
+    try:
+        store.init_schema()
+    except Exception:
+        pass
+
+    # TODO: Load ack state from session if session_id provided
+    ack_state: dict[str, int] = {}
+
+    dossier = generate_dossier(
+        variant_store=store,
+        reference=reference,
+        scope=scope,
+        ack_state=ack_state,
+        session_id=session_id,
     )
-    console.print(
-        "[dim]This command will compare edition texts against SBLGNT spine.[/dim]"
-    )
-    console.print(
-        "[dim]For now, use fixture-based tests to verify variant building.[/dim]"
-    )
-    sys.exit(0)
+
+    conn.close()
+
+    import json as json_lib
+
+    dossier_dict = dossier.to_dict()
+
+    if output:
+        Path(output).write_text(
+            json_lib.dumps(dossier_dict, indent=2, ensure_ascii=False)
+        )
+        console.print(f"[green]✓ Dossier written to {output}[/green]")
+    else:
+        # Always output as JSON for dossier
+        console.print(json_lib.dumps(dossier_dict, indent=2, ensure_ascii=False))
 
 
 @variants.command("list")
@@ -1107,6 +1314,238 @@ def variants_list(verse: str | None, significance: str | None, as_json: bool):
         )
 
     console.print(table)
+
+
+# ============================================================================
+# Packs commands (Sprint 8)
+# ============================================================================
+
+
+@cli.group()
+def packs():
+    """Manage data packs (Pack Spec v1.1)."""
+    pass
+
+
+@packs.command("validate")
+@click.argument("path", type=click.Path(exists=True))
+@click.option(
+    "--strict",
+    is_flag=True,
+    help="Treat warnings as errors",
+)
+@click.option(
+    "--format-version",
+    default="1.1",
+    help="Expected format version (default: 1.1)",
+)
+@click.option("--json", "as_json", is_flag=True, help="Output as JSON")
+def packs_validate(path: str, strict: bool, format_version: str, as_json: bool):
+    """Validate a pack against Pack Spec v1.1.
+
+    Checks manifest fields, TSV format, verse_id patterns, and coverage.
+
+    Examples:
+        redletters packs validate data/packs/westcott-hort-john
+        redletters packs validate data/packs/mypack --strict
+    """
+    from redletters.sources.pack_validator import validate_pack
+
+    result = validate_pack(path, strict=strict, expected_version=format_version)
+
+    if as_json:
+        import json as json_lib
+
+        output = {
+            "valid": result.valid,
+            "manifest_version": result.manifest_version,
+            "verse_count": result.verse_count,
+            "books_found": result.books_found,
+            "errors": [{"path": e.path, "message": e.message} for e in result.errors],
+            "warnings": [
+                {"path": w.path, "message": w.message} for w in result.warnings
+            ],
+        }
+        console.print(json_lib.dumps(output, indent=2, ensure_ascii=False))
+        if not result.valid:
+            sys.exit(1)
+        return
+
+    if result.valid:
+        console.print(
+            f"[green]✓ Pack valid[/green] (format version: {result.manifest_version})"
+        )
+        console.print(f"  Verses: {result.verse_count}")
+        console.print(f"  Books: {', '.join(result.books_found)}")
+    else:
+        console.print("[red]✗ Pack validation failed[/red]")
+
+    if result.errors:
+        console.print("\n[red]Errors:[/red]")
+        for err in result.errors:
+            console.print(f"  [red]✗[/red] {err.path}: {err.message}")
+
+    if result.warnings:
+        console.print("\n[yellow]Warnings:[/yellow]")
+        for warn in result.warnings:
+            console.print(f"  [yellow]⚠[/yellow] {warn.path}: {warn.message}")
+
+    if not result.valid:
+        sys.exit(1)
+
+
+@packs.command("index")
+@click.argument("path", type=click.Path(exists=True))
+@click.option(
+    "--output-manifest",
+    is_flag=True,
+    help="Update manifest.json in place",
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help="Print index without writing",
+)
+@click.option("--json", "as_json", is_flag=True, help="Output as JSON")
+def packs_index(path: str, output_manifest: bool, dry_run: bool, as_json: bool):
+    """Generate or update pack index.
+
+    Creates a lightweight index (book -> chapters -> verse count) for
+    faster status display and variant building.
+
+    Examples:
+        redletters packs index data/packs/westcott-hort-john
+        redletters packs index data/packs/mypack --output-manifest
+        redletters packs index data/packs/mypack --dry-run
+    """
+    from redletters.sources.pack_indexer import PackIndexer
+
+    indexer = PackIndexer(path)
+    index = indexer.generate()
+
+    if as_json:
+        import json as json_lib
+
+        console.print(json_lib.dumps(index.to_dict(), indent=2, ensure_ascii=False))
+        return
+
+    # Show summary
+    summary = indexer.get_summary()
+    console.print(f"[bold]Pack Index[/bold] ({path})")
+    console.print(f"  Total verses: {summary['total_verses']}")
+    console.print(f"  Total books: {summary['total_books']}")
+
+    for book_name, book_info in summary["books"].items():
+        console.print(
+            f"    {book_name}: {book_info['chapters']} chapters, {book_info['verses']} verses"
+        )
+
+    if output_manifest and not dry_run:
+        indexer.update_manifest()
+        console.print("\n[green]✓ manifest.json updated[/green]")
+    elif dry_run:
+        console.print("\n[dim](dry-run: no files modified)[/dim]")
+
+
+@packs.command("list")
+@click.option(
+    "--data-root",
+    type=click.Path(),
+    help="Override data root directory",
+)
+@click.option("--json", "as_json", is_flag=True, help="Output as JSON")
+def packs_list(data_root: str | None, as_json: bool):
+    """List installed packs with status.
+
+    Shows all packs from sources_catalog.yaml that use format: pack.
+
+    Examples:
+        redletters packs list
+        redletters packs list --json
+    """
+    from redletters.sources.catalog import SourceCatalog
+    from redletters.sources.pack_loader import PackLoader
+
+    catalog = SourceCatalog.load()
+
+    packs_info = []
+    for key, source in catalog.sources.items():
+        if source.format != "pack":
+            continue
+
+        pack_path = Path(source.pack_path) if source.pack_path else None
+        if not pack_path:
+            continue
+
+        # Try to load pack
+        loader = PackLoader(pack_path)
+        loaded = loader.load()
+
+        info = {
+            "id": key,
+            "name": source.name,
+            "pack_path": str(pack_path),
+            "exists": pack_path.exists(),
+            "loaded": loaded,
+            "format_version": "unknown",
+            "siglum": source.witness_siglum or "",
+            "witness_type": source.witness_type or "",
+            "verse_count": 0,
+            "coverage": [],
+        }
+
+        if loaded and loader.manifest:
+            info["format_version"] = loader.manifest.format_version
+            info["siglum"] = loader.manifest.effective_siglum
+            info["witness_type"] = loader.manifest.witness_type
+            info["verse_count"] = len(loader)
+            info["coverage"] = loader.manifest.effective_coverage
+
+        packs_info.append(info)
+
+    if as_json:
+        import json as json_lib
+
+        console.print(json_lib.dumps(packs_info, indent=2, ensure_ascii=False))
+        return
+
+    if not packs_info:
+        console.print("[dim]No packs configured in sources_catalog.yaml[/dim]")
+        return
+
+    table = Table(title="Installed Packs")
+    table.add_column("ID", style="cyan")
+    table.add_column("Siglum", style="yellow")
+    table.add_column("Type")
+    table.add_column("Coverage")
+    table.add_column("Verses", justify="right")
+    table.add_column("Status")
+
+    for info in packs_info:
+        if info["loaded"]:
+            status = "[green]✓ Loaded[/green]"
+        elif info["exists"]:
+            status = "[yellow]⚠ Exists (load failed)[/yellow]"
+        else:
+            status = "[dim]Not installed[/dim]"
+
+        coverage = ", ".join(info["coverage"][:3])
+        if len(info["coverage"]) > 3:
+            coverage += f" (+{len(info['coverage']) - 3})"
+
+        table.add_row(
+            info["id"],
+            info["siglum"],
+            info["witness_type"],
+            coverage,
+            str(info["verse_count"]) if info["verse_count"] > 0 else "-",
+            status,
+        )
+
+    console.print(table)
+    console.print(
+        f"\n[dim]Total: {len(packs_info)} pack(s), {sum(p['verse_count'] for p in packs_info)} verses[/dim]"
+    )
 
 
 # Register engine spine CLI commands

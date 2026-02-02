@@ -10,8 +10,9 @@ import { useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAppStore, selectSettings } from "../store";
 import type { ApiClient } from "../api/client";
-import type { GateResponse, VariantDisplay, RequiredAck } from "../api/types";
+import type { GateResponse, VariantDisplay } from "../api/types";
 import { isGateResponse } from "../api/types";
+import { DossierPanel } from "../components/DossierPanel";
 
 interface GateProps {
   client: ApiClient | null;
@@ -175,6 +176,27 @@ const requiredAckStyle: React.CSSProperties = {
   fontSize: "13px",
 };
 
+// Sprint 7: Styles for multi-ack button
+const multiAckButtonStyle: React.CSSProperties = {
+  padding: "12px 24px",
+  fontSize: "14px",
+  fontWeight: 500,
+  backgroundColor: "#f59e0b",
+  color: "white",
+  border: "none",
+  borderRadius: "6px",
+  cursor: "pointer",
+};
+
+const reasonBadgeStyle: React.CSSProperties = {
+  fontSize: "11px",
+  padding: "2px 6px",
+  borderRadius: "3px",
+  backgroundColor: "#374151",
+  color: "#9ca3af",
+  marginLeft: "8px",
+};
+
 interface VariantSelectionState {
   [variantRef: string]: number; // variant_ref -> selected reading index
 }
@@ -312,6 +334,67 @@ export function Gate({ client }: GateProps) {
     }));
   }, []);
 
+  // Sprint 7: Multi-ack handler for acknowledging all passage variants at once
+  const handleAcknowledgeAll = useCallback(async () => {
+    if (!client || !gate) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Build acks list from selections
+      const acks = (
+        gate.required_acks.length > 0
+          ? gate.required_acks
+          : gate.variants_side_by_side.filter((v) => v.requires_acknowledgement)
+      ).map((item) => {
+        const variantRef = "variant_ref" in item ? item.variant_ref : item.ref;
+        return {
+          variant_ref: variantRef,
+          reading_index: selections[variantRef] ?? 0,
+        };
+      });
+
+      // Use multi-ack endpoint
+      await client.acknowledgeMulti({
+        session_id: settings.sessionId,
+        acks,
+        scope: "passage",
+      });
+
+      // Re-translate
+      const response = await client.translate({
+        reference: originalReference || gate.reference,
+        mode: "readable",
+        session_id: settings.sessionId,
+        translator: "literal",
+      });
+
+      if (isGateResponse(response)) {
+        navigate("/gate", {
+          state: {
+            gate: response,
+            originalReference: originalReference || gate.reference,
+          },
+          replace: true,
+        });
+      } else {
+        navigate("/translate", { state: { result: response } });
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Acknowledgement failed");
+    } finally {
+      setLoading(false);
+    }
+  }, [
+    client,
+    gate,
+    selections,
+    settings.sessionId,
+    originalReference,
+    navigate,
+  ]);
+
   const handleAcknowledge = useCallback(async () => {
     if (!client || !gate) return;
 
@@ -436,13 +519,36 @@ export function Gate({ client }: GateProps) {
       {/* Required acknowledgements list */}
       {gate.required_acks.length > 1 && (
         <div style={sectionStyle}>
-          <div style={sectionHeaderStyle}>Required Acknowledgements</div>
+          <div style={sectionHeaderStyle}>
+            Required Acknowledgements ({gate.required_acks.length})
+          </div>
           {gate.required_acks.map((ack) => (
             <div key={ack.variant_ref} style={requiredAckStyle}>
               <span style={{ color: "#f59e0b" }}>{ack.variant_ref}</span>
-              <span style={{ color: "#6b7280", marginLeft: "12px" }}>
-                {ack.message}
+              <span
+                style={{
+                  fontSize: "11px",
+                  padding: "2px 6px",
+                  borderRadius: "3px",
+                  backgroundColor:
+                    ack.significance === "major"
+                      ? "#ef4444"
+                      : ack.significance === "significant"
+                        ? "#f59e0b"
+                        : "#4b5563",
+                  color: "white",
+                  marginLeft: "8px",
+                }}
+              >
+                {ack.significance}
               </span>
+              {/* Sprint 7: Show reason if available */}
+              {ack.reason && <span style={reasonBadgeStyle}>{ack.reason}</span>}
+              <div
+                style={{ color: "#6b7280", marginTop: "4px", fontSize: "12px" }}
+              >
+                {ack.message}
+              </div>
             </div>
           ))}
         </div>
@@ -498,6 +604,21 @@ export function Gate({ client }: GateProps) {
         >
           Cancel
         </button>
+        {/* Sprint 7: Multi-ack button for passages with multiple variants */}
+        {gate.required_acks.length > 1 && (
+          <button
+            style={
+              !client || loading ? disabledButtonStyle : multiAckButtonStyle
+            }
+            onClick={handleAcknowledgeAll}
+            disabled={!client || loading}
+            title="Acknowledge all variants for this passage at once"
+          >
+            {loading
+              ? "Processing..."
+              : `Ack All (${gate.required_acks.length})`}
+          </button>
+        )}
         <button
           style={!client || loading ? disabledButtonStyle : primaryButtonStyle}
           onClick={handleAcknowledge}
@@ -506,6 +627,14 @@ export function Gate({ client }: GateProps) {
           {loading ? "Processing..." : "Acknowledge & Continue"}
         </button>
       </div>
+
+      {/* Sprint 8: Dossier Panel for full variant traceability */}
+      <DossierPanel
+        client={client}
+        reference={gate.reference}
+        scope="verse"
+        sessionId={settings.sessionId}
+      />
 
       {/* Status strip */}
       <div style={statusStripStyle}>

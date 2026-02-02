@@ -245,6 +245,32 @@ export interface RequiredAck {
   reading_index: number | null;
   significance: string;
   message: string;
+  // Sprint 7: Reason classification (B4)
+  reason?: string;
+  reason_detail?: string | null;
+}
+
+// Sprint 7: Multi-ack support (B3)
+export interface AckItem {
+  variant_ref: string;
+  reading_index: number;
+}
+
+export interface AcknowledgeMultiRequest {
+  session_id: string;
+  variant_ref?: string;
+  reading_index?: number;
+  acks?: AckItem[];
+  scope?: "verse" | "passage" | "book";
+}
+
+export interface AcknowledgeMultiResponse {
+  success: boolean;
+  session_id: string;
+  acknowledged: string[];
+  count: number;
+  scope: string;
+  errors: string[];
 }
 
 export interface GateResponse {
@@ -366,3 +392,149 @@ export function isTranslateResponse(
 ): result is TranslateResponse {
   return result.response_type === "translation";
 }
+
+// --- Source Management Types (Sprint 6) ---
+
+export type SourceRole =
+  | "canonical_spine"
+  | "lexicon_primary"
+  | "lexicon_secondary"
+  | "lexicon_semantic_domains"
+  | "comparative_layer"
+  | "witness_anchor"
+  | "variant_collation";
+
+export interface SourceStatus {
+  source_id: string;
+  name: string;
+  role: SourceRole;
+  license: string;
+  requires_eula: boolean;
+  installed: boolean;
+  install_path: string | null;
+  installed_at: string | null;
+  version: string | null;
+  eula_accepted: boolean | null;
+}
+
+export interface SourcesListResponse {
+  data_root: string;
+  sources: SourceStatus[];
+}
+
+export interface SourcesStatusResponse {
+  data_root: string;
+  manifest_path: string;
+  spine_installed: boolean;
+  spine_source_id: string | null;
+  sources: Record<string, SourceStatus>;
+}
+
+export interface InstallSourceRequest {
+  source_id: string;
+  accept_eula?: boolean;
+}
+
+export interface InstallSourceResponse {
+  success: boolean;
+  source_id: string;
+  message: string;
+  install_path: string | null;
+  eula_required: boolean;
+  error: string | null;
+}
+
+export interface UninstallSourceRequest {
+  source_id: string;
+}
+
+export interface UninstallSourceResponse {
+  success: boolean;
+  source_id: string;
+  message: string;
+  error: string | null;
+}
+
+export interface LicenseInfoResponse {
+  source_id: string;
+  name: string;
+  license: string;
+  license_url: string | null;
+  requires_eula: boolean;
+  eula_summary: string | null;
+  notes: string | null;
+}
+
+// --- Sprint 8: Dossier Types (B4/B5) ---
+
+export interface DossierWitnessInfo {
+  siglum: string;
+  type: string;
+  century: number | null;
+}
+
+export interface DossierWitnessSummary {
+  editions: string[];
+  papyri: string[];
+  uncials: string[];
+  minuscules: string[];
+  versions: string[];
+  fathers: string[];
+}
+
+export interface DossierReading {
+  index: number;
+  text: string;
+  is_spine: boolean;
+  witnesses: DossierWitnessInfo[];
+  witness_summary: DossierWitnessSummary;
+  source_packs: string[];
+}
+
+export interface DossierReason {
+  code: string;
+  summary: string;
+  detail: string | null;
+}
+
+export interface DossierAcknowledgement {
+  required: boolean;
+  acknowledged: boolean;
+  acknowledged_reading: number | null;
+  session_id: string | null;
+}
+
+export interface DossierVariant {
+  ref: string;
+  position: number;
+  classification: string;
+  significance: string;
+  gating_requirement: string;
+  reason: DossierReason;
+  readings: DossierReading[];
+  acknowledgement: DossierAcknowledgement;
+}
+
+export interface DossierSpine {
+  source_id: string;
+  text: string;
+  is_default: boolean;
+}
+
+export interface DossierProvenance {
+  spine_source: string;
+  comparative_packs: string[];
+  build_timestamp: string;
+}
+
+export interface DossierResponse {
+  reference: string;
+  scope: string;
+  generated_at: string;
+  spine: DossierSpine;
+  variants: DossierVariant[];
+  provenance: DossierProvenance;
+  witness_density_note: string | null;
+}
+
+export type DossierScope = "verse" | "passage" | "chapter" | "book";

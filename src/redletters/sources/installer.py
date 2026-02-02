@@ -398,6 +398,16 @@ class SourceInstaller:
 
     def _get_install_spec(self, source: SourcePack) -> InstallSpec:
         """Get installation spec for a source."""
+        # Sprint 7: Check if source is a local pack
+        if source.is_pack and source.pack_path:
+            # Resolve pack path relative to catalog location
+            catalog_dir = self.catalog.path.parent if self.catalog.path else Path.cwd()
+            pack_path = catalog_dir / source.pack_path
+            return InstallSpec(
+                source_type="local",
+                path=str(pack_path),
+            )
+
         # Check if source has explicit install config
         if source.provenance and "install" in source.provenance:
             return InstallSpec.from_dict(source.provenance["install"])

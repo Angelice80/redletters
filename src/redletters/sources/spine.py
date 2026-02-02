@@ -543,3 +543,57 @@ def get_installed_spine(
 
     # No spine installed - raise with instructions
     raise SpineMissingError(source_id)
+
+
+class PackSpineAdapter(SpineProvider):
+    """Adapter to use a PackLoader as a SpineProvider (Sprint 7).
+
+    This allows comparative edition packs to be used with VariantBuilder.
+    """
+
+    def __init__(self, pack_loader, source_key: str = "pack"):
+        """Initialize adapter.
+
+        Args:
+            pack_loader: PackLoader instance
+            source_key: Source key for provenance
+        """
+        from redletters.sources.pack_loader import PackLoader
+
+        self._pack: PackLoader = pack_loader
+        self._source_key = source_key
+
+    def get_verse_text(self, verse_id: str) -> VerseText | None:
+        """Get text for a single verse."""
+        verse = self._pack.get_verse(verse_id)
+        if verse is None:
+            return None
+
+        return VerseText(
+            verse_id=verse.verse_id,
+            text=verse.text,
+            tokens=[],  # Pack format doesn't have token-level data
+            source_key=self._source_key,
+            word_count=len(verse.text.split()) if verse.text else 0,
+        )
+
+    def get_verse_tokens(self, verse_id: str) -> list[dict]:
+        """Get token-level data (packs don't have this)."""
+        return []
+
+    def has_verse(self, verse_id: str) -> bool:
+        """Check if verse exists in pack."""
+        return self._pack.has_verse(verse_id)
+
+    @property
+    def source_key(self) -> str:
+        """Get source key."""
+        return self._source_key
+
+    def load(self) -> bool:
+        """Load the underlying pack."""
+        return self._pack.load()
+
+
+# Alias for backward compatibility with API routes
+SpineProvider = SBLGNTSpine

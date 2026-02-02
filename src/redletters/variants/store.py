@@ -1,6 +1,7 @@
 """Variant storage and persistence.
 
 Implements ADR-008 database schema for variants.
+Sprint 9: Enhanced with reading_support table for multi-pack aggregation.
 """
 
 from __future__ import annotations
@@ -11,6 +12,8 @@ from redletters.variants.models import (
     VariantUnit,
     WitnessReading,
     WitnessType,
+    WitnessSupportType,
+    WitnessSupport,
     VariantClassification,
     SignificanceLevel,
 )
@@ -42,6 +45,10 @@ CREATE TABLE IF NOT EXISTS variant_units (
     sblgnt_reading_index INTEGER DEFAULT 0,
     source_id INTEGER REFERENCES sources(id),
     notes TEXT,
+    -- Sprint 7: Reason classification (B4)
+    reason_code TEXT DEFAULT '',
+    reason_summary TEXT DEFAULT '',
+    reason_detail TEXT,
     UNIQUE(ref, position)
 );
 
@@ -54,10 +61,11 @@ CREATE TABLE IF NOT EXISTS witness_readings (
     normalized_text TEXT,
     notes TEXT,
     source_id INTEGER REFERENCES sources(id),
+    source_pack_id TEXT,  -- Sprint 8: Pack provenance tracking
     UNIQUE(variant_unit_id, reading_index)
 );
 
--- reading_witnesses: Witnesses supporting each reading
+-- reading_witnesses: Witnesses supporting each reading (legacy, retained for backward compat)
 CREATE TABLE IF NOT EXISTS reading_witnesses (
     id INTEGER PRIMARY KEY,
     reading_id INTEGER NOT NULL REFERENCES witness_readings(id) ON DELETE CASCADE,
@@ -69,11 +77,28 @@ CREATE TABLE IF NOT EXISTS reading_witnesses (
     UNIQUE(reading_id, witness_siglum)
 );
 
+-- Sprint 9: reading_support - structured witness support with provenance (B1)
+CREATE TABLE IF NOT EXISTS reading_support (
+    id INTEGER PRIMARY KEY,
+    reading_id INTEGER NOT NULL REFERENCES witness_readings(id) ON DELETE CASCADE,
+    witness_siglum TEXT NOT NULL,
+    witness_type TEXT NOT NULL,  -- 'edition', 'manuscript', 'tradition', 'other'
+    century_earliest INTEGER,
+    century_latest INTEGER,
+    source_pack_id TEXT NOT NULL,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    -- Dedupe: same witness can't support same reading twice from same pack
+    UNIQUE(reading_id, witness_siglum, source_pack_id)
+);
+
 -- Indexes for variant queries
 CREATE INDEX IF NOT EXISTS idx_variant_units_ref ON variant_units(ref);
 CREATE INDEX IF NOT EXISTS idx_variant_units_significance ON variant_units(significance);
 CREATE INDEX IF NOT EXISTS idx_witness_readings_unit ON witness_readings(variant_unit_id);
 CREATE INDEX IF NOT EXISTS idx_reading_witnesses_reading ON reading_witnesses(reading_id);
+CREATE INDEX IF NOT EXISTS idx_reading_support_reading ON reading_support(reading_id);
+CREATE INDEX IF NOT EXISTS idx_reading_support_siglum ON reading_support(witness_siglum);
+CREATE INDEX IF NOT EXISTS idx_reading_support_type ON reading_support(witness_type);
 """
 
 
@@ -122,14 +147,18 @@ class VariantStore:
         cursor = self._conn.execute(
             """
             INSERT INTO variant_units (ref, position, classification, significance,
-                                       sblgnt_reading_index, source_id, notes)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+                                       sblgnt_reading_index, source_id, notes,
+                                       reason_code, reason_summary, reason_detail)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(ref, position) DO UPDATE SET
                 classification = excluded.classification,
                 significance = excluded.significance,
                 sblgnt_reading_index = excluded.sblgnt_reading_index,
                 source_id = excluded.source_id,
-                notes = excluded.notes
+                notes = excluded.notes,
+                reason_code = excluded.reason_code,
+                reason_summary = excluded.reason_summary,
+                reason_detail = excluded.reason_detail
             RETURNING id
             """,
             (
@@ -140,6 +169,9 @@ class VariantStore:
                 variant.sblgnt_reading_index,
                 source_id or variant.source_id,
                 variant.notes,
+                variant.reason_code,
+                variant.reason_summary,
+                variant.reason_detail,
             ),
         )
         unit_id = cursor.fetchone()[0]
@@ -178,8 +210,8 @@ class VariantStore:
         cursor = self._conn.execute(
             """
             INSERT INTO witness_readings (variant_unit_id, reading_index, surface_text,
-                                         normalized_text, notes, source_id)
-            VALUES (?, ?, ?, ?, ?, ?)
+                                         normalized_text, notes, source_id, source_pack_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             RETURNING id
             """,
             (
@@ -189,11 +221,12 @@ class VariantStore:
                 reading.normalized_text,
                 reading.notes,
                 source_id,
+                reading.source_pack_id,
             ),
         )
         reading_id = cursor.fetchone()[0]
 
-        # Insert witnesses (deduplicate by siglum to avoid UNIQUE violations)
+        # Insert witnesses (deduplicate by siglum to avoid UNIQUE violations) - legacy
         seen_sigla: set[str] = set()
         for witness, wtype in zip(reading.witnesses, reading.witness_types):
             if witness in seen_sigla:
@@ -216,7 +249,59 @@ class VariantStore:
                 ),
             )
 
+        # Sprint 9: Insert support_set entries (B1)
+        for support in reading.support_set:
+            self._save_support(reading_id, support)
+
         return reading_id
+
+    def _save_support(self, reading_id: int, support: WitnessSupport) -> None:
+        """Save a witness support entry (Sprint 9: B1).
+
+        Uses INSERT OR IGNORE to handle duplicates idempotently.
+        """
+        self._conn.execute(
+            """
+            INSERT OR IGNORE INTO reading_support (
+                reading_id, witness_siglum, witness_type,
+                century_earliest, century_latest, source_pack_id
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                reading_id,
+                support.witness_siglum,
+                support.witness_type.value,
+                support.century_range[0] if support.century_range else None,
+                support.century_range[1] if support.century_range else None,
+                support.source_pack_id,
+            ),
+        )
+
+    def add_support_to_reading(self, reading_id: int, support: WitnessSupport) -> bool:
+        """Add a support entry to an existing reading (Sprint 9: B2).
+
+        Returns True if support was added, False if already exists.
+        Used for idempotent multi-pack aggregation.
+        """
+        cursor = self._conn.execute(
+            """
+            INSERT OR IGNORE INTO reading_support (
+                reading_id, witness_siglum, witness_type,
+                century_earliest, century_latest, source_pack_id
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                reading_id,
+                support.witness_siglum,
+                support.witness_type.value,
+                support.century_range[0] if support.century_range else None,
+                support.century_range[1] if support.century_range else None,
+                support.source_pack_id,
+            ),
+        )
+        return cursor.rowcount > 0
 
     def get_variant(self, ref: str, position: int) -> VariantUnit | None:
         """Get a variant unit by reference and position.
@@ -231,7 +316,8 @@ class VariantStore:
         cursor = self._conn.execute(
             """
             SELECT id, ref, position, classification, significance,
-                   sblgnt_reading_index, source_id, notes
+                   sblgnt_reading_index, source_id, notes,
+                   reason_code, reason_summary, reason_detail
             FROM variant_units
             WHERE ref = ? AND position = ?
             """,
@@ -255,7 +341,8 @@ class VariantStore:
         cursor = self._conn.execute(
             """
             SELECT id, ref, position, classification, significance,
-                   sblgnt_reading_index, source_id, notes
+                   sblgnt_reading_index, source_id, notes,
+                   reason_code, reason_summary, reason_detail
             FROM variant_units
             WHERE ref = ?
             ORDER BY position
@@ -279,7 +366,8 @@ class VariantStore:
         """
         query = """
             SELECT id, ref, position, classification, significance,
-                   sblgnt_reading_index, source_id, notes
+                   sblgnt_reading_index, source_id, notes,
+                   reason_code, reason_summary, reason_detail
             FROM variant_units
             WHERE significance IN ('significant', 'major')
         """
@@ -308,6 +396,9 @@ class VariantStore:
             sblgnt_idx,
             source_id,
             notes,
+            reason_code,
+            reason_summary,
+            reason_detail,
         ) = row
 
         # Load readings
@@ -322,13 +413,16 @@ class VariantStore:
             significance=SignificanceLevel(significance),
             notes=notes or "",
             source_id=source_id,
+            reason_code=reason_code or "",
+            reason_summary=reason_summary or "",
+            reason_detail=reason_detail,
         )
 
     def _load_readings(self, unit_id: int) -> list[WitnessReading]:
         """Load all readings for a variant unit."""
         cursor = self._conn.execute(
             """
-            SELECT id, reading_index, surface_text, normalized_text, notes
+            SELECT id, reading_index, surface_text, normalized_text, notes, source_pack_id
             FROM witness_readings
             WHERE variant_unit_id = ?
             ORDER BY reading_index
@@ -338,8 +432,10 @@ class VariantStore:
 
         readings = []
         for row in cursor:
-            reading_id, idx, surface, normalized, notes = row
+            reading_id, idx, surface, normalized, notes, source_pack_id = row
             witnesses, types, date_range = self._load_witnesses(reading_id)
+            # Sprint 9: Load support_set
+            support_set = self._load_support_set(reading_id)
             readings.append(
                 WitnessReading(
                     surface_text=surface,
@@ -348,10 +444,44 @@ class VariantStore:
                     date_range=date_range,
                     normalized_text=normalized,
                     notes=notes or "",
+                    source_pack_id=source_pack_id,
+                    support_set=support_set,
                 )
             )
 
         return readings
+
+    def _load_support_set(self, reading_id: int) -> list[WitnessSupport]:
+        """Load support set entries for a reading (Sprint 9: B1)."""
+        cursor = self._conn.execute(
+            """
+            SELECT witness_siglum, witness_type, century_earliest, century_latest, source_pack_id
+            FROM reading_support
+            WHERE reading_id = ?
+            ORDER BY witness_siglum
+            """,
+            (reading_id,),
+        )
+
+        support_set = []
+        for row in cursor:
+            siglum, wtype, cent_early, cent_late, pack_id = row
+            century_range = None
+            if cent_early is not None and cent_late is not None:
+                century_range = (cent_early, cent_late)
+            elif cent_early is not None:
+                century_range = (cent_early, cent_early)
+
+            support_set.append(
+                WitnessSupport(
+                    witness_siglum=siglum,
+                    witness_type=WitnessSupportType(wtype),
+                    source_pack_id=pack_id,
+                    century_range=century_range,
+                )
+            )
+
+        return support_set
 
     def _load_witnesses(
         self, reading_id: int
@@ -452,4 +582,66 @@ class VariantStore:
         else:
             cursor = self._conn.execute("SELECT COUNT(*) FROM variant_units")
 
+        return cursor.fetchone()[0]
+
+    # Sprint 9: Methods for multi-pack aggregation (B2)
+
+    def get_reading_id_by_normalized(
+        self, variant_ref: str, position: int, normalized_text: str
+    ) -> int | None:
+        """Get reading ID by normalized text for merging (Sprint 9: B2).
+
+        Used during multi-pack aggregation to find existing readings
+        that match the normalized form.
+        """
+        cursor = self._conn.execute(
+            """
+            SELECT wr.id
+            FROM witness_readings wr
+            JOIN variant_units vu ON wr.variant_unit_id = vu.id
+            WHERE vu.ref = ? AND vu.position = ? AND wr.normalized_text = ?
+            """,
+            (variant_ref, position, normalized_text),
+        )
+        row = cursor.fetchone()
+        return row[0] if row else None
+
+    def get_variant_id(self, ref: str, position: int) -> int | None:
+        """Get variant unit ID by reference and position (Sprint 9: B2)."""
+        cursor = self._conn.execute(
+            "SELECT id FROM variant_units WHERE ref = ? AND position = ?",
+            (ref, position),
+        )
+        row = cursor.fetchone()
+        return row[0] if row else None
+
+    def add_reading_to_variant(
+        self,
+        variant_id: int,
+        reading: WitnessReading,
+        source_id: int | None = None,
+    ) -> int:
+        """Add a new reading to an existing variant (Sprint 9: B2).
+
+        Used during multi-pack aggregation when a new reading text is found.
+        """
+        # Get next reading index
+        cursor = self._conn.execute(
+            """
+            SELECT COALESCE(MAX(reading_index), -1) + 1
+            FROM witness_readings
+            WHERE variant_unit_id = ?
+            """,
+            (variant_id,),
+        )
+        next_index = cursor.fetchone()[0]
+
+        return self._save_reading(variant_id, next_index, reading, source_id)
+
+    def count_support_entries(self, reading_id: int) -> int:
+        """Count support entries for a reading (Sprint 9: B2)."""
+        cursor = self._conn.execute(
+            "SELECT COUNT(*) FROM reading_support WHERE reading_id = ?",
+            (reading_id,),
+        )
         return cursor.fetchone()[0]

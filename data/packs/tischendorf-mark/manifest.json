@@ -1,0 +1,19 @@
+{
+  "format_version": "1.1",
+  "id": "tischendorf-mark",
+  "name": "Tischendorf 8th Edition (Mark)",
+  "version": "1.0.0",
+  "license": "Public Domain",
+  "license_url": null,
+  "role": "comparative_layer",
+  "siglum": "Tisch",
+  "witness_type": "edition",
+  "coverage": ["Mark"],
+  "century_range": [19, 19],
+  "provenance": {
+    "source": "Tischendorf, Novum Testamentum Graece, Editio Octava Critica Maior (1869-1872)",
+    "digitized_from": "Public domain transcription",
+    "notes": "Critical edition notable for its extensive apparatus criticus"
+  },
+  "notes": "Tischendorf 8th critical edition (1869-1872). Public domain. Mark chapter 1 included. Notable for incorporating Codex Sinaiticus readings which Tischendorf himself discovered."
+}

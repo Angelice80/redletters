@@ -11,7 +11,7 @@
  */
 
 import { useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAppStore, selectSettings } from "../store";
 import type { ApiClient } from "../api/client";
 import type {
@@ -502,7 +502,27 @@ export function Translate({ client }: TranslateProps) {
             marginBottom: "16px",
           }}
         >
-          {error}
+          <div>{error}</div>
+          {/* CTA for spine-missing error */}
+          {(error.toLowerCase().includes("spine") ||
+            error.toLowerCase().includes("morphgnt-sblgnt") ||
+            error.toLowerCase().includes("no tokens found")) && (
+            <div style={{ marginTop: "12px" }}>
+              <span style={{ fontSize: "13px" }}>
+                The canonical spine source may not be installed.{" "}
+              </span>
+              <Link
+                to="/sources"
+                style={{
+                  color: "#60a5fa",
+                  textDecoration: "underline",
+                  fontSize: "13px",
+                }}
+              >
+                Go to Sources to install it
+              </Link>
+            </div>
+          )}
         </div>
       )}
 

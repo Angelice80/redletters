@@ -1,0 +1,19 @@
+{
+  "format_version": "1.1",
+  "id": "westcott-hort-john",
+  "name": "Westcott-Hort Greek NT (John)",
+  "version": "1.0.0",
+  "license": "Public Domain",
+  "license_url": null,
+  "role": "comparative_layer",
+  "siglum": "WH",
+  "witness_type": "edition",
+  "coverage": ["John"],
+  "century_range": [19, 19],
+  "provenance": {
+    "source": "Westcott & Hort, The New Testament in the Original Greek (1881)",
+    "digitized_from": "Public domain transcription",
+    "variant_notes": "Key variants marked where W-H differs from SBLGNT"
+  },
+  "notes": "Westcott-Hort 1881 critical edition. Public domain. John chapters 1-2 included as MVP. Contains key textual variants from SBLGNT baseline (e.g., μονογενὴς υἱός at 1:18)."
+}

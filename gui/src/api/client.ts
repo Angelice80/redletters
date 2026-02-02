@@ -16,6 +16,18 @@ import type {
   TranslateResult,
   AcknowledgeRequest,
   AcknowledgeResponse,
+  SourcesListResponse,
+  SourcesStatusResponse,
+  InstallSourceRequest,
+  InstallSourceResponse,
+  UninstallSourceRequest,
+  UninstallSourceResponse,
+  LicenseInfoResponse,
+  AcknowledgeMultiRequest,
+  AcknowledgeMultiResponse,
+  // Sprint 8: Dossier types
+  DossierResponse,
+  DossierScope,
 } from "./types";
 
 export class ApiError extends Error {
@@ -215,6 +227,94 @@ export class ApiClient {
    */
   async acknowledge(request: AcknowledgeRequest): Promise<AcknowledgeResponse> {
     return this.request<AcknowledgeResponse>("POST", "/acknowledge", request);
+  }
+
+  /**
+   * POST /acknowledge/multi - Acknowledge multiple variant readings at once (Sprint 7).
+   *
+   * Supports batch acknowledgement for passage-level or book-level acks.
+   */
+  async acknowledgeMulti(
+    request: AcknowledgeMultiRequest,
+  ): Promise<AcknowledgeMultiResponse> {
+    return this.request<AcknowledgeMultiResponse>(
+      "POST",
+      "/acknowledge/multi",
+      request,
+    );
+  }
+
+  // --- Source Management (Sprint 6) ---
+
+  /**
+   * GET /sources - List all configured sources.
+   */
+  async getSources(): Promise<SourcesListResponse> {
+    return this.request<SourcesListResponse>("GET", "/sources");
+  }
+
+  /**
+   * GET /sources/status - Get installation status for all sources.
+   */
+  async getSourcesStatus(): Promise<SourcesStatusResponse> {
+    return this.request<SourcesStatusResponse>("GET", "/sources/status");
+  }
+
+  /**
+   * POST /sources/install - Install a source.
+   */
+  async installSource(
+    request: InstallSourceRequest,
+  ): Promise<InstallSourceResponse> {
+    return this.request<InstallSourceResponse>(
+      "POST",
+      "/sources/install",
+      request,
+    );
+  }
+
+  /**
+   * POST /sources/uninstall - Uninstall a source.
+   */
+  async uninstallSource(
+    request: UninstallSourceRequest,
+  ): Promise<UninstallSourceResponse> {
+    return this.request<UninstallSourceResponse>(
+      "POST",
+      "/sources/uninstall",
+      request,
+    );
+  }
+
+  /**
+   * GET /sources/license - Get license info for a source.
+   */
+  async getLicenseInfo(sourceId: string): Promise<LicenseInfoResponse> {
+    const params = new URLSearchParams({ source_id: sourceId });
+    return this.request<LicenseInfoResponse>(
+      "GET",
+      `/sources/license?${params}`,
+    );
+  }
+
+  // --- Variant Dossier (Sprint 8) ---
+
+  /**
+   * GET /variants/dossier - Get a variant dossier for a reference.
+   *
+   * Returns complete dossier with witness support, provenance,
+   * and acknowledgement state.
+   */
+  async getDossier(
+    reference: string,
+    scope: DossierScope = "verse",
+    sessionId?: string,
+  ): Promise<DossierResponse> {
+    const params = new URLSearchParams({ reference, scope });
+    if (sessionId) {
+      params.set("session_id", sessionId);
+    }
+    return this.request<DossierResponse>("GET", `/variants/dossier?${params}`);
   }
 }
 

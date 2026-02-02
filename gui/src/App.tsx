@@ -19,6 +19,7 @@ import { Diagnostics } from "./screens/Diagnostics";
 import { Settings } from "./screens/Settings";
 import { Translate } from "./screens/Translate";
 import { Gate } from "./screens/Gate";
+import { Sources } from "./screens/Sources";
 
 import { useAppStore, selectSettings, checkConnectionHealth } from "./store";
 import { useEventStream } from "./hooks/useEventStream";
@@ -220,6 +221,14 @@ export function App() {
               Translate
             </NavLink>
             <NavLink
+              to="/sources"
+              style={({ isActive }) =>
+                isActive ? navLinkActiveStyle : navLinkStyle
+              }
+            >
+              Sources
+            </NavLink>
+            <NavLink
               to="/jobs"
               style={({ isActive }) =>
                 isActive ? navLinkActiveStyle : navLinkStyle
@@ -307,6 +316,7 @@ export function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/translate" element={<Translate client={client} />} />
             <Route path="/gate" element={<Gate client={client} />} />
+            <Route path="/sources" element={<Sources client={client} />} />
             <Route
               path="/jobs"
               element={<Jobs client={client} onRefresh={refreshJobs} />}

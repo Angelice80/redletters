@@ -1,0 +1,19 @@
+{
+  "format_version": "1.1",
+  "id": "byzantine-john",
+  "name": "Byzantine Textform (John)",
+  "version": "1.0.0",
+  "license": "Public Domain",
+  "license_url": null,
+  "role": "comparative_layer",
+  "siglum": "Byz",
+  "witness_type": "edition",
+  "coverage": ["John"],
+  "century_range": [21, 21],
+  "provenance": {
+    "source": "Robinson-Pierpont Byzantine Textform (2018 edition)",
+    "digitized_from": "Public domain edition",
+    "notes": "Representative of the majority manuscript tradition"
+  },
+  "notes": "Byzantine/Majority Text John chapter 1. Public domain. Represents readings found in the majority of Greek manuscripts. Differs from SBLGNT in several places including John 1:18, 1:34."
+}

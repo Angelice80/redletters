@@ -174,3 +174,23 @@ class AcknowledgementStore:
             (session_id, ref),
         )
         return cursor.fetchone() is not None
+
+    def get_session_acks(self, session_id: str) -> dict[str, int]:
+        """Get all variant acknowledgements for a session.
+
+        Args:
+            session_id: Session ID to query
+
+        Returns:
+            Dict mapping variant_ref to acknowledged reading index
+        """
+        cursor = self._conn.execute(
+            """
+            SELECT ref, choice
+            FROM acknowledgements
+            WHERE session_id = ? AND ack_type = 'variant'
+            """,
+            (session_id,),
+        )
+
+        return {row[0]: int(row[1]) for row in cursor}

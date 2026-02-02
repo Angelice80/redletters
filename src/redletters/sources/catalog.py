@@ -79,10 +79,16 @@ class SourcePack:
     license_url: str = ""
     files: list[str] = field(default_factory=list)
     notes: str = ""
-    format: str = ""  # morphgnt, json, tsv, xml
+    format: str = ""  # morphgnt, json, tsv, xml, pack
     root_path: str = ""  # Override local path
     verse_id_scheme: str = "Book.Chapter.Verse"
     provenance: dict = field(default_factory=dict)
+
+    # Pack-specific fields (Sprint 7)
+    pack_path: str = ""  # Local pack path relative to project root
+    witness_siglum: str = ""  # Witness siglum for apparatus (e.g., "WH")
+    witness_type: str = ""  # papyrus, uncial, minuscule, version, father
+    date_range: tuple[int, int] | None = None  # Century range
 
     @property
     def is_spine(self) -> bool:
@@ -93,6 +99,11 @@ class SourcePack:
     def is_comparative(self) -> bool:
         """True if this is a comparative edition for variant generation."""
         return self.role == SourceRole.COMPARATIVE_LAYER
+
+    @property
+    def is_pack(self) -> bool:
+        """True if this is a local data pack (Sprint 7)."""
+        return self.format == "pack" or bool(self.pack_path)
 
     @property
     def has_pinned_commit(self) -> bool:
@@ -126,6 +137,13 @@ class SourcePack:
                 key,
             )
 
+        # Parse date_range (list to tuple)
+        date_range = data.get("date_range")
+        if date_range and isinstance(date_range, list) and len(date_range) == 2:
+            date_range = (date_range[0], date_range[1])
+        else:
+            date_range = None
+
         # Optional fields with defaults
         return cls(
             key=key,
@@ -143,6 +161,11 @@ class SourcePack:
             root_path=data.get("root_path", ""),
             verse_id_scheme=data.get("verse_id_scheme", "Book.Chapter.Verse"),
             provenance=data.get("provenance", {}),
+            # Pack-specific fields (Sprint 7)
+            pack_path=data.get("pack_path", ""),
+            witness_siglum=data.get("witness_siglum", ""),
+            witness_type=data.get("witness_type", ""),
+            date_range=date_range,
         )
 
     def to_dict(self) -> dict:
