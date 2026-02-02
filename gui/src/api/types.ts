@@ -189,7 +189,7 @@ export type ConnectionState = "connected" | "degraded" | "disconnected";
 // --- Translation Types (Sprint 5) ---
 
 export type TranslationMode = "readable" | "traceable";
-export type TranslatorType = "fake" | "literal" | "fluent";
+export type TranslatorType = "fake" | "literal" | "fluent" | "traceable";
 
 export interface TranslateRequest {
   reference: string;
@@ -377,6 +377,8 @@ export interface TranslateResponse {
   tokens: Record<string, unknown>[];
   session_id: string;
   translator_type: TranslatorType;
+  // Sprint 10: Traceable ledger (token-level evidence)
+  ledger: VerseLedger[] | null;
 }
 
 export type TranslateResult = TranslateResponse | GateResponse;
@@ -538,3 +540,54 @@ export interface DossierResponse {
 }
 
 export type DossierScope = "verse" | "passage" | "chapter" | "book";
+
+// --- Sprint 10: Traceable Ledger Types ---
+
+export interface TokenConfidence {
+  textual: number;
+  grammatical: number;
+  lexical: number;
+  interpretive: number;
+  explanations: Record<string, string>;
+}
+
+export interface TokenLedger {
+  position: number;
+  surface: string;
+  normalized: string;
+  lemma: string | null;
+  morph: string | null;
+  gloss: string;
+  gloss_source: string;
+  notes: string[];
+  confidence: TokenConfidence;
+}
+
+export interface SegmentLedger {
+  token_range: [number, number];
+  greek_phrase: string;
+  english_phrase: string;
+  alignment_type: string;
+  transformation_notes: string[];
+}
+
+export interface EvidenceClassSummary {
+  manuscript_count: number;
+  edition_count: number;
+  tradition_count: number;
+  other_count: number;
+}
+
+export interface LedgerProvenance {
+  spine_source_id: string;
+  comparative_sources_used: string[];
+  evidence_class_summary: EvidenceClassSummary;
+}
+
+export interface VerseLedger {
+  verse_id: string;
+  normalized_ref: string;
+  tokens: TokenLedger[];
+  translation_segments: SegmentLedger[];
+  provenance: LedgerProvenance;
+}

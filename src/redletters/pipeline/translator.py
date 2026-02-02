@@ -1149,9 +1149,9 @@ def get_translator(
     """Factory function to get appropriate translator.
 
     Args:
-        translator_type: "fake", "literal", "fluent", or "real"
-        source_id: Source pack ID (for literal/fluent translator)
-        source_license: License string (for literal/fluent translator)
+        translator_type: "fake", "literal", "fluent", "traceable", or "real"
+        source_id: Source pack ID (for literal/fluent/traceable translator)
+        source_license: License string (for literal/fluent/traceable translator)
         scenario: Scenario for FakeTranslator
 
     Returns:
@@ -1164,6 +1164,14 @@ def get_translator(
         )
     elif translator_type == "fluent":
         return FluentTranslator(
+            source_id=source_id,
+            source_license=source_license,
+        )
+    elif translator_type == "traceable":
+        # Import here to avoid circular dependency
+        from redletters.pipeline.traceable_translator import TraceableTranslator
+
+        return TraceableTranslator(
             source_id=source_id,
             source_license=source_license,
         )

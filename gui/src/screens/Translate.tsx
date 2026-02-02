@@ -23,6 +23,7 @@ import type {
   VariantDisplay,
 } from "../api/types";
 import { isGateResponse } from "../api/types";
+import { LedgerList } from "../components/LedgerPanel";
 
 interface TranslateProps {
   client: ApiClient | null;
@@ -395,6 +396,7 @@ export function Translate({ client }: TranslateProps) {
 
   const [showClaims, setShowClaims] = useState(false);
   const [showVariants, setShowVariants] = useState(false);
+  const [showLedger, setShowLedger] = useState(false);
 
   const handleTranslate = useCallback(async () => {
     if (!client || !reference.trim()) return;
@@ -474,6 +476,7 @@ export function Translate({ client }: TranslateProps) {
           >
             <option value="literal">Literal</option>
             <option value="fluent">Fluent</option>
+            <option value="traceable">Traceable</option>
             <option value="fake">Test Data</option>
           </select>
         </div>
@@ -575,6 +578,34 @@ export function Translate({ client }: TranslateProps) {
             </div>
             {showVariants && <VariantsList variants={result.variants} />}
           </div>
+
+          {/* Ledger expander (traceable mode only) */}
+          {result.mode === "traceable" &&
+            result.ledger &&
+            result.ledger.length > 0 && (
+              <div style={expanderStyle}>
+                <div
+                  style={expanderHeaderStyle}
+                  onClick={() => setShowLedger(!showLedger)}
+                >
+                  <span
+                    style={{
+                      color: "#60a5fa",
+                      fontSize: "14px",
+                      fontWeight: 500,
+                    }}
+                  >
+                    Token Ledger (
+                    {result.ledger.reduce((sum, v) => sum + v.tokens.length, 0)}{" "}
+                    tokens)
+                  </span>
+                  <span style={{ color: "#6b7280" }}>
+                    {showLedger ? "−" : "+"}
+                  </span>
+                </div>
+                {showLedger && <LedgerList ledgers={result.ledger} />}
+              </div>
+            )}
 
           {/* Provenance */}
           <div

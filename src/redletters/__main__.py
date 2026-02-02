@@ -155,9 +155,20 @@ def query(reference: str, style: str | None, output: str | None):
 @click.option(
     "--translator",
     "-t",
-    type=click.Choice(["fake", "literal", "fluent"]),
+    type=click.Choice(["fake", "literal", "fluent", "traceable"]),
     default=None,
-    help="Translator type (fake=test data, literal=real glosses, fluent=readable English)",
+    help="Translator type (fake=test data, literal=glosses, fluent=readable, traceable=ledger)",
+)
+@click.option(
+    "--ledger",
+    is_flag=True,
+    help="Show token ledger in human output (traceable mode only)",
+)
+@click.option(
+    "--json",
+    "output_json",
+    is_flag=True,
+    help="Output as JSON (includes ledger in traceable mode)",
 )
 @click.option(
     "--data-root",
@@ -172,6 +183,8 @@ def translate(
     output: str | None,
     scenario: str,
     translator: str | None,
+    ledger: bool,
+    output_json: bool,
     data_root: str | None,
 ):
     """Translate a passage with receipt-grade output.
@@ -183,15 +196,18 @@ def translate(
     If a gate is triggered (variant acknowledgement or mode escalation),
     the command returns a gate response instead of a translation.
 
+    Sprint 10: Use --translator traceable with --mode traceable to get
+    token-level ledger with gloss provenance and confidence scoring.
+
     Examples:
         redletters translate "John 1:18"
         redletters translate "John 1:18-19"
         redletters translate "Jn 1:18–19"  # with en-dash
         redletters translate "John 1:18" --mode traceable
         redletters translate "John 1:18" --translator literal
+        redletters translate "John 1:18" --translator traceable --mode traceable --json
+        redletters translate "John 1:18" --translator traceable --mode traceable --ledger
         redletters translate "John 1:18" --ack "John.1.18:0"
-        redletters translate "John 1:18-19" --ack "John.1.18:0" --ack "John.1.19:0"
-        redletters translate "John 1:18-19" --ack "John.1.18:0,John.1.19:0"
     """
     from redletters.pipeline import (
         translate_passage,
@@ -235,8 +251,8 @@ def translate(
     source_id = ""
     source_license = ""
 
-    if translator in ("literal", "fluent"):
-        # Need installed spine for literal/fluent translation
+    if translator in ("literal", "fluent", "traceable"):
+        # Need installed spine for literal/fluent/traceable translation
         try:
             installer = SourceInstaller(data_root=data_root)
 
@@ -382,6 +398,11 @@ def translate(
     # Handle translation response
     result_dict = result.to_dict()
 
+    # JSON output mode
+    if output_json:
+        console.print(json.dumps(result_dict, indent=2, ensure_ascii=False))
+        return
+
     if output:
         Path(output).write_text(json.dumps(result_dict, indent=2, ensure_ascii=False))
         console.print(f"[green]✓ Output written to {output}[/green]")
@@ -458,6 +479,66 @@ def translate(
         console.print(
             f"\n[dim]Checks run: {len(result.receipts.checks_run)} | Gates satisfied: {len(result.receipts.gates_satisfied)} | Verses: {', '.join(result.verse_ids)}[/dim]"
         )
+
+        # Ledger display (Sprint 10: traceable mode)
+        if ledger and result_dict.get("ledger"):
+            console.print("\n[bold cyan]Token Ledger:[/bold cyan]")
+            for verse_ledger in result_dict["ledger"]:
+                console.print(
+                    f"\n  [cyan]{verse_ledger['normalized_ref']}[/cyan] ({len(verse_ledger['tokens'])} tokens)"
+                )
+
+                # Create token table
+                token_table = Table(show_header=True, header_style="bold dim")
+                token_table.add_column("#", style="dim", width=4)
+                token_table.add_column("Surface", style="cyan")
+                token_table.add_column("Lemma", style="cyan")
+                token_table.add_column("Morph", style="dim")
+                token_table.add_column("Gloss")
+                token_table.add_column("Source", style="dim")
+                token_table.add_column("T/G/L/I", style="yellow")
+
+                for token in verse_ledger["tokens"]:
+                    conf = token["confidence"]
+                    conf_str = (
+                        f"{conf['textual']:.1f}/{conf['grammatical']:.1f}/"
+                        f"{conf['lexical']:.1f}/{conf['interpretive']:.1f}"
+                    )
+                    token_table.add_row(
+                        str(token["position"] + 1),
+                        token["surface"],
+                        token["lemma"] or "—",
+                        token["morph"] or "—",
+                        token["gloss"],
+                        token["gloss_source"],
+                        conf_str,
+                    )
+
+                console.print(token_table)
+
+                # Provenance
+                prov = verse_ledger["provenance"]
+                ecs = prov["evidence_class_summary"]
+                console.print(f"  [dim]Spine: {prov['spine_source_id']}[/dim]")
+                if prov["comparative_sources_used"]:
+                    console.print(
+                        f"  [dim]Comparative: {', '.join(prov['comparative_sources_used'])}[/dim]"
+                    )
+                evidence_parts = []
+                if ecs["manuscript_count"] > 0:
+                    evidence_parts.append(f"{ecs['manuscript_count']} MSS")
+                if ecs["edition_count"] > 0:
+                    evidence_parts.append(f"{ecs['edition_count']} Ed")
+                if ecs["tradition_count"] > 0:
+                    evidence_parts.append(f"{ecs['tradition_count']} Trad")
+                if ecs["other_count"] > 0:
+                    evidence_parts.append(f"{ecs['other_count']} Other")
+                if evidence_parts:
+                    console.print(f"  [dim]Evidence: {', '.join(evidence_parts)}[/dim]")
+        elif ledger and not result_dict.get("ledger"):
+            console.print(
+                "\n[dim]No ledger data. Use --translator traceable --mode traceable for token ledger.[/dim]"
+            )
 
 
 @cli.command("list-spans")

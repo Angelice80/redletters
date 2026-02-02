@@ -2,13 +2,18 @@
 
 Stable schema for CLI and GUI consumption. Forward-compatible design
 supports future additions without breaking clients.
+
+Sprint 10: Added optional ledger field for traceable mode output.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
+
+if TYPE_CHECKING:
+    pass
 
 
 class ResponseType(Enum):
@@ -479,7 +484,16 @@ class TranslateResponse:
 
     # Translator info
     translator_type: str = ""
-    """Type of translator used (fake/literal/fluent)."""
+    """Type of translator used (fake/literal/fluent/traceable)."""
+
+    # Sprint 10: Traceable ledger (token-level evidence)
+    ledger: list | None = None
+    """Token-level ledger for traceable mode (list of VerseLedger).
+
+    Populated only when mode='traceable' and translator_type='traceable'.
+    Contains per-verse token analysis with gloss provenance and confidence.
+    None in readable mode.
+    """
 
     def to_dict(self) -> dict:
         """Serialize for JSON output."""
@@ -548,4 +562,10 @@ class TranslateResponse:
             "tokens": self.tokens,
             "session_id": self.session_id,
             "translator_type": self.translator_type,
+            # Sprint 10: Traceable ledger
+            "ledger": (
+                [vl.to_dict() for vl in self.ledger]
+                if self.ledger is not None
+                else None
+            ),
         }
