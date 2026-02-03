@@ -1,101 +1,216 @@
 # Red Letters Source Reader
 
-A transparent, multi-reading Greek New Testament tool that generates **3-5 plausible renderings**
-for Jesus' sayings with explicit interpretive receipts.
+A transparent Greek New Testament tool that generates **multiple plausible English
+renderings** with explicit interpretive receipts.
 
-## Philosophy
+**Current Version:** v0.17.0
 
-- **No hidden theology**: Every translation choice is documented with linguistic rationale
+> **Important:** This tool produces *plausible renderings*, not "The One True
+> Translation." Every output shows that translation involves interpretive choices.
+> See [Concepts](docs/concepts.md) for details.
+
+---
+
+## Why Red Letters?
+
+- **No hidden theology**: Every translation choice is documented with rationale
 - **Multiple readings**: Shows the ambiguity inherent in translation
-- **Greek-first**: All analysis starts from the Greek text
-- **Extensible**: Plugin architecture for lexica, variants, and witness traditions
+- **Greek-first**: All analysis starts from the Greek text (SBLGNT canonical spine)
+- **Uncertainty propagation**: Confidence scores (textual, grammatical, lexical, interpretive) flow through all outputs
+- **Friction is intentional**: Exports require acknowledgement of significant variants
+- **Deterministic**: No ML, no randomization - fully auditable and reproducible
+
+See [Goals & Principles](docs/GOALS.md) for enforceable constraints.
+
+---
+
+## Installation
+
+**Requirements:** Python 3.8+
+
+```bash
+git clone https://github.com/your-org/greek2english.git
+cd greek2english
+pip install -e .
+```
+
+Verify:
+
+```bash
+redletters --version
+redletters --help
+```
+
+---
 
 ## Quick Start
 
 ```bash
-# Install
-pip install -e .
-
-# Initialize database with demo data
+# 1. Initialize database with demo data
 redletters init
 
-# Query a verse
+# 2. Query a verse
 redletters query "Matthew 3:2"
 
-# Start API server
+# 3. See all available passages
+redletters list-spans
+```
+
+Output shows multiple renderings:
+
+```
+Reference: Matthew 3:2
+Greek: metanoeite eggiken gar he basileia ton ouranon
+
+Renderings:
+  1. [ultra-literal] Change-your-minds! Has-drawn-near for the kingdom of-the heavens.
+  2. [natural] Change your minds! The kingdom of heaven has drawn near.
+  3. [meaning-first] Transform your thinking! God's reign is approaching.
+```
+
+Each rendering includes receipts documenting why each word was translated that way.
+
+---
+
+## Example Workflow
+
+### 1. Explore a passage
+
+```bash
+redletters query "John 1:18"
+```
+
+### 2. Get full receipts
+
+```bash
+redletters translate "John 1:18" --mode traceable --ledger
+```
+
+### 3. Check for variants
+
+```bash
+redletters variants dossier "John 1:18"
+```
+
+### 4. Acknowledge and export
+
+```bash
+# If variants exist, acknowledge them first
+redletters gates pending "John 1:18"
+redletters gates acknowledge "John 1:18" 0 --session my-session
+
+# Then export
+redletters quote "John 1:18" --out quote.json
+```
+
+---
+
+## Starting the Engine
+
+```bash
 redletters serve
 ```
 
-## CLI Commands
+The Engine Spine provides a unified API for translation, source management, and scholarly exports.
+
+- **Default Port**: 47200 (localhost only)
+- **Swagger UI**: http://127.0.0.1:47200/docs
+- **ReDoc**: http://127.0.0.1:47200/redoc
+
+> **Security Note:** The engine binds to 127.0.0.1 only (per ADR-005). It requires
+> a Bearer token for authentication. The GUI handles token management automatically.
+
+---
+
+## GUI (Desktop Application)
+
+For a visual interface, start the GUI:
 
 ```bash
-# Show all red-letter spans in demo data
-redletters list-spans
+# Terminal 1: Start the backend
+redletters serve
 
-# Query with specific rendering style
-redletters query "Mark 1:15" --style ultra-literal
-
-# Export receipts to JSON file
-redletters query "Matthew 3:2" --output receipts.json
+# Terminal 2: Start the GUI
+cd gui
+npm install  # first time only
+npm run dev
 ```
 
-## API Endpoints
+Open http://localhost:5173 in your browser, or build the desktop app with `npm run tauri:build`.
 
-```
-GET  /api/v1/query?ref=Matthew+3:2
-GET  /api/v1/query?ref=Mark+1:15&style=natural
-GET  /api/v1/spans
-GET  /api/v1/health
-```
+See [GUI Guide](docs/gui.md) for full documentation.
 
-## Rendering Styles
+---
 
-| Style | Description |
-|-------|-------------|
-| `ultra-literal` | Word-for-word, preserving Greek syntax |
-| `natural` | Idiomatic English word order |
-| `meaning-first` | Prioritizes semantic clarity |
-| `jewish-context` | Socio-historical Jewish framing |
+## Naming Conventions
 
-## Output Format
+| Context | Name | Why |
+|---------|------|-----|
+| Repository | `greek2english` | Describes the function |
+| CLI command | `redletters` | Reflects the focus (Jesus' words) |
+| Data directory | `~/.greek2english/` | Matches repo for discoverability |
+| Environment variables | `REDLETTERS_*` | Matches CLI for consistency |
 
-```json
-{
-  "reference": "Matthew 3:2",
-  "greek_text": "μετανοεῖτε· ἤγγικεν γὰρ ἡ βασιλεία τῶν οὐρανῶν",
-  "renderings": [
-    {
-      "style": "ultra-literal",
-      "text": "Change-your-minds! Has-drawn-near for the kingdom of-the heavens.",
-      "score": 0.92,
-      "receipts": [...]
-    }
-  ]
-}
-```
+---
 
-## Architecture
+## Documentation
 
-```
-redletters/
-├── ingest/          # Data loading & normalization
-├── engine/          # Core rendering logic
-│   ├── query.py     # Reference parsing
-│   ├── senses.py    # Lexeme lookup
-│   ├── generator.py # Candidate generation
-│   └── ranker.py    # Deterministic ranking
-├── api/             # FastAPI endpoints
-├── plugins/         # Extension interfaces
-└── db/              # SQLite utilities
+| Document | Description |
+|----------|-------------|
+| [CLI Reference](docs/cli.md) | Complete command documentation |
+| [GUI Guide](docs/gui.md) | Desktop application usage |
+| [API Reference](docs/API.md) | REST endpoints and schemas |
+| [Key Concepts](docs/concepts.md) | Receipts, gates, confidence, claims |
+| [Sources & Licensing](docs/sources-and-licensing.md) | Data provenance and attribution |
+| [Troubleshooting](docs/troubleshooting.md) | Common problems and solutions |
+| [Goals & Principles](docs/GOALS.md) | Project constraints and non-goals |
+
+---
+
+## Installing Source Packs
+
+The demo data from `init` allows basic exploration. For full scholarly work,
+install source packs:
+
+```bash
+# List available sources
+redletters sources list
+
+# Install the canonical Greek text
+redletters sources install morphgnt-sblgnt
+
+# Some sources require license acceptance
+redletters sources install ubs-dictionary --accept-eula
 ```
 
-## Plugin System
+See [Sources & Licensing](docs/sources-and-licensing.md) for what each pack
+provides and license requirements.
 
-The system supports plugins for:
-- **Sense Providers**: Custom lexicon data sources
-- **Variant Providers**: Textual variant apparatus (future)
-- **Witness Overlays**: Syriac and other tradition data (future)
+---
+
+## Development
+
+```bash
+# Install with dev dependencies
+pip install -e ".[dev]"
+
+# Run tests
+pytest
+
+# Lint
+ruff check src/ tests/
+```
+
+---
 
 ## License
 
 MIT
+
+---
+
+## Further Reading
+
+- [docs/PROGRESS.md](docs/PROGRESS.md) - Development history
+- [docs/schemas/](docs/schemas/) - JSON Schema definitions
+- [docs/adrs/](docs/adrs/) - Architecture decision records

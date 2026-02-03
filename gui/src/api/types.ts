@@ -186,6 +186,81 @@ export interface ErrorResponse {
 
 export type ConnectionState = "connected" | "degraded" | "disconnected";
 
+// --- API Capabilities (Sprint 16: Compatibility Handshake) ---
+
+export interface ApiCapabilities {
+  version: string;
+  api_version: string;
+  min_gui_version: string;
+  endpoints: {
+    engine_status: string;
+    stream: string;
+    jobs: string;
+    gates_pending: string;
+    run_scholarly: string;
+    translate: string;
+    acknowledge: string;
+    sources: string;
+    sources_status: string;
+    variants_dossier: string;
+  };
+  features: string[];
+  initialized: boolean;
+}
+
+// Sprint 17: Error categories for structured error handling
+export type ErrorCategory =
+  | "network"
+  | "auth"
+  | "not_found"
+  | "gate_blocked"
+  | "service_unavailable"
+  | "server"
+  | "unknown";
+
+// Error detail types for ApiErrorPanel
+export interface ApiErrorDetail {
+  method: string;
+  url: string;
+  status: number | null;
+  statusText: string;
+  responseSnippet: string;
+  suggestedFix: string;
+  timestamp: string;
+  // Sprint 17: Enhanced diagnostics
+  category: ErrorCategory;
+  likelyCause: string;
+  suggestions: string[];
+  raw?: unknown;
+  // Sprint 17: Contract diagnostics for debugging endpoint resolution
+  contractDiagnostics?: {
+    baseUrl: string;
+    hasCapabilities: boolean;
+    capabilities?: {
+      version: string;
+      api_version: string;
+      min_gui_version: string;
+      features: string[];
+      initialized: boolean;
+    };
+    resolvedEndpoints?: Record<string, string>;
+  };
+}
+
+// Sprint 17: Capability validation result
+export interface CapabilitiesValidation {
+  valid: boolean;
+  error?: string;
+  missingEndpoints?: string[];
+  versionMismatch?: {
+    required: string;
+    current: string;
+  };
+}
+
+// Sprint 17: GUI version for compatibility checks
+export const GUI_VERSION = "0.17.0";
+
 // --- Translation Types (Sprint 5) ---
 
 export type TranslationMode = "readable" | "traceable";
@@ -590,4 +665,82 @@ export interface VerseLedger {
   tokens: TokenLedger[];
   translation_segments: SegmentLedger[];
   provenance: LedgerProvenance;
+}
+
+// --- Sprint 15: Gate Pending Check Types ---
+
+export interface PendingGateInfo {
+  ref: string;
+  significance: string;
+  message: string;
+  reason?: string;
+  reason_detail?: string | null;
+}
+
+export interface PendingGatesResponse {
+  reference: string;
+  session_id: string;
+  pending_gates: PendingGateInfo[];
+  total_variants: number;
+}
+
+// --- Sprint 14: Scholarly Run Types ---
+
+export interface ScholarlyRunRequest {
+  reference: string;
+  mode?: "readable" | "traceable";
+  force?: boolean;
+  session_id?: string;
+  include_schemas?: boolean;
+  create_zip?: boolean;
+}
+
+export interface ScholarlyRunFile {
+  path: string;
+  artifact_type: string;
+  sha256: string;
+  schema_version?: string;
+}
+
+export interface ScholarlyRunValidation {
+  check: string;
+  passed: boolean;
+  errors?: string[];
+  warnings?: string[];
+}
+
+export interface ScholarlyRunGates {
+  pending_count: number;
+  pending_refs: string[];
+  forced?: boolean;
+  forced_responsibility?: string;
+}
+
+export interface ScholarlyRunLog {
+  schema_version: string;
+  tool_version: string;
+  started_at: string;
+  completed_at: string;
+  reference: string;
+  mode: string;
+  verse_ids: string[];
+  files_created: ScholarlyRunFile[];
+  validations: ScholarlyRunValidation[];
+  gates?: ScholarlyRunGates;
+  success: boolean;
+  errors?: string[];
+  content_hash?: string;
+}
+
+export interface ScholarlyRunResponse {
+  success: boolean;
+  gate_blocked: boolean;
+  pending_gates: string[];
+  message: string;
+  reference: string;
+  mode: string;
+  output_dir?: string;
+  bundle_path?: string;
+  run_log?: ScholarlyRunLog;
+  errors: string[];
 }
