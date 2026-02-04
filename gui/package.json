@@ -17,7 +17,8 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:real": "playwright test --config=playwright-real.config.ts",
-    "test:e2e:real:boot": "CI=1 playwright test --config=playwright-real.config.ts"
+    "test:e2e:real:boot": "CI=1 playwright test --config=playwright-real.config.ts",
+    "verify": "npm run test && npm run test:e2e"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.0.0",
