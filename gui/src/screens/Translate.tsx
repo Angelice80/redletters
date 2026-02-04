@@ -13,6 +13,7 @@
 import { useState, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAppStore, selectSettings } from "../store";
+import { ApiError, detectBackendMismatch } from "../api/client";
 import type { ApiClient } from "../api/client";
 import type {
   TranslateResponse,
@@ -21,9 +22,11 @@ import type {
   ConfidenceResult,
   ClaimResult,
   VariantDisplay,
+  BackendMismatchInfo,
 } from "../api/types";
 import { isGateResponse } from "../api/types";
 import { LedgerList } from "../components/LedgerPanel";
+import { BackendMismatchPanel } from "../components/BackendMismatchPanel";
 
 interface TranslateProps {
   client: ApiClient | null;
@@ -394,6 +397,9 @@ export function Translate({ client }: TranslateProps) {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<TranslateResponse | null>(null);
 
+  // Sprint 19: Backend mismatch detection
+  const [mismatch, setMismatch] = useState<BackendMismatchInfo | null>(null);
+
   const [showClaims, setShowClaims] = useState(false);
   const [showVariants, setShowVariants] = useState(false);
   const [showLedger, setShowLedger] = useState(false);
@@ -404,6 +410,7 @@ export function Translate({ client }: TranslateProps) {
     setLoading(true);
     setError(null);
     setResult(null);
+    setMismatch(null);
 
     try {
       const response = await client.translate({
@@ -422,6 +429,18 @@ export function Translate({ client }: TranslateProps) {
         setResult(response);
       }
     } catch (err) {
+      // Sprint 19: Check for backend mismatch on 404
+      if (err instanceof ApiError && err.status === 404) {
+        const mismatchInfo = await detectBackendMismatch(
+          client.baseUrl,
+          client.token,
+          "/translate",
+        );
+        if (mismatchInfo.detected) {
+          setMismatch(mismatchInfo);
+          return;
+        }
+      }
       setError(err instanceof Error ? err.message : "Translation failed");
     } finally {
       setLoading(false);
@@ -439,7 +458,7 @@ export function Translate({ client }: TranslateProps) {
 
   return (
     <div style={containerStyle}>
-      <h1 style={headerStyle}>Translate</h1>
+      <h1 style={headerStyle}>Explore</h1>
 
       {/* Input form */}
       <div style={formRowStyle}>
@@ -494,8 +513,17 @@ export function Translate({ client }: TranslateProps) {
         </button>
       </div>
 
+      {/* Sprint 19: Backend mismatch display */}
+      {mismatch && (
+        <BackendMismatchPanel
+          mismatchInfo={mismatch}
+          onRetry={handleTranslate}
+          onDismiss={() => setMismatch(null)}
+        />
+      )}
+
       {/* Error display */}
-      {error && (
+      {error && !mismatch && (
         <div
           style={{
             padding: "12px",

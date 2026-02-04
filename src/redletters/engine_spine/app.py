@@ -33,6 +33,39 @@ DEFAULT_WORKSPACE_BASE = Path("~/.greek2english/workspaces").expanduser()
 DEFAULT_PORT = 47200
 
 
+def _introspect_backend_shape(app: FastAPI) -> "BackendShape":
+    """Introspect app routes to determine backend shape.
+
+    Sprint 19: Guardrail against backend mode mismatch.
+    Checks which API routes are actually registered.
+    """
+    from redletters.engine_spine.models import BackendShape
+
+    # Collect all registered route paths
+    route_paths = set()
+    for route in app.routes:
+        if hasattr(route, "path"):
+            route_paths.add(route.path)
+
+    # Check for required API routes
+    has_translate = "/translate" in route_paths
+    has_sources_status = "/sources/status" in route_paths
+    has_acknowledge = "/acknowledge" in route_paths
+    has_variants_dossier = "/variants/dossier" in route_paths
+
+    # Determine backend mode based on route presence
+    is_full = has_translate and has_sources_status
+    backend_mode = "full" if is_full else "engine_only"
+
+    return BackendShape(
+        backend_mode=backend_mode,
+        has_translate=has_translate,
+        has_sources_status=has_sources_status,
+        has_acknowledge=has_acknowledge,
+        has_variants_dossier=has_variants_dossier,
+    )
+
+
 def create_engine_app(
     db_path: Path | None = None,
     workspace_base: Path | None = None,
@@ -66,7 +99,9 @@ def create_engine_app(
 
         # Initialize engine state
         state = EngineState.get_instance()
-        state.initialize(db, broadcaster, safe_mode=safe_mode)
+        state.initialize(
+            db, broadcaster, safe_mode=safe_mode, workspace_base=workspace_base
+        )
 
         # Recover orphaned jobs from crash
         job_manager = JobManager(db, broadcaster, workspace_base, safe_mode)
@@ -89,9 +124,13 @@ def create_engine_app(
         # Start heartbeat
         await state.status_manager.start_heartbeat()
 
+        # Sprint 19: Introspect routes and set backend shape
+        backend_shape = _introspect_backend_shape(app)
+        state.status_manager.set_backend_shape(backend_shape)
+
         logger.info(
             f"Engine started (mode={'safe' if safe_mode else 'normal'}, "
-            f"port={DEFAULT_PORT})"
+            f"port={DEFAULT_PORT}, shape={backend_shape.backend_mode})"
         )
 
         yield
@@ -112,7 +151,7 @@ def create_engine_app(
         lifespan=lifespan,
     )
 
-    # Add CORS middleware for Tauri WebView access
+    # Add CORS middleware for Tauri WebView and browser dev server access
     # Order matters: CORS must be added AFTER auth (middleware runs in reverse order)
     # so preflight OPTIONS requests are handled before auth rejects them
     app.add_middleware(
@@ -124,15 +163,37 @@ def create_engine_app(
             "https://tauri.localhost",
         ],
         allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
-        allow_methods=["*"],
-        allow_headers=["*"],  # includes Authorization + Last-Event-ID for SSE
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+        allow_headers=[
+            "Authorization",
+            "Content-Type",
+            "Accept",
+            "Origin",
+            "X-Requested-With",
+            "Last-Event-ID",
+            "Cache-Control",
+        ],
+        expose_headers=[
+            "Content-Type",
+            "Content-Length",
+            "X-Request-ID",
+            "X-Job-ID",
+        ],
+        max_age=3600,  # Cache preflight for 1 hour
     )
 
     # Add auth middleware (all endpoints except docs require token)
     app.add_middleware(AuthMiddleware)
 
     # Include routes
-    app.include_router(router)
+    app.include_router(router)  # Engine spine routes at /v1/*
+
+    # Sprint 16: Include API routes for translation/sources/variants
+    # This unifies the engine and API into a single application
+    from redletters.api.routes import router as api_router
+
+    app.include_router(api_router)  # API routes at root (translate, sources, variants)
 
     @app.get("/")
     async def root():

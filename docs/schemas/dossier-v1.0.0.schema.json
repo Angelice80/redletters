@@ -1,0 +1,277 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://redletters.dev/schemas/dossier-v1.0.0.schema.json",
+  "title": "Variant Dossier",
+  "description": "Schema for variant dossier output (v0.8.0+, v0.10.0 adds schema_version)",
+  "type": "object",
+  "required": [
+    "reference",
+    "scope",
+    "generated_at",
+    "spine",
+    "variants",
+    "provenance",
+    "schema_version"
+  ],
+  "properties": {
+    "reference": {
+      "type": "string",
+      "description": "Scripture reference"
+    },
+    "scope": {
+      "type": "string",
+      "description": "Scope of the dossier",
+      "enum": ["verse", "passage", "chapter", "book"]
+    },
+    "generated_at": {
+      "type": "string",
+      "description": "ISO 8601 timestamp",
+      "format": "date-time"
+    },
+    "spine": {
+      "$ref": "#/$defs/spine"
+    },
+    "variants": {
+      "type": "array",
+      "description": "List of variant units",
+      "items": {
+        "$ref": "#/$defs/variant"
+      }
+    },
+    "provenance": {
+      "$ref": "#/$defs/provenance"
+    },
+    "witness_density_note": {
+      "type": ["string", "null"],
+      "description": "Note about witness density"
+    },
+    "coverage_summary": {
+      "type": "array",
+      "description": "Pack coverage summary (v0.8.0)",
+      "items": {
+        "$ref": "#/$defs/pack_coverage"
+      }
+    },
+    "schema_version": {
+      "type": "string",
+      "description": "Schema version (v0.10.0)",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    }
+  },
+  "$defs": {
+    "spine": {
+      "type": "object",
+      "required": ["source_id", "text", "is_default"],
+      "properties": {
+        "source_id": {
+          "type": "string",
+          "description": "Spine source ID"
+        },
+        "text": {
+          "type": "string",
+          "description": "Greek text"
+        },
+        "is_default": {
+          "type": "boolean",
+          "description": "Whether this is the default spine"
+        }
+      }
+    },
+    "variant": {
+      "type": "object",
+      "required": ["ref", "position", "classification", "significance", "gating_requirement", "reason", "readings", "acknowledgement"],
+      "properties": {
+        "ref": {
+          "type": "string",
+          "description": "Variant reference"
+        },
+        "position": {
+          "type": "integer",
+          "description": "Token position",
+          "minimum": 0
+        },
+        "classification": {
+          "type": "string",
+          "description": "Variant classification"
+        },
+        "significance": {
+          "type": "string",
+          "description": "Significance level",
+          "enum": ["trivial", "minor", "significant", "major"]
+        },
+        "gating_requirement": {
+          "type": "string",
+          "description": "Gate requirement",
+          "enum": ["none", "requires_acknowledgement"]
+        },
+        "reason": {
+          "$ref": "#/$defs/reason"
+        },
+        "readings": {
+          "type": "array",
+          "description": "List of readings",
+          "items": {
+            "$ref": "#/$defs/reading"
+          }
+        },
+        "acknowledgement": {
+          "$ref": "#/$defs/acknowledgement"
+        },
+        "consequence": {
+          "$ref": "#/$defs/consequence"
+        },
+        "confidence_bucket": {
+          "type": ["string", "null"],
+          "description": "Confidence bucket (v0.8.0)",
+          "enum": ["high", "medium", "low", null]
+        }
+      }
+    },
+    "reason": {
+      "type": "object",
+      "required": ["code", "summary"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "Reason code"
+        },
+        "summary": {
+          "type": "string",
+          "description": "Human-readable summary"
+        },
+        "detail": {
+          "type": ["string", "null"],
+          "description": "Additional detail"
+        }
+      }
+    },
+    "reading": {
+      "type": "object",
+      "required": ["index", "text", "is_spine", "witnesses", "witness_summary", "source_packs"],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "text": {
+          "type": "string",
+          "description": "Greek text of this reading"
+        },
+        "is_spine": {
+          "type": "boolean",
+          "description": "Whether this is the spine reading"
+        },
+        "witnesses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/witness_info"
+          }
+        },
+        "witness_summary": {
+          "type": "object",
+          "description": "Legacy witness summary"
+        },
+        "source_packs": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "support_summary": {
+          "$ref": "#/$defs/support_summary"
+        },
+        "evidence_class": {
+          "type": "string",
+          "description": "Evidence class label"
+        },
+        "minority_metadata": {
+          "$ref": "#/$defs/minority_metadata"
+        },
+        "incentive_tags": {
+          "type": "array",
+          "description": "Incentive tags (v0.9.0)",
+          "items": {
+            "type": "string",
+            "enum": ["brevity_preference_present", "age_bias_risk"]
+          }
+        }
+      }
+    },
+    "witness_info": {
+      "type": "object",
+      "required": ["siglum", "type"],
+      "properties": {
+        "siglum": {"type": "string"},
+        "type": {"type": "string"},
+        "century": {"type": ["integer", "null"]}
+      }
+    },
+    "support_summary": {
+      "type": "object",
+      "required": ["total_count", "by_type", "provenance_packs"],
+      "properties": {
+        "total_count": {"type": "integer", "minimum": 0},
+        "by_type": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "count": {"type": "integer"},
+              "sigla": {"type": "array", "items": {"type": "string"}},
+              "century_range": {"type": ["array", "null"]}
+            }
+          }
+        },
+        "earliest_century": {"type": ["integer", "null"]},
+        "provenance_packs": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "minority_metadata": {
+      "type": "object",
+      "properties": {
+        "attestation_strength": {
+          "type": ["string", "null"],
+          "enum": ["strong", "moderate", "weak", null]
+        },
+        "historical_uptake": {"type": ["string", "null"]},
+        "ideological_usage": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "acknowledgement": {
+      "type": "object",
+      "required": ["required", "acknowledged"],
+      "properties": {
+        "required": {"type": "boolean"},
+        "acknowledged": {"type": "boolean"},
+        "acknowledged_reading": {"type": ["integer", "null"]},
+        "session_id": {"type": ["string", "null"]}
+      }
+    },
+    "consequence": {
+      "type": "object",
+      "description": "Consequence summary (v0.8.0)",
+      "properties": {
+        "affects_surface": {"type": "boolean"},
+        "affects_gloss": {"type": "boolean"},
+        "affects_omission_addition": {"type": "boolean"},
+        "notes": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["spine_source", "comparative_packs", "build_timestamp"],
+      "properties": {
+        "spine_source": {"type": "string"},
+        "comparative_packs": {"type": "array", "items": {"type": "string"}},
+        "build_timestamp": {"type": "string", "format": "date-time"}
+      }
+    },
+    "pack_coverage": {
+      "type": "object",
+      "required": ["pack_id", "covers_scope", "reason"],
+      "properties": {
+        "pack_id": {"type": "string"},
+        "covers_scope": {"type": "boolean"},
+        "reason": {"type": "string"}
+      }
+    }
+  }
+}

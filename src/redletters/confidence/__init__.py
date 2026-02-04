@@ -12,6 +12,8 @@ Each layer provides:
 - A score (0.0-1.0)
 - A rationale explaining the score
 - Input factors for auditability
+
+v0.8.0: Added confidence bucketing (high/medium/low) for uncertainty propagation.
 """
 
 from redletters.confidence.scoring import (
@@ -22,6 +24,11 @@ from redletters.confidence.scoring import (
     InterpretiveConfidence,
     ConfidenceCalculator,
     ConfidenceExplanation,
+    # v0.8.0: Confidence bucketing
+    bucket_confidence,
+    ConfidenceBucket,
+    CONFIDENCE_BUCKET_HIGH,
+    CONFIDENCE_BUCKET_MEDIUM,
 )
 
 __all__ = [
@@ -32,4 +39,9 @@ __all__ = [
     "InterpretiveConfidence",
     "ConfidenceCalculator",
     "ConfidenceExplanation",
+    # v0.8.0: Confidence bucketing
+    "bucket_confidence",
+    "ConfidenceBucket",
+    "CONFIDENCE_BUCKET_HIGH",
+    "CONFIDENCE_BUCKET_MEDIUM",
 ]

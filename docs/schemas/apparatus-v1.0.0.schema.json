@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://redletters.dev/schemas/apparatus-v1.0.0.schema.json",
+  "title": "Apparatus Export Record",
+  "description": "Schema for a single variant unit in apparatus JSONL export (v0.5.0+)",
+  "type": "object",
+  "required": [
+    "variant_unit_id",
+    "verse_id",
+    "position",
+    "classification",
+    "significance",
+    "gate_requirement",
+    "sblgnt_reading_index",
+    "readings",
+    "provenance_packs",
+    "schema_version"
+  ],
+  "properties": {
+    "variant_unit_id": {
+      "type": "string",
+      "description": "Stable identifier for this variant unit"
+    },
+    "verse_id": {
+      "type": "string",
+      "description": "Scripture reference (e.g., 'John.1.18')",
+      "pattern": "^[A-Za-z]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "position": {
+      "type": "integer",
+      "description": "Token position within the verse",
+      "minimum": 0
+    },
+    "classification": {
+      "type": "string",
+      "description": "Variant type classification",
+      "enum": ["omission", "addition", "substitution", "word_order", "spelling", "conflation", "unknown"]
+    },
+    "significance": {
+      "type": "string",
+      "description": "Significance level",
+      "enum": ["trivial", "minor", "significant", "major"]
+    },
+    "gate_requirement": {
+      "type": "string",
+      "description": "Whether acknowledgement is required",
+      "enum": ["none", "requires_acknowledgement"]
+    },
+    "sblgnt_reading_index": {
+      "type": "integer",
+      "description": "Index of the SBLGNT/spine reading in the readings array",
+      "minimum": 0
+    },
+    "readings": {
+      "type": "array",
+      "description": "List of variant readings",
+      "items": {
+        "$ref": "#/$defs/reading"
+      },
+      "minItems": 1
+    },
+    "provenance_packs": {
+      "type": "array",
+      "description": "List of source pack IDs that contributed to this unit",
+      "items": {
+        "type": "string"
+      }
+    },
+    "reason_code": {
+      "type": "string",
+      "description": "Classification reason code"
+    },
+    "reason_summary": {
+      "type": "string",
+      "description": "Human-readable reason summary"
+    },
+    "schema_version": {
+      "type": "string",
+      "description": "Schema version for this record",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    }
+  },
+  "$defs": {
+    "reading": {
+      "type": "object",
+      "required": ["reading_id", "index", "surface_text", "is_sblgnt"],
+      "properties": {
+        "reading_id": {
+          "type": "string",
+          "description": "Stable identifier for this reading"
+        },
+        "index": {
+          "type": "integer",
+          "description": "Index in the readings array",
+          "minimum": 0
+        },
+        "surface_text": {
+          "type": "string",
+          "description": "Greek text of this reading"
+        },
+        "normalized_text": {
+          "type": ["string", "null"],
+          "description": "Normalized form of the reading"
+        },
+        "is_sblgnt": {
+          "type": "boolean",
+          "description": "Whether this is the SBLGNT/spine reading"
+        },
+        "witness_summary": {
+          "type": "string",
+          "description": "Human-readable witness summary"
+        },
+        "support_entries": {
+          "type": "array",
+          "description": "Detailed witness support entries",
+          "items": {
+            "$ref": "#/$defs/support_entry"
+          }
+        },
+        "source_packs": {
+          "type": "array",
+          "description": "Source pack IDs for this reading",
+          "items": {
+            "type": "string"
+          }
+        },
+        "minority_metadata": {
+          "$ref": "#/$defs/minority_metadata"
+        },
+        "incentive_tags": {
+          "type": "array",
+          "description": "Incentive logic tags (v0.9.0)",
+          "items": {
+            "type": "string",
+            "enum": ["brevity_preference_present", "age_bias_risk"]
+          }
+        }
+      }
+    },
+    "support_entry": {
+      "type": "object",
+      "required": ["witness_siglum", "witness_type", "source_pack_id"],
+      "properties": {
+        "witness_siglum": {
+          "type": "string",
+          "description": "Witness identifier (e.g., 'P66', 'B', 'NA28')"
+        },
+        "witness_type": {
+          "type": "string",
+          "description": "Type of witness",
+          "enum": ["papyrus", "uncial", "minuscule", "version", "father", "edition", "tradition", "other"]
+        },
+        "century_range": {
+          "type": ["array", "null"],
+          "description": "Century range [start, end]",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "source_pack_id": {
+          "type": "string",
+          "description": "ID of the pack that provided this support data"
+        }
+      }
+    },
+    "minority_metadata": {
+      "type": "object",
+      "description": "Metadata for minority/fringe reading preservation (v0.9.0)",
+      "properties": {
+        "attestation_strength": {
+          "type": ["string", "null"],
+          "description": "Strength of manuscript support",
+          "enum": ["strong", "moderate", "weak", null]
+        },
+        "historical_uptake": {
+          "type": ["string", "null"],
+          "description": "Historical adoption level (pack-provided only)"
+        },
+        "ideological_usage": {
+          "type": "array",
+          "description": "Documented historical associations",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

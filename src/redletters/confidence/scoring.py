@@ -1,13 +1,45 @@
 """Layered confidence scoring implementation.
 
 Implements ADR-010: Four-layer confidence model with explainability.
+
+v0.8.0: Added confidence bucketing for uncertainty propagation.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Literal
 
 from redletters.claims.taxonomy import Claim, ClaimType
+
+
+# Confidence bucketing thresholds (v0.8.0)
+CONFIDENCE_BUCKET_HIGH = 0.8
+CONFIDENCE_BUCKET_MEDIUM = 0.6
+
+# Type alias for bucket values
+ConfidenceBucket = Literal["high", "medium", "low"]
+
+
+def bucket_confidence(score: float) -> ConfidenceBucket:
+    """Map numeric score to 'high'/'medium'/'low'.
+
+    Thresholds:
+    - >= 0.8: "high"
+    - >= 0.6: "medium"
+    - < 0.6: "low"
+
+    Args:
+        score: Confidence score between 0.0 and 1.0
+
+    Returns:
+        Bucket label: "high", "medium", or "low"
+    """
+    if score >= CONFIDENCE_BUCKET_HIGH:
+        return "high"
+    elif score >= CONFIDENCE_BUCKET_MEDIUM:
+        return "medium"
+    return "low"
 
 
 @dataclass
@@ -447,10 +479,20 @@ class LayeredConfidence:
         }
         return min(scores, key=lambda k: scores[k])
 
+    @property
+    def bucket(self) -> ConfidenceBucket:
+        """Get bucket label for composite score (v0.8.0).
+
+        Returns:
+            "high", "medium", or "low" based on composite score
+        """
+        return bucket_confidence(self.composite)
+
     def to_dict(self) -> dict:
         """Serialize to dictionary for API responses."""
         return {
             "composite": round(self.composite, 3),
+            "bucket": self.bucket,
             "layers": {
                 "textual": {
                     "score": round(self.textual.score, 3),

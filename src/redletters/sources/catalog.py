@@ -31,6 +31,7 @@ class SourceRole(Enum):
     COMPARATIVE_LAYER = "comparative_layer"
     WITNESS_ANCHOR = "witness_anchor"
     VARIANT_COLLATION = "variant_collation"
+    SENSE_PACK = "sense_pack"  # v0.6.0: Installable lexicon/gloss packs
 
 
 class CatalogValidationError(Exception):

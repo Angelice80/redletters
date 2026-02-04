@@ -239,8 +239,15 @@ class JobManager:
         self,
         job_id: str,
         outputs: list[ArtifactInfo] | None = None,
+        scholarly_result: dict | None = None,
     ) -> JobReceipt:
-        """Mark job as completed and generate receipt."""
+        """Mark job as completed and generate receipt.
+
+        Args:
+            job_id: Job identifier
+            outputs: List of output artifacts
+            scholarly_result: Scholarly job result payload (Sprint 18)
+        """
         job = self._db.get_job(job_id)
         if not job:
             raise ValueError(f"Job not found: {job_id}")
@@ -251,8 +258,10 @@ class JobManager:
         # Emit state change
         await self._emit_state_change(job_id, JobState.RUNNING, JobState.COMPLETED)
 
-        # Generate receipt
-        receipt = await self._generate_receipt(job, "completed", outputs)
+        # Generate receipt (include scholarly_result if provided)
+        receipt = await self._generate_receipt(
+            job, "completed", outputs, scholarly_result=scholarly_result
+        )
 
         logger.info(f"Job completed: {job_id}")
         return receipt
@@ -372,6 +381,7 @@ class JobManager:
         error_code: str | None = None,
         error_message: str | None = None,
         error_details: dict[str, Any] | None = None,
+        scholarly_result: dict | None = None,
     ) -> JobReceipt:
         """Generate and write receipt.json.
 
@@ -416,7 +426,12 @@ class JobManager:
         temp_path = receipt_path.with_suffix(
             f".tmp.{os.getpid()}.{uuid.uuid4().hex[:8]}"
         )
-        content = receipt.model_dump_json(indent=2)
+
+        # Build receipt content, optionally including scholarly_result (Sprint 18)
+        receipt_dict = json.loads(receipt.model_dump_json())
+        if scholarly_result:
+            receipt_dict["scholarly_result"] = scholarly_result
+        content = json.dumps(receipt_dict, indent=2, default=str)
         content_bytes = content.encode("utf-8")
 
         # Write to temp file with fsync
@@ -463,7 +478,7 @@ class JobManager:
         self._db.update_job_state(
             job_id,
             current_state,
-            receipt_json=receipt.model_dump_json(),
+            receipt_json=content,  # Include scholarly_result if present
             receipt_hash=sha256,
         )
 
@@ -493,6 +508,17 @@ class JobManager:
 
     def _job_dict_to_response(self, job: dict[str, Any]) -> JobResponse:
         """Convert job dict to JobResponse."""
+        # Extract result from receipt if available (Sprint 18)
+        result = None
+        if job.get("receipt_json"):
+            try:
+                receipt = json.loads(job["receipt_json"])
+                # For scholarly jobs, result is embedded in receipt
+                if receipt.get("scholarly_result"):
+                    result = receipt["scholarly_result"]
+            except (json.JSONDecodeError, KeyError):
+                pass
+
         return JobResponse(
             job_id=job["job_id"],
             state=JobState(job["state"]),
@@ -508,4 +534,5 @@ class JobManager:
             progress_phase=job["progress_phase"],
             error_code=job["error_code"],
             error_message=job["error_message"],
+            result=result,
         )

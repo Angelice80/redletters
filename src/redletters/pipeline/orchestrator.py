@@ -588,7 +588,10 @@ def _translate_single_verse(
         timestamp=datetime.now().isoformat(),
     )
 
-    # 13. Build final response
+    # 13. Extract ledger from draft if present (Sprint 10: TraceableTranslator)
+    ledger = getattr(draft, "ledger", None)
+
+    # 14. Build final response
     return TranslateResponse(
         response_type="translation",
         reference=normalized_ref,
@@ -613,6 +616,7 @@ def _translate_single_verse(
         provenance=provenance,
         receipts=receipt,
         tokens=tokens,
+        ledger=ledger,
     )
 
 
@@ -817,6 +821,9 @@ def _translate_multi_verse(
         timestamp=datetime.now().isoformat(),
     )
 
+    # Extract ledger from draft if present (Sprint 10: TraceableTranslator)
+    ledger = getattr(draft, "ledger", None)
+
     return TranslateResponse(
         response_type="translation",
         reference=normalized_ref,
@@ -832,6 +839,7 @@ def _translate_multi_verse(
         provenance=provenance,
         receipts=receipt,
         tokens=combined_tokens,
+        ledger=ledger,
     )
 
 

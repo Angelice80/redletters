@@ -244,3 +244,92 @@ describe("createApiContract", () => {
     expect(contract.baseUrl).toBe("http://127.0.0.1:8080");
   });
 });
+
+/**
+ * These tests verify that GUI endpoint paths match the backend routes.
+ *
+ * Backend route locations:
+ * - /translate: src/redletters/api/routes.py (line ~198)
+ * - /sources/status: src/redletters/api/routes.py (line ~351)
+ * - /v1/gates/pending: src/redletters/engine_spine/routes.py (line ~430)
+ * - /v1/capabilities: src/redletters/engine_spine/routes.py (line ~49)
+ */
+describe("endpoint paths match backend", () => {
+  let contract: ApiContract;
+
+  beforeEach(() => {
+    contract = new ApiContract("http://127.0.0.1:47200");
+  });
+
+  it("translate endpoint path matches api/routes.py @router.post('/translate')", () => {
+    // Backend: src/redletters/api/routes.py - @router.post("/translate")
+    expect(contract.translate()).toBe("/translate");
+    expect(contract.url("translate")).toBe("http://127.0.0.1:47200/translate");
+  });
+
+  it("sources_status path matches api/routes.py @router.get('/sources/status')", () => {
+    // Backend: src/redletters/api/routes.py - @router.get("/sources/status")
+    expect(contract.sourcesStatus()).toBe("/sources/status");
+    expect(contract.url("sources_status")).toBe(
+      "http://127.0.0.1:47200/sources/status",
+    );
+  });
+
+  it("gates_pending path matches engine_spine/routes.py @router.get('/gates/pending') with /v1 prefix", () => {
+    // Backend: src/redletters/engine_spine/routes.py - router prefix="/v1", @router.get("/gates/pending")
+    expect(contract.gatesPending()).toBe("/v1/gates/pending");
+    expect(contract.url("gates_pending")).toBe(
+      "http://127.0.0.1:47200/v1/gates/pending",
+    );
+  });
+
+  it("capabilities path matches engine_spine/routes.py @router.get('/capabilities') with /v1 prefix", () => {
+    // Backend: src/redletters/engine_spine/routes.py - router prefix="/v1", @router.get("/capabilities")
+    expect(contract.capabilitiesPath()).toBe("/v1/capabilities");
+  });
+
+  it("run_scholarly path matches engine_spine/routes.py @router.post('/run/scholarly') with /v1 prefix", () => {
+    // Backend: src/redletters/engine_spine/routes.py - router prefix="/v1", @router.post("/run/scholarly")
+    expect(contract.runScholarly()).toBe("/v1/run/scholarly");
+  });
+});
+
+describe("SSE stream URL construction", () => {
+  let contract: ApiContract;
+
+  beforeEach(() => {
+    contract = new ApiContract("http://127.0.0.1:47200");
+  });
+
+  it("constructs global stream URL", () => {
+    expect(contract.globalStreamUrl()).toBe("http://127.0.0.1:47200/v1/stream");
+  });
+
+  it("constructs job-specific stream URL with encoded job_id", () => {
+    expect(contract.jobStreamUrl("job-123")).toBe(
+      "http://127.0.0.1:47200/v1/stream?job_id=job-123",
+    );
+  });
+
+  it("URL-encodes special characters in job_id", () => {
+    expect(contract.jobStreamUrl("job/with?special&chars")).toBe(
+      "http://127.0.0.1:47200/v1/stream?job_id=job%2Fwith%3Fspecial%26chars",
+    );
+  });
+});
+
+describe("all DEFAULT_ENDPOINTS use absolute paths", () => {
+  it("all endpoints start with /", () => {
+    for (const [key, path] of Object.entries(DEFAULT_ENDPOINTS)) {
+      expect(path).toMatch(/^\//);
+    }
+  });
+
+  it("no endpoints contain relative paths or full URLs", () => {
+    for (const [key, path] of Object.entries(DEFAULT_ENDPOINTS)) {
+      expect(path).not.toMatch(/^https?:\/\//);
+      expect(path).not.toMatch(/^\.\./);
+      expect(path).not.toMatch(/^[^/]/);
+    }
+  });
+});

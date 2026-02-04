@@ -3,7 +3,7 @@
 A transparent Greek New Testament tool that generates **multiple plausible English
 renderings** with explicit interpretive receipts.
 
-**Current Version:** v0.17.0
+**Current Version:** v0.18.0
 
 > **Important:** This tool produces *plausible renderings*, not "The One True
 > Translation." Every output shows that translation involves interpretive choices.

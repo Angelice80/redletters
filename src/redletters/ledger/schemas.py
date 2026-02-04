@@ -302,11 +302,75 @@ class EvidenceClassSummary:
 
 
 @dataclass
+class SensePackCitation:
+    """Citation-grade metadata for a sense pack (v0.6.0)."""
+
+    pack_id: str
+    """Pack identifier."""
+
+    source_id: str
+    """Stable citation key (e.g., 'LSJ', 'BDAG')."""
+
+    source_title: str = ""
+    """Full bibliographic title."""
+
+    edition: str = ""
+    """Edition string."""
+
+    publisher: str = ""
+    """Publisher name."""
+
+    year: int | None = None
+    """Publication year."""
+
+    license: str = ""
+    """License identifier."""
+
+    license_url: str = ""
+    """Link to license text."""
+
+    def to_dict(self) -> dict:
+        """Serialize for JSON output."""
+        result = {
+            "pack_id": self.pack_id,
+            "source_id": self.source_id,
+        }
+        if self.source_title:
+            result["source_title"] = self.source_title
+        if self.edition:
+            result["edition"] = self.edition
+        if self.publisher:
+            result["publisher"] = self.publisher
+        if self.year:
+            result["year"] = self.year
+        if self.license:
+            result["license"] = self.license
+        if self.license_url:
+            result["license_url"] = self.license_url
+        return result
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "SensePackCitation":
+        """Deserialize from dictionary."""
+        return cls(
+            pack_id=data.get("pack_id", ""),
+            source_id=data.get("source_id", ""),
+            source_title=data.get("source_title", ""),
+            edition=data.get("edition", ""),
+            publisher=data.get("publisher", ""),
+            year=data.get("year"),
+            license=data.get("license", ""),
+            license_url=data.get("license_url", ""),
+        )
+
+
+@dataclass
 class LedgerProvenance:
     """Source attribution for the ledger.
 
-    Tracks spine source (always SBLGNT per ADR-007) and
-    comparative sources used in variant analysis.
+    Tracks spine source (always SBLGNT per ADR-007),
+    comparative sources used in variant analysis,
+    and sense packs used for gloss provenance (v0.6.0).
     """
 
     spine_source_id: str
@@ -320,13 +384,21 @@ class LedgerProvenance:
     )
     """Counts by type from dossier/support."""
 
+    # v0.6.0: Sense pack citation metadata
+    sense_packs_used: list[SensePackCitation] = field(default_factory=list)
+    """Sense packs used for gloss lookups with citation-grade metadata."""
+
     def to_dict(self) -> dict:
         """Serialize for JSON output."""
-        return {
+        result = {
             "spine_source_id": self.spine_source_id,
             "comparative_sources_used": self.comparative_sources_used,
             "evidence_class_summary": self.evidence_class_summary.to_dict(),
         }
+        # v0.6.0: Include sense packs if present
+        if self.sense_packs_used:
+            result["sense_packs_used"] = [sp.to_dict() for sp in self.sense_packs_used]
+        return result
 
     @classmethod
     def from_dict(cls, data: dict) -> "LedgerProvenance":
@@ -337,10 +409,15 @@ class LedgerProvenance:
             if ecs_data
             else EvidenceClassSummary.empty()
         )
+        # v0.6.0: Parse sense packs
+        sense_packs = [
+            SensePackCitation.from_dict(sp) for sp in data.get("sense_packs_used", [])
+        ]
         return cls(
             spine_source_id=data.get("spine_source_id", "sblgnt"),
             comparative_sources_used=data.get("comparative_sources_used", []),
             evidence_class_summary=ecs,
+            sense_packs_used=sense_packs,
         )
 
 

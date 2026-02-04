@@ -66,16 +66,68 @@ SOURCE_ROLES: dict[str, SourceRole] = {
             "Some parsing decisions reflect editorial judgment",
         ],
     ),
+    # v0.6.0: Basic glosses fallback
+    "basic_glosses": SourceRole(
+        name="Basic Gloss Fallback",
+        license="Public Domain",
+        role="Fallback glosses for common vocabulary",
+        limitations=[
+            "Limited coverage of rare vocabulary",
+            "Single-gloss per lemma (no semantic range)",
+            "Should be supplemented with scholarly lexica",
+        ],
+    ),
 }
 
 
+# v0.6.0: Dynamic sense pack registry
+_sense_pack_roles: dict[str, SourceRole] = {}
+
+
+def register_sense_pack_role(
+    source_id: str,
+    name: str,
+    license: str,
+    role: str = "Installed sense pack",
+    limitations: list[str] | None = None,
+) -> None:
+    """Register a sense pack source role dynamically.
+
+    v0.6.0: Allows sense packs to register their provenance metadata.
+
+    Args:
+        source_id: Citation key for the source
+        name: Full bibliographic name
+        license: License identifier
+        role: Role description
+        limitations: Known limitations (optional)
+    """
+    _sense_pack_roles[source_id.lower()] = SourceRole(
+        name=name,
+        license=license,
+        role=role,
+        limitations=limitations or [],
+    )
+
+
 def get_source_role(source_name: str) -> SourceRole | None:
-    """Get the role definition for a source, or None if unknown."""
+    """Get the role definition for a source, or None if unknown.
+
+    v0.6.0: Also checks dynamically registered sense pack sources.
+    """
     # Normalize source name for lookup
     key = source_name.lower().replace(" ", "").replace("-", "").replace("'", "")
+
+    # Check static roles first
     for k, v in SOURCE_ROLES.items():
         if k in key or key in k:
             return v
+
+    # v0.6.0: Check dynamically registered sense pack roles
+    for k, v in _sense_pack_roles.items():
+        if k in key or key in k:
+            return v
+
     return None
 
 
@@ -188,3 +240,61 @@ def receipt_to_bibtex_style(receipt: dict) -> str:
         f"({receipt['sense_source']} s.v. {receipt['chosen_sense_id']}; "
         f"weight={receipt['sense_weight']:.2f})"
     )
+
+
+def format_sense_pack_citation(citation: dict) -> str:
+    """Format sense pack citation for scholarly use (v0.6.0).
+
+    Args:
+        citation: Dictionary with citation-grade fields:
+            - source_id: Citation key
+            - source_title: Full bibliographic title
+            - edition: Edition string (optional)
+            - publisher: Publisher name (optional)
+            - year: Publication year (optional)
+            - license: License identifier (optional)
+
+    Returns:
+        Formatted citation string
+
+    Example:
+        "LSJ (A Greek-English Lexicon, 9th ed., Clarendon Press, 1996)"
+    """
+    parts = [citation.get("source_id", "unknown")]
+
+    details = []
+    if citation.get("source_title"):
+        details.append(citation["source_title"])
+    if citation.get("edition"):
+        details.append(f"{citation['edition']} ed.")
+    if citation.get("publisher"):
+        details.append(citation["publisher"])
+    if citation.get("year"):
+        details.append(str(citation["year"]))
+
+    if details:
+        parts.append(f"({', '.join(details)})")
+
+    if citation.get("license"):
+        parts.append(f"[{citation['license']}]")
+
+    return " ".join(parts)
+
+
+def format_sense_pack_provenance(sense_packs: list[dict]) -> str:
+    """Format multiple sense pack citations for receipts (v0.6.0).
+
+    Args:
+        sense_packs: List of sense pack citation dicts
+
+    Returns:
+        Formatted provenance string
+    """
+    if not sense_packs:
+        return "No sense packs used"
+
+    lines = ["Sense Pack Sources:"]
+    for sp in sense_packs:
+        lines.append(f"  • {format_sense_pack_citation(sp)}")
+
+    return "\n".join(lines)

@@ -1,9 +1,18 @@
 /**
- * ReceiptViewer component - Displays job receipt JSON.
+ * ReceiptViewer - Displays job receipt with structured collapsible sections.
+ *
+ * Sprint 20: Jobs-first GUI UX loop
+ *
+ * Features:
+ * - Job metadata (job_id, run_id, receipt_status, timestamps)
+ * - Artifacts list with paths, sizes, sha256
+ * - Collapsible sections for config snapshot and source pins
+ * - Error details for failed jobs
+ * - Copy JSON button for full receipt
  */
 
 import { useCallback, useEffect, useState } from "react";
-import type { JobReceipt, JobState } from "../api/types";
+import type { JobReceipt, JobState, ArtifactInfo } from "../api/types";
 import { ApiClient } from "../api/client";
 
 interface ReceiptViewerProps {
@@ -13,6 +22,433 @@ interface ReceiptViewerProps {
 }
 
 const TERMINAL_STATES: JobState[] = ["completed", "failed", "cancelled"];
+
+// Styles
+const containerStyle: React.CSSProperties = {
+  backgroundColor: "#2d2d44",
+  borderRadius: "8px",
+  overflow: "hidden",
+};
+
+const headerStyle: React.CSSProperties = {
+  padding: "12px 16px",
+  borderBottom: "1px solid #4b5563",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+};
+
+const copyButtonStyle: React.CSSProperties = {
+  padding: "4px 10px",
+  fontSize: "11px",
+  backgroundColor: "#374151",
+  color: "#9ca3af",
+  border: "none",
+  borderRadius: "4px",
+  cursor: "pointer",
+};
+
+const contentStyle: React.CSSProperties = {
+  padding: "16px",
+};
+
+const sectionStyle: React.CSSProperties = {
+  marginBottom: "16px",
+};
+
+const sectionHeaderStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+  padding: "8px 0",
+  cursor: "pointer",
+  userSelect: "none",
+  borderBottom: "1px solid #374151",
+};
+
+const sectionLabelStyle: React.CSSProperties = {
+  fontSize: "12px",
+  fontWeight: 500,
+  color: "#9ca3af",
+  textTransform: "uppercase",
+};
+
+const chevronStyle: React.CSSProperties = {
+  fontSize: "10px",
+  color: "#6b7280",
+  transition: "transform 0.15s",
+};
+
+const rowStyle: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "flex-start",
+  padding: "8px 0",
+  borderBottom: "1px solid #374151",
+};
+
+const labelStyle: React.CSSProperties = {
+  fontSize: "12px",
+  color: "#6b7280",
+  minWidth: "100px",
+};
+
+const valueStyle: React.CSSProperties = {
+  fontSize: "12px",
+  color: "#eaeaea",
+  textAlign: "right",
+  wordBreak: "break-all",
+};
+
+const codeStyle: React.CSSProperties = {
+  fontFamily: "monospace",
+  fontSize: "11px",
+  backgroundColor: "#374151",
+  padding: "2px 6px",
+  borderRadius: "3px",
+  color: "#9ca3af",
+  wordBreak: "break-all",
+};
+
+const artifactRowStyle: React.CSSProperties = {
+  padding: "10px",
+  backgroundColor: "#1a1a2e",
+  borderRadius: "4px",
+  marginBottom: "6px",
+};
+
+const artifactPathStyle: React.CSSProperties = {
+  fontSize: "12px",
+  color: "#60a5fa",
+  fontFamily: "monospace",
+  wordBreak: "break-all",
+  marginBottom: "4px",
+};
+
+const artifactMetaStyle: React.CSSProperties = {
+  display: "flex",
+  gap: "16px",
+  fontSize: "10px",
+  color: "#6b7280",
+};
+
+const errorBoxStyle: React.CSSProperties = {
+  padding: "12px",
+  backgroundColor: "#450a0a",
+  borderRadius: "6px",
+  marginBottom: "16px",
+};
+
+const preStyle: React.CSSProperties = {
+  fontFamily: "monospace",
+  fontSize: "11px",
+  color: "#9ca3af",
+  backgroundColor: "#1a1a2e",
+  padding: "12px",
+  borderRadius: "4px",
+  overflow: "auto",
+  maxHeight: "200px",
+  whiteSpace: "pre-wrap",
+  wordBreak: "break-word",
+  margin: 0,
+};
+
+const statusBadgeStyle: React.CSSProperties = {
+  padding: "3px 8px",
+  borderRadius: "4px",
+  fontSize: "11px",
+  fontWeight: 600,
+  textTransform: "uppercase",
+};
+
+const loadingStyle: React.CSSProperties = {
+  padding: "24px",
+  textAlign: "center",
+  color: "#6b7280",
+  fontSize: "13px",
+  backgroundColor: "#2d2d44",
+  borderRadius: "8px",
+};
+
+const errorMessageStyle: React.CSSProperties = {
+  padding: "16px",
+  backgroundColor: "#2d2d44",
+  borderRadius: "8px",
+};
+
+const retryButtonStyle: React.CSSProperties = {
+  padding: "6px 14px",
+  borderRadius: "4px",
+  border: "none",
+  backgroundColor: "#3b82f6",
+  color: "white",
+  cursor: "pointer",
+  fontSize: "12px",
+};
+
+const pendingStyle: React.CSSProperties = {
+  padding: "16px",
+  backgroundColor: "#2d2d44",
+  borderRadius: "8px",
+  color: "#9ca3af",
+  textAlign: "center",
+};
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+function formatTimestamp(ts: string | undefined): string {
+  if (!ts) return "—";
+  try {
+    return new Date(ts).toLocaleString();
+  } catch {
+    return ts;
+  }
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const colors: Record<string, { bg: string; text: string }> = {
+    completed: { bg: "#14532d", text: "#86efac" },
+    failed: { bg: "#7f1d1d", text: "#fca5a5" },
+    cancelled: { bg: "#78350f", text: "#fcd34d" },
+  };
+
+  const color = colors[status] ?? { bg: "#374151", text: "#9ca3af" };
+
+  return (
+    <span
+      style={{
+        ...statusBadgeStyle,
+        backgroundColor: color.bg,
+        color: color.text,
+      }}
+    >
+      {status}
+    </span>
+  );
+}
+
+function CollapsibleSection({
+  title,
+  count,
+  defaultOpen = false,
+  children,
+}: {
+  title: string;
+  count?: number;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  return (
+    <div style={sectionStyle}>
+      <div
+        style={sectionHeaderStyle}
+        onClick={() => setIsOpen(!isOpen)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => e.key === "Enter" && setIsOpen(!isOpen)}
+      >
+        <span
+          style={{
+            ...chevronStyle,
+            transform: isOpen ? "rotate(90deg)" : "rotate(0deg)",
+          }}
+        >
+          ▶
+        </span>
+        <span style={sectionLabelStyle}>
+          {title}
+          {count !== undefined && ` (${count})`}
+        </span>
+      </div>
+      {isOpen && <div style={{ paddingTop: "8px" }}>{children}</div>}
+    </div>
+  );
+}
+
+function ArtifactsList({ artifacts }: { artifacts: ArtifactInfo[] }) {
+  return (
+    <>
+      {artifacts.map((artifact, idx) => (
+        <div key={idx} style={artifactRowStyle}>
+          <div style={artifactPathStyle}>{artifact.path}</div>
+          <div style={artifactMetaStyle}>
+            <span>{formatBytes(artifact.size_bytes)}</span>
+            <span title={artifact.sha256}>
+              sha256: {artifact.sha256.slice(0, 16)}...
+            </span>
+          </div>
+        </div>
+      ))}
+    </>
+  );
+}
+
+function ReceiptContent({ receipt }: { receipt: JobReceipt }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyJson = useCallback(() => {
+    const json = JSON.stringify(receipt, null, 2);
+    navigator.clipboard.writeText(json);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }, [receipt]);
+
+  const hasSourcePins =
+    receipt.source_pins && Object.keys(receipt.source_pins).length > 0;
+  const hasConfigSnapshot =
+    receipt.config_snapshot && Object.keys(receipt.config_snapshot).length > 0;
+  const hasInputsSummary =
+    receipt.inputs_summary && Object.keys(receipt.inputs_summary).length > 0;
+  const hasErrorDetails =
+    receipt.error_details && Object.keys(receipt.error_details).length > 0;
+
+  return (
+    <div style={containerStyle}>
+      {/* Header */}
+      <div style={headerStyle}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <span style={{ fontWeight: 600, color: "#eaeaea" }}>Job Receipt</span>
+          <StatusBadge status={receipt.receipt_status} />
+        </div>
+        <button style={copyButtonStyle} onClick={handleCopyJson}>
+          {copied ? "Copied!" : "Copy JSON"}
+        </button>
+      </div>
+
+      <div style={contentStyle}>
+        {/* Metadata */}
+        <div style={sectionStyle}>
+          <div style={rowStyle}>
+            <span style={labelStyle}>Job ID</span>
+            <code style={codeStyle}>{receipt.job_id}</code>
+          </div>
+          <div style={rowStyle}>
+            <span style={labelStyle}>Run ID</span>
+            <code style={codeStyle}>{receipt.run_id}</code>
+          </div>
+          <div style={rowStyle}>
+            <span style={labelStyle}>Schema</span>
+            <span style={valueStyle}>{receipt.schema_version}</span>
+          </div>
+          {receipt.exit_code && (
+            <div style={rowStyle}>
+              <span style={labelStyle}>Exit Code</span>
+              <code style={codeStyle}>{receipt.exit_code}</code>
+            </div>
+          )}
+        </div>
+
+        {/* Timestamps */}
+        <CollapsibleSection title="Timestamps" defaultOpen>
+          <div style={rowStyle}>
+            <span style={labelStyle}>Created</span>
+            <span style={valueStyle}>
+              {formatTimestamp(receipt.timestamps.created)}
+            </span>
+          </div>
+          {receipt.timestamps.started && (
+            <div style={rowStyle}>
+              <span style={labelStyle}>Started</span>
+              <span style={valueStyle}>
+                {formatTimestamp(receipt.timestamps.started)}
+              </span>
+            </div>
+          )}
+          {receipt.timestamps.completed && (
+            <div style={rowStyle}>
+              <span style={labelStyle}>Completed</span>
+              <span style={valueStyle}>
+                {formatTimestamp(receipt.timestamps.completed)}
+              </span>
+            </div>
+          )}
+        </CollapsibleSection>
+
+        {/* Error Details (if failed) */}
+        {receipt.receipt_status === "failed" && receipt.error_message && (
+          <div style={errorBoxStyle}>
+            <div
+              style={{ color: "#fca5a5", fontWeight: 500, marginBottom: "8px" }}
+            >
+              {receipt.error_code || "Error"}
+            </div>
+            <div
+              style={{
+                color: "#fecaca",
+                fontSize: "12px",
+                fontFamily: "monospace",
+                whiteSpace: "pre-wrap",
+                maxHeight: "150px",
+                overflow: "auto",
+              }}
+            >
+              {receipt.error_message}
+            </div>
+          </div>
+        )}
+
+        {/* Artifacts */}
+        {receipt.outputs && receipt.outputs.length > 0 && (
+          <CollapsibleSection
+            title="Artifacts"
+            count={receipt.outputs.length}
+            defaultOpen
+          >
+            <ArtifactsList artifacts={receipt.outputs} />
+          </CollapsibleSection>
+        )}
+
+        {/* Source Pins */}
+        {hasSourcePins && (
+          <CollapsibleSection
+            title="Source Pins"
+            count={Object.keys(receipt.source_pins).length}
+          >
+            {Object.entries(receipt.source_pins).map(([source, version]) => (
+              <div key={source} style={rowStyle}>
+                <span style={labelStyle}>{source}</span>
+                <code style={codeStyle}>{version}</code>
+              </div>
+            ))}
+          </CollapsibleSection>
+        )}
+
+        {/* Config Snapshot */}
+        {hasConfigSnapshot && (
+          <CollapsibleSection title="Config Snapshot">
+            <pre style={preStyle}>
+              {JSON.stringify(receipt.config_snapshot, null, 2)}
+            </pre>
+          </CollapsibleSection>
+        )}
+
+        {/* Inputs Summary */}
+        {hasInputsSummary && (
+          <CollapsibleSection title="Inputs Summary">
+            <pre style={preStyle}>
+              {JSON.stringify(receipt.inputs_summary, null, 2)}
+            </pre>
+          </CollapsibleSection>
+        )}
+
+        {/* Error Details JSON */}
+        {hasErrorDetails && (
+          <CollapsibleSection title="Error Details">
+            <pre style={preStyle}>
+              {JSON.stringify(receipt.error_details, null, 2)}
+            </pre>
+          </CollapsibleSection>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export function ReceiptViewer({ jobId, jobState, client }: ReceiptViewerProps) {
   const [receipt, setReceipt] = useState<JobReceipt | null>(null);
@@ -46,60 +482,23 @@ export function ReceiptViewer({ jobId, jobState, client }: ReceiptViewerProps) {
 
   if (!isTerminal) {
     return (
-      <div
-        style={{
-          padding: "16px",
-          backgroundColor: "#2d2d44",
-          borderRadius: "4px",
-          color: "#9ca3af",
-          textAlign: "center",
-        }}
-      >
+      <div style={pendingStyle}>
         Receipt will be available when job completes.
       </div>
     );
   }
 
   if (loading) {
-    return (
-      <div
-        style={{
-          padding: "16px",
-          backgroundColor: "#2d2d44",
-          borderRadius: "4px",
-          color: "#9ca3af",
-          textAlign: "center",
-        }}
-      >
-        Loading receipt...
-      </div>
-    );
+    return <div style={loadingStyle}>Loading receipt...</div>;
   }
 
   if (error) {
     return (
-      <div
-        style={{
-          padding: "16px",
-          backgroundColor: "#2d2d44",
-          borderRadius: "4px",
-        }}
-      >
-        <div style={{ color: "#ef4444", marginBottom: "8px" }}>
+      <div style={errorMessageStyle}>
+        <div style={{ color: "#ef4444", marginBottom: "12px" }}>
           Failed to load receipt: {error}
         </div>
-        <button
-          onClick={fetchReceipt}
-          style={{
-            padding: "4px 12px",
-            borderRadius: "4px",
-            border: "none",
-            backgroundColor: "#3b82f6",
-            color: "white",
-            cursor: "pointer",
-            fontSize: "12px",
-          }}
-        >
+        <button onClick={fetchReceipt} style={retryButtonStyle}>
           Retry
         </button>
       </div>
@@ -110,153 +509,7 @@ export function ReceiptViewer({ jobId, jobState, client }: ReceiptViewerProps) {
     return null;
   }
 
-  const formatTimestamp = (ts: string | undefined) => {
-    if (!ts) return "N/A";
-    try {
-      return new Date(ts).toLocaleString();
-    } catch {
-      return ts;
-    }
-  };
-
-  return (
-    <div
-      style={{
-        backgroundColor: "#2d2d44",
-        borderRadius: "4px",
-        overflow: "hidden",
-      }}
-    >
-      {/* Header */}
-      <div
-        style={{
-          padding: "12px 16px",
-          borderBottom: "1px solid #4a4a6a",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <span style={{ fontWeight: 600 }}>Job Receipt</span>
-        <span
-          style={{
-            padding: "2px 8px",
-            borderRadius: "4px",
-            backgroundColor:
-              receipt.receipt_status === "completed"
-                ? "#22c55e"
-                : receipt.receipt_status === "failed"
-                  ? "#ef4444"
-                  : "#6b7280",
-            color: "white",
-            fontSize: "12px",
-            fontWeight: 500,
-            textTransform: "uppercase",
-          }}
-        >
-          {receipt.receipt_status}
-        </span>
-      </div>
-
-      {/* Summary */}
-      <div style={{ padding: "16px" }}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "auto 1fr",
-            gap: "8px 16px",
-            marginBottom: "16px",
-            fontSize: "13px",
-          }}
-        >
-          <span style={{ color: "#9ca3af" }}>Job ID:</span>
-          <span style={{ fontFamily: "monospace" }}>{receipt.job_id}</span>
-
-          <span style={{ color: "#9ca3af" }}>Run ID:</span>
-          <span style={{ fontFamily: "monospace" }}>{receipt.run_id}</span>
-
-          <span style={{ color: "#9ca3af" }}>Created:</span>
-          <span>{formatTimestamp(receipt.timestamps.created)}</span>
-
-          <span style={{ color: "#9ca3af" }}>Started:</span>
-          <span>{formatTimestamp(receipt.timestamps.started)}</span>
-
-          <span style={{ color: "#9ca3af" }}>Completed:</span>
-          <span>{formatTimestamp(receipt.timestamps.completed)}</span>
-
-          {receipt.error_code && (
-            <>
-              <span style={{ color: "#ef4444" }}>Error:</span>
-              <span style={{ color: "#ef4444" }}>
-                {receipt.error_code}: {receipt.error_message}
-              </span>
-            </>
-          )}
-        </div>
-
-        {/* Outputs */}
-        {receipt.outputs.length > 0 && (
-          <div style={{ marginBottom: "16px" }}>
-            <div
-              style={{
-                color: "#9ca3af",
-                marginBottom: "8px",
-                fontSize: "12px",
-                fontWeight: 600,
-                textTransform: "uppercase",
-              }}
-            >
-              Outputs ({receipt.outputs.length})
-            </div>
-            {receipt.outputs.map((output, index) => (
-              <div
-                key={index}
-                style={{
-                  padding: "8px",
-                  backgroundColor: "#1a1a2e",
-                  borderRadius: "4px",
-                  marginBottom: "4px",
-                  fontFamily: "monospace",
-                  fontSize: "12px",
-                }}
-              >
-                <div>{output.path}</div>
-                <div style={{ color: "#6b7280", marginTop: "4px" }}>
-                  {(output.size_bytes / 1024).toFixed(1)} KB | sha256:{" "}
-                  {output.sha256.slice(0, 16)}...
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Full JSON */}
-        <details>
-          <summary
-            style={{
-              cursor: "pointer",
-              color: "#3b82f6",
-              fontSize: "12px",
-              marginBottom: "8px",
-            }}
-          >
-            View Full JSON
-          </summary>
-          <pre
-            style={{
-              backgroundColor: "#1a1a2e",
-              padding: "12px",
-              borderRadius: "4px",
-              overflow: "auto",
-              maxHeight: "300px",
-              fontSize: "11px",
-              lineHeight: 1.4,
-            }}
-          >
-            {JSON.stringify(receipt, null, 2)}
-          </pre>
-        </details>
-      </div>
-    </div>
-  );
+  return <ReceiptContent receipt={receipt} />;
 }
+
+export default ReceiptViewer;

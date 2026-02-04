@@ -22,6 +22,7 @@ from redletters.export.schema_versions import (
     CITATIONS_SCHEMA_VERSION,
     QUOTE_SCHEMA_VERSION,
     DOSSIER_SCHEMA_VERSION,
+    RUNLOG_SCHEMA_VERSION,
 )
 
 
@@ -33,6 +34,7 @@ ARTIFACT_SCHEMA_VERSIONS = {
     "citations": CITATIONS_SCHEMA_VERSION,
     "quote": QUOTE_SCHEMA_VERSION,
     "dossier": DOSSIER_SCHEMA_VERSION,
+    "runlog": RUNLOG_SCHEMA_VERSION,
 }
 
 # Required fields for each artifact type (minimal structural validation)
@@ -55,6 +57,18 @@ REQUIRED_FIELDS = {
         "variants",
         "provenance",
         "schema_version",
+    ],
+    "runlog": [
+        "schema_version",
+        "tool_version",
+        "command",
+        "started_at",
+        "completed_at",
+        "reference",
+        "mode",
+        "files_created",
+        "validations",
+        "success",
     ],
 }
 
@@ -110,9 +124,18 @@ def detect_artifact_type(file_path: Path, content: Any = None) -> str | None:
         return "quote"
     if "dossier" in name:
         return "dossier"
+    if "run_log" in name or "runlog" in name:
+        return "runlog"
 
     # Check content structure for JSON files
     if content and isinstance(content, dict):
+        # Runlog has command and validations
+        if (
+            "command" in content
+            and "validations" in content
+            and "files_created" in content
+        ):
+            return "runlog"
         # Snapshot has unique structure
         if "tool_version" in content and "export_hashes" in content:
             return "snapshot"
@@ -209,6 +232,24 @@ def validate_record(
         spine = record.get("spine", {})
         if not isinstance(spine, dict):
             errors.append(f"{prefix}spine must be an object")
+
+    elif artifact_type == "runlog":
+        command = record.get("command", {})
+        if not isinstance(command, dict):
+            errors.append(f"{prefix}command must be an object")
+        else:
+            if "reference" not in command:
+                errors.append(f"{prefix}command missing reference field")
+            if "output_dir" not in command:
+                errors.append(f"{prefix}command missing output_dir field")
+            if "mode" not in command:
+                errors.append(f"{prefix}command missing mode field")
+        files_created = record.get("files_created", [])
+        if not isinstance(files_created, list):
+            errors.append(f"{prefix}files_created must be an array")
+        validations = record.get("validations", [])
+        if not isinstance(validations, list):
+            errors.append(f"{prefix}validations must be an array")
 
     return errors
 

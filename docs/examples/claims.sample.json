@@ -1,0 +1,24 @@
+{
+  "claims": [
+    {
+      "label": "divine-sonship",
+      "text": "Jesus is uniquely identified as the divine Son who reveals the Father",
+      "dependencies": ["John.1.18"]
+    },
+    {
+      "label": "eternal-logos",
+      "text": "The Word (Logos) existed eternally with God",
+      "dependencies": ["John.1.1", "John.1.2"]
+    },
+    {
+      "label": "new-birth",
+      "text": "Spiritual rebirth is necessary for seeing the kingdom of God",
+      "dependencies": ["John.3.3", "John.3.5", "John.3.7"]
+    },
+    {
+      "label": "divine-love",
+      "text": "God's love for the world is demonstrated in the giving of His Son",
+      "dependencies": ["John.3.16"]
+    }
+  ]
+}

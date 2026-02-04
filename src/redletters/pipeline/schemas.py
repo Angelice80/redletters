@@ -336,8 +336,40 @@ class ConfidenceResult:
 
 
 @dataclass
+class SensePackProvenance:
+    """Citation-grade provenance for a sense pack (v0.6.0)."""
+
+    pack_id: str
+    """Pack identifier."""
+
+    source_id: str
+    """Stable citation key (e.g., 'LSJ', 'BDAG')."""
+
+    source_title: str = ""
+    """Full bibliographic title."""
+
+    edition: str = ""
+    """Edition string."""
+
+    publisher: str = ""
+    """Publisher name."""
+
+    year: int | None = None
+    """Publication year."""
+
+    license: str = ""
+    """License identifier."""
+
+    license_url: str = ""
+    """Link to license text."""
+
+
+@dataclass
 class ProvenanceInfo:
-    """Provenance tracking for the translation."""
+    """Provenance tracking for the translation.
+
+    v0.6.0: Added sense_packs_used for citation-grade lexicon provenance.
+    """
 
     spine_source: str = "SBLGNT"
     """Canonical text source (always SBLGNT)."""
@@ -353,6 +385,10 @@ class ProvenanceInfo:
 
     witness_summaries: list[dict] = field(default_factory=list)
     """Summary of manuscript witnesses."""
+
+    # v0.6.0: Sense pack citation metadata
+    sense_packs_used: list[SensePackProvenance] = field(default_factory=list)
+    """Sense packs used with citation-grade metadata."""
 
 
 @dataclass
@@ -551,6 +587,22 @@ class TranslateResponse:
                 "sources_used": self.provenance.sources_used,
                 "variant_unit_ids": self.provenance.variant_unit_ids,
                 "witness_summaries": self.provenance.witness_summaries,
+                # v0.6.0: Sense pack citation metadata
+                "sense_packs_used": [
+                    {
+                        "pack_id": sp.pack_id,
+                        "source_id": sp.source_id,
+                        **(
+                            {"source_title": sp.source_title} if sp.source_title else {}
+                        ),
+                        **({"edition": sp.edition} if sp.edition else {}),
+                        **({"publisher": sp.publisher} if sp.publisher else {}),
+                        **({"year": sp.year} if sp.year else {}),
+                        **({"license": sp.license} if sp.license else {}),
+                        **({"license_url": sp.license_url} if sp.license_url else {}),
+                    }
+                    for sp in self.provenance.sense_packs_used
+                ],
             },
             "receipts": {
                 "checks_run": self.receipts.checks_run,

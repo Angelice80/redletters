@@ -13,6 +13,9 @@ export type JobState =
   | "failed"
   | "archived";
 
+/** Sprint 18: Job type discriminator */
+export type JobType = "translation" | "scholarly";
+
 export type EngineMode = "normal" | "safe";
 
 export type EngineHealth = "healthy" | "degraded";
@@ -22,10 +25,18 @@ export type LogLevel = "trace" | "debug" | "info" | "warn" | "error";
 // --- Request/Response Models ---
 
 export interface JobConfig {
+  job_type?: JobType; // Sprint 18: Job type discriminator
   input_paths: string[];
   output_dir?: string;
   style: string;
   options: Record<string, unknown>;
+  // Sprint 18: Scholarly job fields (only used when job_type == "scholarly")
+  reference?: string;
+  mode?: "readable" | "traceable";
+  force?: boolean;
+  session_id?: string;
+  include_schemas?: boolean;
+  create_zip?: boolean;
 }
 
 export interface JobCreateRequest {
@@ -44,6 +55,20 @@ export interface JobResponse {
   progress_phase?: string;
   error_code?: string;
   error_message?: string;
+  // Sprint 18: Job result payload (populated for completed scholarly jobs)
+  result?: ScholarlyJobResult | Record<string, unknown>;
+}
+
+/**
+ * Sprint 19: Backend shape for GUI mismatch detection.
+ * Populated by introspecting app.routes at startup.
+ */
+export interface BackendShape {
+  backend_mode: "full" | "engine_only";
+  has_translate: boolean;
+  has_sources_status: boolean;
+  has_acknowledge: boolean;
+  has_variants_dossier: boolean;
 }
 
 export interface EngineStatus {
@@ -56,6 +81,8 @@ export interface EngineStatus {
   uptime_seconds: number;
   active_jobs: number;
   queue_depth: number;
+  // Sprint 19: Backend shape for mismatch detection
+  shape?: BackendShape;
 }
 
 // --- SSE Event Models ---
@@ -186,6 +213,42 @@ export interface ErrorResponse {
 
 export type ConnectionState = "connected" | "degraded" | "disconnected";
 
+// --- Sprint 19: SSE Connection Health ---
+
+/** SSE connection health state for the connection badge */
+export type SSEHealthState = "connected" | "reconnecting" | "disconnected";
+
+/** SSE health info for diagnostics */
+export interface SSEHealthInfo {
+  state: SSEHealthState;
+  baseUrl: string;
+  lastEventId: number | null;
+  lastMessageAt: Date | null;
+  reconnectAttempt: number;
+}
+
+// --- Sprint 19: Job UI State Machine ---
+
+/**
+ * Job UI state for ExportView and Jobs screen.
+ * Represents the client-side view of a job's lifecycle.
+ */
+export type JobUIState =
+  | { status: "idle" }
+  | { status: "enqueued"; jobId: string }
+  | {
+      status: "streaming";
+      jobId: string;
+      stage: string;
+      percent: number;
+      message: string;
+    }
+  | { status: "cancel_requested"; jobId: string }
+  | { status: "completed_success"; jobId: string; result: ScholarlyJobResult }
+  | { status: "completed_gate_blocked"; jobId: string; pendingGates: string[] }
+  | { status: "completed_failed"; jobId: string; errors: string[] }
+  | { status: "canceled"; jobId: string };
+
 // --- API Capabilities (Sprint 16: Compatibility Handshake) ---
 
 export interface ApiCapabilities {
@@ -208,15 +271,27 @@ export interface ApiCapabilities {
   initialized: boolean;
 }
 
-// Sprint 17: Error categories for structured error handling
+// Sprint 17/19: Error categories for structured error handling
 export type ErrorCategory =
   | "network"
   | "auth"
   | "not_found"
+  | "backend_mismatch" // Sprint 19: Backend running in wrong mode
   | "gate_blocked"
   | "service_unavailable"
   | "server"
   | "unknown";
+
+/**
+ * Sprint 19: Backend mismatch detection result.
+ * Used when a 404 is detected for /translate or /sources/status.
+ */
+export interface BackendMismatchInfo {
+  detected: boolean;
+  backendMode?: "full" | "engine_only";
+  missingRoutes: string[];
+  correctStartCommand: string;
+}
 
 // Error detail types for ApiErrorPanel
 export interface ApiErrorDetail {
@@ -245,6 +320,8 @@ export interface ApiErrorDetail {
     };
     resolvedEndpoints?: Record<string, string>;
   };
+  // Sprint 19: Backend mismatch info (populated async for 404 errors)
+  mismatchInfo?: BackendMismatchInfo;
 }
 
 // Sprint 17: Capability validation result
@@ -743,4 +820,47 @@ export interface ScholarlyRunResponse {
   bundle_path?: string;
   run_log?: ScholarlyRunLog;
   errors: string[];
+}
+
+// --- Sprint 18: Async Scholarly Jobs ---
+
+/** Response for POST /v1/run/scholarly (async job mode) */
+export interface ScholarlyJobResponse {
+  success: boolean;
+  job_id: string;
+  reference: string;
+  mode: string;
+  force: boolean;
+  session_id: string;
+  message: string;
+}
+
+/** Result payload stored in job receipt for scholarly jobs */
+export interface ScholarlyJobResult {
+  success: boolean;
+  gate_blocked?: boolean;
+  pending_gates?: string[];
+  output_dir?: string;
+  bundle_path?: string;
+  run_log_summary?: {
+    reference: string;
+    mode: string;
+    verse_count: number;
+    file_count: number;
+    content_hash?: string;
+  };
+  errors?: string[];
+  started_at?: string;
+  completed_at?: string;
+}
+
+/** Extended job config for scholarly jobs */
+export interface ScholarlyJobConfig extends JobConfig {
+  job_type: "scholarly";
+  reference: string;
+  mode: "readable" | "traceable";
+  force: boolean;
+  session_id: string;
+  include_schemas: boolean;
+  create_zip: boolean;
 }

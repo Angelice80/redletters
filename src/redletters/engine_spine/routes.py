@@ -46,6 +46,55 @@ async def get_engine_status(_: None = Depends(require_auth)) -> EngineStatus:
     return state.status_manager.get_status()
 
 
+@router.get(
+    "/capabilities",
+    summary="Get detailed API capabilities",
+    description="Returns detailed capability information for GUI compatibility checks.",
+)
+async def get_capabilities(_: None = Depends(require_auth)):
+    """GET /v1/capabilities - Detailed capability information.
+
+    Sprint 16: Used by GUI for compatibility handshake.
+    Includes endpoint availability and required GUI version.
+    """
+    from redletters import __version__
+
+    state = get_engine_state()
+
+    # Check which capabilities are available
+    capabilities = {
+        "version": __version__,
+        "api_version": "v1",
+        "min_gui_version": "0.15.0",
+        "endpoints": {
+            # Engine spine routes (always available)
+            "engine_status": "/v1/engine/status",
+            "stream": "/v1/stream",
+            "jobs": "/v1/jobs",
+            "gates_pending": "/v1/gates/pending",
+            "run_scholarly": "/v1/run/scholarly",
+            # API routes (translation/sources) - now unified
+            "translate": "/translate",
+            "acknowledge": "/acknowledge",
+            "sources": "/sources",
+            "sources_status": "/sources/status",
+            "variants_dossier": "/variants/dossier",
+        },
+        "features": [
+            "translation",
+            "sources",
+            "variants",
+            "gates",
+            "scholarly_run",
+            "jobs",
+            "sse_streaming",
+        ],
+        "initialized": state.is_initialized if state else False,
+    }
+
+    return capabilities
+
+
 # --- SSE Streaming ---
 
 
@@ -205,21 +254,35 @@ async def cancel_job(
     job_id: str,
     _: None = Depends(require_auth),
 ) -> JobResponse:
-    """POST /v1/jobs/{job_id}/cancel - Cancel job."""
+    """POST /v1/jobs/{job_id}/cancel - Cancel job.
+
+    Sprint 18: For running jobs, signals the executor to cancel.
+    The job will transition to CANCELLED state when the executor acknowledges.
+    """
     engine_state = get_engine_state()
     if not engine_state.is_initialized:
         raise HTTPException(status_code=503, detail="Engine not initialized")
 
     from redletters.engine_spine.jobs import JobManager
-    from pathlib import Path
 
-    workspace_base = Path("~/.greek2english/workspaces").expanduser()
     job_manager = JobManager(
         db=engine_state.db,
         broadcaster=engine_state.broadcaster,
-        workspace_base=workspace_base,
+        workspace_base=engine_state.workspace_base,
     )
 
+    # Check if job is currently running in executor (Sprint 18)
+    if engine_state.executor and engine_state.executor.current_job_id == job_id:
+        # Signal executor to cancel - it will handle the state transition
+        engine_state.executor.request_cancel(job_id)
+        logger.info(f"Cancel requested for running job: {job_id}")
+        # Return current job state - executor will complete the cancellation
+        job = await job_manager.get_job(job_id)
+        if not job:
+            raise HTTPException(status_code=404, detail=f"Job not found: {job_id}")
+        return job
+
+    # For queued jobs, cancel immediately
     receipt = await job_manager.cancel_job(job_id)
     if not receipt:
         raise HTTPException(status_code=404, detail=f"Job not found: {job_id}")
@@ -358,4 +421,183 @@ async def export_diagnostics(
             "summary": report.summary,
             "failures": report.failures,
         },
+    }
+
+
+# --- Gate Pending Check (v0.15.0) ---
+
+
+@router.get(
+    "/gates/pending",
+    summary="Check for pending gates",
+    description="Check for pending variant acknowledgements at a reference. Uses same resolver as ScholarlyRunner.",
+    responses={
+        200: {"description": "Gate check complete"},
+        400: {"description": "Invalid reference"},
+        503: {"description": "Engine not initialized"},
+    },
+)
+async def get_pending_gates(
+    reference: str = Query(..., description="Scripture reference to check"),
+    session_id: str = Query(..., description="Session ID for acknowledgement lookup"),
+    _: None = Depends(require_auth),
+):
+    """GET /v1/gates/pending - Check for pending gates.
+
+    Uses the same gate resolution logic as ScholarlyRunner to ensure
+    consistency between gate detection and export blocking.
+    """
+    from redletters.pipeline.passage_ref import normalize_reference, PassageRefError
+    from redletters.gates.state import AcknowledgementStore
+    from redletters.variants.store import VariantStore
+
+    engine_state = get_engine_state()
+    if not engine_state.is_initialized:
+        raise HTTPException(status_code=503, detail="Engine not initialized")
+
+    # Parse reference
+    try:
+        normalized_ref, verse_ids = normalize_reference(reference)
+    except PassageRefError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid reference: {e}")
+
+    # Get stores - use raw sqlite connection from EngineDatabase
+    conn = engine_state.db.connect()
+    ack_store = AcknowledgementStore(conn)
+    variant_store = VariantStore(conn)
+
+    try:
+        ack_store.init_schema()
+    except Exception:
+        pass
+
+    try:
+        variant_store.init_schema()
+    except Exception:
+        pass
+
+    # Load session acknowledgement state
+    ack_state = ack_store.load_session_state(session_id)
+
+    # Check for significant variants that need acknowledgement
+    pending_gates = []
+    total_variants = 0
+
+    for verse_id in verse_ids:
+        variants = variant_store.get_variants_for_verse(verse_id)
+        total_variants += len(variants)
+
+        for v in variants:
+            if v.is_significant and not ack_state.has_acknowledged_variant(v.ref):
+                pending_gates.append(
+                    {
+                        "ref": v.ref,
+                        "significance": v.significance.value
+                        if hasattr(v.significance, "value")
+                        else str(v.significance),
+                        "message": f"Variant at {v.ref} requires acknowledgement",
+                        "reason": v.reason if hasattr(v, "reason") else None,
+                        "reason_detail": v.reason_detail
+                        if hasattr(v, "reason_detail")
+                        else None,
+                    }
+                )
+
+    return {
+        "reference": normalized_ref,
+        "session_id": session_id,
+        "pending_gates": pending_gates,
+        "total_variants": total_variants,
+    }
+
+
+# --- Scholarly Run (v0.14.0) ---
+
+
+@router.post(
+    "/run/scholarly",
+    summary="Run scholarly workflow (async job)",
+    description="Enqueue an end-to-end scholarly run job. Returns immediately with job_id. "
+    "Monitor progress via GET /v1/stream?job_id=...",
+    responses={
+        202: {"description": "Scholarly job enqueued successfully"},
+        400: {"description": "Invalid reference or configuration"},
+        503: {"description": "Engine not initialized"},
+    },
+    status_code=202,
+)
+async def run_scholarly(
+    request_body: dict,
+    _: None = Depends(require_auth),
+):
+    """POST /v1/run/scholarly - Enqueue scholarly run as async job.
+
+    Sprint 18: Jobs-first scholarly runs.
+
+    Creates a job that executes the full scholarly workflow:
+    1. Generate/verify lockfile
+    2. Check gates (refuse unless force=True)
+    3. Run translation
+    4. Export all artifacts (apparatus, translation, citations, quote)
+    5. Generate snapshot
+    6. Create verified bundle
+    7. Write run_log.json
+
+    Returns job_id immediately. Monitor progress via SSE stream.
+    Gate-blocked is a terminal "completed" state (not an error).
+    """
+    import uuid
+
+    from redletters.engine_spine.jobs import JobManager
+    from redletters.engine_spine.models import JobConfig, JobType
+
+    engine_state = get_engine_state()
+    if not engine_state.is_initialized:
+        raise HTTPException(status_code=503, detail="Engine not initialized")
+
+    # Parse request
+    reference = request_body.get("reference")
+    if not reference:
+        raise HTTPException(status_code=400, detail="Reference is required")
+
+    mode = request_body.get("mode", "traceable")
+    force = request_body.get("force", False)
+    session_id = request_body.get("session_id", f"scholarly-{uuid.uuid4().hex[:8]}")
+    include_schemas = request_body.get("include_schemas", False)
+    create_zip = request_body.get("create_zip", False)
+
+    # Build scholarly job config
+    config = JobConfig(
+        job_type=JobType.SCHOLARLY,
+        reference=reference,
+        mode=mode,
+        force=force,
+        session_id=session_id,
+        include_schemas=include_schemas,
+        create_zip=create_zip,
+    )
+
+    # Create job manager and enqueue job
+    job_manager = JobManager(
+        db=engine_state.db,
+        broadcaster=engine_state.broadcaster,
+        workspace_base=engine_state.workspace_base,
+    )
+
+    # Use idempotency key if provided
+    idempotency_key = request_body.get("idempotency_key")
+
+    job = await job_manager.create_job(config, idempotency_key=idempotency_key)
+
+    logger.info(f"Scholarly job enqueued: {job.job_id} for reference '{reference}'")
+
+    # Return 202 Accepted with job info
+    return {
+        "success": True,
+        "job_id": job.job_id,
+        "reference": reference,
+        "mode": mode,
+        "force": force,
+        "session_id": session_id,
+        "message": f"Scholarly job enqueued. Monitor progress via GET /v1/stream?job_id={job.job_id}",
     }

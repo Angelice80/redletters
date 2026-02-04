@@ -283,6 +283,26 @@ export class ApiContract {
   }
 
   /**
+   * Sprint 19: Get full URL for job-specific SSE stream.
+   *
+   * @param jobId - Job ID to filter events for
+   * @returns Full URL with job_id query param
+   */
+  jobStreamUrl(jobId: string): string {
+    const baseUrl = this.url("stream");
+    return `${baseUrl}?job_id=${encodeURIComponent(jobId)}`;
+  }
+
+  /**
+   * Sprint 19: Get full URL for global SSE stream (no job filter).
+   *
+   * @returns Full stream URL
+   */
+  globalStreamUrl(): string {
+    return this.url("stream");
+  }
+
+  /**
    * Get diagnostics/export endpoint path.
    */
   diagnosticsExport(): string {

@@ -55,11 +55,23 @@ class LogLevel(str, Enum):
 # --- Request/Response Models ---
 
 
+class JobType(str, Enum):
+    """Job type discriminator for executor routing."""
+
+    TRANSLATION = "translation"
+    SCHOLARLY = "scholarly"
+
+
 class JobConfig(BaseModel):
     """Job configuration submitted with POST /v1/jobs."""
 
-    # Required fields
-    input_paths: List[str] = Field(..., description="Paths to input files")
+    # Job type discriminator (Sprint 18)
+    job_type: JobType = Field(JobType.TRANSLATION, description="Job type")
+
+    # Required fields for translation jobs
+    input_paths: List[str] = Field(
+        default_factory=list, description="Paths to input files"
+    )
 
     # Optional configuration
     output_dir: Optional[str] = Field(None, description="Output directory override")
@@ -67,6 +79,16 @@ class JobConfig(BaseModel):
     options: Dict[str, Any] = Field(
         default_factory=dict, description="Additional options"
     )
+
+    # Scholarly job fields (Sprint 18) - only used when job_type == SCHOLARLY
+    reference: Optional[str] = Field(
+        None, description="Scripture reference for scholarly jobs"
+    )
+    mode: str = Field("traceable", description="Translation mode: readable/traceable")
+    force: bool = Field(False, description="Bypass pending gates")
+    session_id: Optional[str] = Field(None, description="Session ID for gate tracking")
+    include_schemas: bool = Field(False, description="Include JSON schemas in bundle")
+    create_zip: bool = Field(False, description="Create zip archive of bundle")
 
 
 class JobCreateRequest(BaseModel):
@@ -92,6 +114,31 @@ class JobResponse(BaseModel):
     error_code: Optional[str] = None
     error_message: Optional[str] = None
 
+    # Sprint 18: Scholarly job result payload (populated for completed scholarly jobs)
+    result: Optional[Dict[str, Any]] = Field(
+        None, description="Job result payload (type depends on job_type)"
+    )
+
+
+class BackendShape(BaseModel):
+    """Backend shape for GUI compatibility detection.
+
+    Sprint 19: Guardrail against backend mode mismatch.
+    Populated by introspecting app.routes at startup.
+    """
+
+    backend_mode: str = Field(
+        "full", description="Backend mode: 'full' (unified) or 'engine_only'"
+    )
+    has_translate: bool = Field(True, description="Whether /translate route exists")
+    has_sources_status: bool = Field(
+        True, description="Whether /sources/status route exists"
+    )
+    has_acknowledge: bool = Field(True, description="Whether /acknowledge route exists")
+    has_variants_dossier: bool = Field(
+        True, description="Whether /variants/dossier route exists"
+    )
+
 
 class EngineStatus(BaseModel):
     """Response for GET /v1/engine/status."""
@@ -105,6 +152,11 @@ class EngineStatus(BaseModel):
     uptime_seconds: float = 0.0
     active_jobs: int = 0
     queue_depth: int = 0
+
+    # Sprint 19: Backend shape for GUI mismatch detection
+    shape: Optional[BackendShape] = Field(
+        None, description="Backend route shape for compatibility detection"
+    )
 
 
 # --- Event Models (SSE) ---
@@ -254,3 +306,61 @@ class ErrorResponse(BaseModel):
     code: str
     message: str
     details: Optional[Dict[str, Any]] = None
+
+
+# --- Scholarly Run Models (v0.14.0) ---
+
+
+class ScholarlyRunRequest(BaseModel):
+    """Request body for POST /run/scholarly."""
+
+    reference: str = Field(..., description="Scripture reference (e.g., 'John 1:1-18')")
+    mode: str = Field(
+        "traceable", description="Translation mode: 'readable' or 'traceable'"
+    )
+    force: bool = Field(
+        False, description="Bypass pending gates with responsibility recorded"
+    )
+    session_id: Optional[str] = Field(
+        None, description="Session ID for acknowledgement tracking"
+    )
+    include_schemas: bool = Field(False, description="Include JSON schemas in bundle")
+    create_zip: bool = Field(False, description="Create zip archive of bundle")
+
+
+class ScholarlyRunResponse(BaseModel):
+    """Response for POST /run/scholarly (async job mode)."""
+
+    success: bool
+    job_id: str
+    reference: str
+    mode: str
+    force: bool
+    session_id: str
+    message: str
+
+
+class ScholarlyJobResult(BaseModel):
+    """Result payload for completed scholarly jobs (stored in receipt).
+
+    Sprint 18: Jobs-first scholarly runs.
+    """
+
+    # Outcome status
+    success: bool
+    gate_blocked: bool = False
+    pending_gates: List[str] = Field(default_factory=list)
+
+    # Output artifacts (if successful)
+    output_dir: Optional[str] = None
+    bundle_path: Optional[str] = None
+
+    # Run log summary (if successful)
+    run_log_summary: Optional[Dict[str, Any]] = None
+
+    # Error details (if failed)
+    errors: List[str] = Field(default_factory=list)
+
+    # Timing
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None

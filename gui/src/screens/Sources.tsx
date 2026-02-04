@@ -8,8 +8,20 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
 import type { ApiClient } from "../api/client";
-import type { SourceStatus, LicenseInfoResponse } from "../api/types";
+import { detectBackendMismatch } from "../api/client";
+import type {
+  SourceStatus,
+  LicenseInfoResponse,
+  ApiErrorDetail,
+  BackendMismatchInfo,
+} from "../api/types";
+import {
+  ApiErrorPanel,
+  createApiErrorDetail,
+} from "../components/ApiErrorPanel";
+import { BackendMismatchPanel } from "../components/BackendMismatchPanel";
 
 interface SourcesProps {
   client: ApiClient | null;
@@ -153,6 +165,36 @@ const spineAlertStyle: React.CSSProperties = {
 const alertTextStyle: React.CSSProperties = {
   color: "#fca5a5",
   fontSize: "14px",
+};
+
+// Sprint 17: Bootstrap CTA styles
+const bootstrapCtaStyle: React.CSSProperties = {
+  padding: "24px",
+  backgroundColor: "#1e3a5f",
+  borderRadius: "8px",
+  marginBottom: "24px",
+  border: "1px solid #3b82f6",
+  textAlign: "center",
+};
+
+const bootstrapTitleStyle: React.CSSProperties = {
+  fontSize: "18px",
+  fontWeight: 600,
+  color: "#60a5fa",
+  marginBottom: "8px",
+};
+
+const bootstrapTextStyle: React.CSSProperties = {
+  color: "#9ca3af",
+  fontSize: "14px",
+  marginBottom: "16px",
+};
+
+const emptyStateContainerStyle: React.CSSProperties = {
+  textAlign: "center",
+  padding: "48px",
+  backgroundColor: "#2d2d44",
+  borderRadius: "8px",
 };
 
 // Modal styles
@@ -321,10 +363,13 @@ function getRoleBadge(role: string): React.ReactNode {
 export function Sources({ client }: SourcesProps) {
   const [sources, setSources] = useState<SourceStatus[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ApiErrorDetail | null>(null);
   const [spineInstalled, setSpineInstalled] = useState(false);
   const [spineSourceId, setSpineSourceId] = useState<string | null>(null);
   const [dataRoot, setDataRoot] = useState<string>("");
+
+  // Sprint 19: Backend mismatch detection
+  const [mismatch, setMismatch] = useState<BackendMismatchInfo | null>(null);
 
   // Per-source loading states
   const [operatingOn, setOperatingOn] = useState<string | null>(null);
@@ -343,6 +388,7 @@ export function Sources({ client }: SourcesProps) {
 
     setLoading(true);
     setError(null);
+    setMismatch(null);
 
     try {
       const response = await client.getSourcesStatus();
@@ -354,7 +400,22 @@ export function Sources({ client }: SourcesProps) {
       setSpineSourceId(response.spine_source_id);
       setDataRoot(response.data_root);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load sources");
+      const errorDetail = createApiErrorDetail("GET", "/sources/status", err);
+
+      // Sprint 19: Check for backend mismatch on 404
+      if (errorDetail.status === 404) {
+        const mismatchInfo = await detectBackendMismatch(
+          client.baseUrl,
+          client.token,
+          "/sources/status",
+        );
+        if (mismatchInfo.detected) {
+          setMismatch(mismatchInfo);
+          return;
+        }
+      }
+
+      setError(errorDetail);
     } finally {
       setLoading(false);
     }
@@ -490,36 +551,56 @@ export function Sources({ client }: SourcesProps) {
         </span>
       </div>
 
-      {/* Spine missing alert */}
+      {/* Sprint 17: Enhanced spine missing alert with bootstrap CTA */}
       {!loading && !spineInstalled && spineSourceId && (
-        <div style={spineAlertStyle}>
-          <span style={alertTextStyle}>
-            The canonical spine source is not installed. Translation will not
-            work until it is installed.
-          </span>
-          <button
-            style={installButtonStyle}
-            onClick={() => handleInstall(spineSourceId)}
-            disabled={operatingOn === spineSourceId}
+        <div style={bootstrapCtaStyle}>
+          <div style={bootstrapTitleStyle}>Spine Source Required</div>
+          <div style={bootstrapTextStyle}>
+            The canonical Greek text source (MorphGNT/SBLGNT) is required for
+            translation. Install it now to start exploring.
+          </div>
+          <div
+            style={{ display: "flex", justifyContent: "center", gap: "12px" }}
           >
-            {operatingOn === spineSourceId ? "Installing..." : "Install Spine"}
-          </button>
+            <button
+              style={installButtonStyle}
+              onClick={() => handleInstall(spineSourceId)}
+              disabled={operatingOn === spineSourceId}
+            >
+              {operatingOn === spineSourceId
+                ? "Installing..."
+                : "Install Spine"}
+            </button>
+            <button
+              style={cancelButtonStyle}
+              onClick={() => {
+                // Trigger bootstrap wizard by clearing the flag
+                localStorage.removeItem("redletters_bootstrap_completed");
+                window.location.reload();
+              }}
+            >
+              Run Setup Wizard
+            </button>
+          </div>
         </div>
       )}
 
+      {/* Sprint 19: Backend mismatch display */}
+      {mismatch && (
+        <BackendMismatchPanel
+          mismatchInfo={mismatch}
+          onRetry={loadSources}
+          onDismiss={() => setMismatch(null)}
+        />
+      )}
+
       {/* Error display */}
-      {error && (
-        <div
-          style={{
-            padding: "12px",
-            backgroundColor: "#7f1d1d",
-            color: "#fca5a5",
-            borderRadius: "4px",
-            marginBottom: "16px",
-          }}
-        >
-          {error}
-        </div>
+      {error && !mismatch && (
+        <ApiErrorPanel
+          error={error}
+          onRetry={loadSources}
+          onDismiss={() => setError(null)}
+        />
       )}
 
       {/* Loading state */}
@@ -605,16 +686,28 @@ export function Sources({ client }: SourcesProps) {
         </div>
       )}
 
-      {/* Empty state */}
+      {/* Sprint 17: Enhanced empty state with bootstrap CTA */}
       {!loading && sources.length === 0 && (
-        <div
-          style={{
-            textAlign: "center",
-            padding: "48px",
-            color: "#6b7280",
-          }}
-        >
-          No sources configured in the catalog.
+        <div style={emptyStateContainerStyle}>
+          <div
+            style={{ fontSize: "18px", color: "#eaeaea", marginBottom: "8px" }}
+          >
+            No Sources Configured
+          </div>
+          <div style={{ color: "#9ca3af", marginBottom: "16px" }}>
+            The sources catalog is empty. Run the setup wizard to configure your
+            data sources.
+          </div>
+          <button
+            style={installButtonStyle}
+            onClick={() => {
+              // Trigger bootstrap wizard by clearing the flag
+              localStorage.removeItem("redletters_bootstrap_completed");
+              window.location.reload();
+            }}
+          >
+            Run Setup Wizard
+          </button>
         </div>
       )}
 

@@ -624,5 +624,159 @@ class SourceInstaller:
 
         return result
 
+    def install_sense_pack(
+        self,
+        pack_path: Path | str,
+        accept_license: bool = False,
+        force: bool = False,
+        db_conn=None,
+    ) -> InstallResult:
+        """Install a sense pack from a local directory.
+
+        Sense packs provide lexicon/gloss data with citation-grade provenance.
+
+        Args:
+            pack_path: Path to sense pack directory
+            accept_license: If True, accept license for non-PD content
+            force: If True, reinstall even if already installed
+            db_conn: Database connection (created if not provided)
+
+        Returns:
+            InstallResult with status and details
+        """
+        from redletters.sources.sense_pack import (
+            SensePackLoader,
+            validate_sense_pack,
+        )
+        from redletters.sources.sense_db import SensePackDB
+
+        pack_path = Path(pack_path)
+
+        # Validate pack
+        validation = validate_sense_pack(pack_path)
+        if not validation.valid:
+            errors = "; ".join(e.message for e in validation.errors[:3])
+            return InstallResult(
+                success=False,
+                source_id=str(pack_path),
+                message=f"Invalid sense pack: {errors}",
+                error="validation_failed",
+            )
+
+        manifest = validation.manifest
+        if manifest is None:
+            return InstallResult(
+                success=False,
+                source_id=str(pack_path),
+                message="Could not load manifest",
+                error="manifest_error",
+            )
+
+        pack_id = manifest.pack_id
+
+        # Check license acceptance
+        if manifest.requires_license_acceptance and not accept_license:
+            return InstallResult(
+                success=False,
+                source_id=pack_id,
+                message=f"Sense pack '{manifest.name}' requires license acceptance.\n"
+                f"License: {manifest.license}\n"
+                f"Run with --accept-license to acknowledge the license terms.",
+                eula_required=True,
+                error="license_required",
+            )
+
+        # Check if already installed
+        if self.manifest.is_installed(pack_id) and not force:
+            installed = self.manifest.get(pack_id)
+            return InstallResult(
+                success=True,
+                source_id=pack_id,
+                message=f"Already installed at {installed.install_path}",
+                install_path=installed.install_path,
+            )
+
+        # Install files to data directory
+        install_path = self.get_install_path(pack_id)
+        if install_path.exists():
+            shutil.rmtree(install_path)
+        shutil.copytree(pack_path, install_path)
+
+        # Load senses into database
+        close_conn = False
+        if db_conn is None:
+            from redletters.db.connection import get_connection
+
+            db_conn = get_connection()
+            close_conn = True
+
+        try:
+            sense_db = SensePackDB(db_conn)
+            sense_db.ensure_schema()
+
+            loader = SensePackLoader(install_path)
+            loader.load()
+
+            pack_hash = self._compute_manifest_hash(install_path)
+            installed_pack = sense_db.install_pack(loader, str(install_path), pack_hash)
+
+            # Also track in main installer manifest
+            installed = InstalledSource(
+                source_id=pack_id,
+                name=manifest.name,
+                installed_at=datetime.utcnow().isoformat(),
+                install_path=str(install_path),
+                version=manifest.version,
+                revision="",
+                license=manifest.license,
+                eula_accepted_at=(
+                    datetime.utcnow().isoformat()
+                    if manifest.requires_license_acceptance
+                    else None
+                ),
+                file_count=self._count_files(install_path),
+                sha256_manifest=pack_hash,
+            )
+
+            self.manifest.add(installed)
+            self._save_manifest()
+
+            return InstallResult(
+                success=True,
+                source_id=pack_id,
+                message=f"Installed sense pack '{manifest.name}' ({installed_pack.sense_count} senses)",
+                install_path=str(install_path),
+                eula_required=manifest.requires_license_acceptance,
+            )
+        finally:
+            if close_conn:
+                db_conn.close()
+
+    def get_sense_pack_status(self, db_conn=None) -> list[dict]:
+        """Get status of installed sense packs.
+
+        Args:
+            db_conn: Database connection (created if not provided)
+
+        Returns:
+            List of sense pack status dicts
+        """
+        from redletters.sources.sense_db import SensePackDB
+
+        close_conn = False
+        if db_conn is None:
+            from redletters.db.connection import get_connection
+
+            db_conn = get_connection()
+            close_conn = True
+
+        try:
+            sense_db = SensePackDB(db_conn)
+            sense_db.ensure_schema()
+            return sense_db.get_pack_status()
+        finally:
+            if close_conn:
+                db_conn.close()
+
 
 # SpineMissingError is defined in spine.py to avoid circular imports

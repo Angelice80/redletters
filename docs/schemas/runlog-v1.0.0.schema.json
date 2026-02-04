@@ -1,0 +1,207 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://redletters.io/schemas/runlog-v1.0.0.schema.json",
+  "title": "Scholarly Run Log",
+  "description": "Schema for deterministic scholarly run logs (v0.13.0)",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "tool_version",
+    "command",
+    "started_at",
+    "completed_at",
+    "reference",
+    "mode",
+    "files_created",
+    "validations",
+    "success"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Schema version in semver format"
+    },
+    "tool_version": {
+      "type": "string",
+      "description": "Tool version that generated this log"
+    },
+    "command": {
+      "type": "object",
+      "required": ["reference", "output_dir", "mode"],
+      "properties": {
+        "reference": {
+          "type": "string",
+          "description": "Scripture reference requested"
+        },
+        "output_dir": {
+          "type": "string",
+          "description": "Output directory path"
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["readable", "traceable"],
+          "description": "Translation mode"
+        },
+        "include_schemas": {
+          "type": "boolean",
+          "description": "Whether schemas were included"
+        },
+        "create_zip": {
+          "type": "boolean",
+          "description": "Whether zip archive was created"
+        },
+        "force": {
+          "type": "boolean",
+          "description": "Whether --force was used"
+        }
+      },
+      "additionalProperties": false
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when run started"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when run completed"
+    },
+    "reference": {
+      "type": "string",
+      "description": "Normalized scripture reference"
+    },
+    "verse_ids": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "List of verse IDs processed"
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["readable", "traceable"],
+      "description": "Translation mode used"
+    },
+    "packs_summary": {
+      "type": "object",
+      "required": ["count", "packs"],
+      "properties": {
+        "count": {
+          "type": "integer",
+          "description": "Number of installed packs"
+        },
+        "packs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["pack_id", "version", "role"],
+            "properties": {
+              "pack_id": {"type": "string"},
+              "version": {"type": "string"},
+              "role": {"type": "string"},
+              "license": {"type": "string"}
+            }
+          }
+        },
+        "lockfile_hash": {
+          "type": "string",
+          "description": "SHA-256 hash of lockfile content"
+        }
+      },
+      "description": "Summary of installed packs"
+    },
+    "files_created": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "artifact_type", "sha256"],
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Relative path within output directory"
+          },
+          "artifact_type": {
+            "type": "string",
+            "description": "Type of artifact (apparatus, translation, etc.)"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "description": "SHA-256 hash of file content"
+          },
+          "schema_version": {
+            "type": "string",
+            "description": "Schema version of the artifact"
+          }
+        }
+      },
+      "description": "List of files created with hashes"
+    },
+    "validations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["check", "passed"],
+        "properties": {
+          "check": {
+            "type": "string",
+            "description": "Name of the validation check"
+          },
+          "passed": {
+            "type": "boolean",
+            "description": "Whether the check passed"
+          },
+          "errors": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Error messages if check failed"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Warning messages"
+          }
+        }
+      },
+      "description": "List of validation checks performed"
+    },
+    "gates": {
+      "type": "object",
+      "properties": {
+        "pending_count": {
+          "type": "integer",
+          "description": "Number of pending gates"
+        },
+        "pending_refs": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "References with pending gates"
+        },
+        "forced": {
+          "type": "boolean",
+          "description": "Whether gates were bypassed with --force"
+        },
+        "forced_responsibility": {
+          "type": "string",
+          "description": "Responsibility note when force was used"
+        }
+      },
+      "description": "Gate status information"
+    },
+    "success": {
+      "type": "boolean",
+      "description": "Whether the run completed successfully"
+    },
+    "errors": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Error messages if run failed"
+    },
+    "content_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA-256 hash of all file hashes concatenated"
+    }
+  },
+  "additionalProperties": false
+}

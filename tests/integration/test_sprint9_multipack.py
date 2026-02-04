@@ -159,7 +159,6 @@ class TestNormalization:
     def test_normalize_removes_punctuation(self):
         """Normalization should remove punctuation."""
         with_punct = "λόγος, καὶ ὁ λόγος."
-        without = "λογος και ο λογος"
 
         normalized = normalize_for_aggregation(with_punct)
 

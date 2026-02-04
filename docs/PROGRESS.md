@@ -2,7 +2,329 @@
 
 ## Project: Red Letters Source Reader
 **Started**: 2026-01-26
-**Current Version**: 0.17.0 (Contract-First GUI)
+**Current Version**: 0.20.0 (Jobs-First UX Loop)
+
+---
+
+## Milestone: Jobs-First UX Loop v0.20
+
+**Date**: 2026-02-03
+**Status**: ✓ Complete
+
+### Summary
+
+Completed the jobs-first GUI UX loop with enhanced job receipts, "View Receipt" flow from export success, and Playwright E2E test infrastructure:
+- ReceiptViewer component with self-fetching and collapsible sections
+- Jobs drawer integrates ReceiptViewer for terminal job states
+- ExportView success modal includes "View Receipt" navigation
+- Playwright E2E test infrastructure with mocked backend
+- All screen components use ApiClient/ApiContract (no hardcoded endpoints)
+
+### Key Additions (Sprint 20)
+
+| Item | Description | Tests |
+|------|-------------|-------|
+| G1 | ReceiptViewer component with collapsible sections | +23 |
+| G2 | Jobs drawer ReceiptViewer integration | - |
+| G3 | ExportView "View Receipt" button + navigation | - |
+| G4 | JobProgressModal onViewReceipt prop | +1 |
+| G5 | Playwright config + E2E fixtures | - |
+| G6 | E2E test scenarios (sources, jobs, receipts) | +13 |
+
+**Total Tests**: 215 GUI unit tests passing + 15 E2E scenarios (all passing)
+
+### E2E Test Infrastructure Fixes (Sprint 20.1)
+
+Fixed mocked Playwright suite from failing tests to 15/15 passing:
+
+| Fix | Issue | Solution |
+|-----|-------|----------|
+| Auth token injection | Tests timeout waiting for API calls | `page.addInitScript()` sets `redletters_auth_token` before navigation |
+| Bootstrap skip | Wizard intercepts navigation | Set `redletters_bootstrap_completed` in localStorage |
+| Port-based URL filtering | Mock routes intercepted page navigation | Check `route.request().url().includes(":47200")` before mocking |
+| Strict mode violations | Multiple elements matched selectors | Use `.first()`, `{ exact: true }`, or more specific locators |
+| Route pattern specificity | Sources mock matched `/sources` page URL | Added port check to skip non-API requests |
+| SSE stream mock | Connection state needed for badge | Return heartbeat event with `text/event-stream` content type |
+
+**How to run E2E tests**:
+```bash
+# Mocked tests (no backend required)
+cd gui && npm run test:e2e
+
+# With UI mode for debugging
+cd gui && npm run test:e2e:ui
+
+# Real backend smoke (requires backend on port 47200)
+cd gui && npm run test:e2e:real:boot
+```
+
+### ReceiptViewer Features
+
+- Self-fetching: calls `client.getReceipt(jobId)` for terminal states
+- Pending message for non-terminal states (queued, running, cancelling)
+- Collapsible sections: Timestamps, Artifacts, Source Pins, Config Snapshot
+- Copy JSON button with clipboard feedback
+- Error handling with Retry button
+- File size formatting (KB, MB)
+- SHA-256 hash display (truncated)
+
+### E2E Test Coverage (15 scenarios)
+
+```
+Sources Page (2):
+- Loads and shows sources heading
+- Shows source data when loaded (installed or not-connected)
+
+Jobs Page (4):
+- Loads and shows job list with reference
+- Clicking job opens drawer with receipt
+- Receipt shows collapsible sections (Timestamps, Job Receipt)
+- Receipt has Copy JSON button
+
+Explore Page (3):
+- Loads explore page with "Explore Greek New Testament"
+- Shows reference input field with placeholder
+- Navigating to /translate shows explore page (redirect)
+
+Export Page (1):
+- Loads export page with heading
+
+Connection Status (2):
+- Shows connection badge (data-testid)
+- Badge shows engine status text (connected/disconnected/reconnecting)
+
+Backend Mismatch Detection (2):
+- Handles engine-only backend mode gracefully
+- Sources page handles 404 in engine-only mode
+
+Navigation (1):
+- Can navigate between pages (Jobs → Sources → Explore)
+```
+
+### Files Created
+
+```
+gui/src/components/ReceiptViewer.tsx        # Self-fetching receipt viewer
+gui/src/components/ReceiptViewer.test.tsx   # 23 component tests
+gui/playwright.config.ts                    # Playwright E2E configuration
+gui/e2e/fixtures.ts                         # Mock backend data and setup
+gui/e2e/gui-flow.spec.ts                    # 13 E2E test scenarios
+```
+
+### Files Modified
+
+```
+gui/src/screens/Jobs.tsx                    # ReceiptViewer in drawer
+gui/src/screens/ExportView.tsx              # handleViewReceipt + navigation
+gui/src/components/JobProgressModal.tsx     # onViewReceipt prop
+gui/package.json                            # test:e2e scripts, @playwright/test
+gui/vite.config.ts                          # Exclude e2e from vitest
+```
+
+### Verification Checklist
+
+- [x] ReceiptViewer fetches receipt for terminal jobs only
+- [x] ReceiptViewer shows pending message for non-terminal jobs
+- [x] Collapsible sections: Timestamps expanded, Source Pins collapsed by default
+- [x] Copy JSON copies full receipt to clipboard
+- [x] Jobs drawer shows ReceiptViewer for selected job
+- [x] ExportView success shows "View Receipt" button
+- [x] "View Receipt" navigates to /jobs/{jobId}
+- [x] All 215 GUI unit tests pass
+- [x] All 15 E2E scenarios pass (mocked backend)
+- [x] E2E fixtures mock all backend routes with port filtering
+- [x] Auth token injection via addInitScript for test isolation
+- [x] No hardcoded endpoints in screen components
+
+---
+
+## Milestone: Jobs-Native GUI v0.19
+
+**Date**: 2026-02-03
+**Status**: ✓ Complete
+
+### Summary
+
+Made the GUI a true jobs-native client with persistent SSE connection health, live job progress, and cancel UX:
+- ExportView shows JobProgressModal with stage list, progress bar, cancel button
+- Jobs screen: cancel confirmation dialog, job detail drawer with full results
+- ConnectionBadge shows SSE health (connected/reconnecting/disconnected) with diagnostics tooltip
+- SSEManager class with automatic reconnection and exponential backoff
+- Gate-blocked is terminal non-error state with amber styling (not red)
+- Cancel shows "Cancel Requested..." until backend confirms
+
+### Key Additions (Sprint 19)
+
+| Item | Description | Tests |
+|------|-------------|-------|
+| G1 | SSEManager class with health state tracking | +16 |
+| G2 | SSEProvider and useSSE hook for shared SSE context | +6 |
+| G3 | useJobEvents hook for job-specific SSE subscriptions | +3 |
+| G4 | ConnectionBadge component with tooltip diagnostics | +14 |
+| G5 | JobProgressModal with 10 scholarly workflow stages | +32 |
+| G6 | ExportView async job flow with JobProgressModal | - |
+| G7 | Jobs screen: cancel dialog + detail drawer | - |
+| G8 | App header ConnectionBadge integration | - |
+| G9 | Vitest jsdom environment setup | - |
+
+**Total Tests**: 150 GUI tests passing
+
+### API Integration
+
+- Uses existing SSE stream at `/v1/stream` with job_id filter
+- Uses existing cancel endpoint `POST /v1/jobs/{id}/cancel`
+- Uses existing job detail `GET /v1/jobs/{id}` for result retrieval
+- No new backend endpoints required
+
+### JobUIState State Machine
+
+```
+idle → enqueued → streaming → completed_success
+                           → completed_gate_blocked (amber, non-error)
+                           → completed_failed
+                           → canceled
+              → cancel_requested → canceled
+```
+
+### Non-Negotiables Validated
+
+- No hardcoded API paths (all from ApiContract)
+- Single backend port (47200)
+- ExportView never blocks UI (async job flow)
+- Gate-blocked is terminal non-error state (amber styling)
+- Cancel shows "Cancel Requested..." until confirmed
+- Errors show ApiErrorPanel with diagnostics
+
+### Files Created
+
+```
+gui/src/api/sse.tsx                        # SSEManager, SSEProvider, hooks
+gui/src/api/sse.test.tsx                   # 25 SSE manager tests
+gui/src/components/ConnectionBadge.tsx     # SSE health badge
+gui/src/components/ConnectionBadge.test.tsx # 14 ConnectionBadge tests
+gui/src/components/JobProgressModal.tsx    # Progress modal with stages
+gui/src/components/JobProgressModal.test.tsx # 32 JobProgressModal tests
+gui/src/test/setup.ts                      # Vitest jsdom setup
+```
+
+### Files Modified
+
+```
+gui/src/App.tsx                            # ConnectionBadge in header, SSE health tracking
+gui/src/api/types.ts                       # SSEHealthInfo, JobUIState types
+gui/src/screens/ExportView.tsx             # Async job flow, JobProgressModal integration
+gui/src/screens/Jobs.tsx                   # Cancel dialog, detail drawer, live updates
+gui/vite.config.ts                         # Vitest jsdom environment config
+gui/package.json                           # @testing-library/react, jsdom deps
+docs/gui.md                                # Sprint 19 documentation
+docs/PROGRESS.md                           # Add v0.19.0 milestone
+```
+
+### Verification Checklist
+
+- [x] ExportView: Start scholarly run → immediate job_id → modal shows
+- [x] JobProgressModal: Stage list progresses through 10 stages
+- [x] JobProgressModal: Cancel button shows "Cancel Requested..." state
+- [x] JobProgressModal: Gate-blocked shows amber styling (not red error)
+- [x] Jobs screen: Cancel button opens confirmation dialog
+- [x] Jobs screen: Click job row opens detail drawer
+- [x] ConnectionBadge: Shows connected/reconnecting/disconnected states
+- [x] ConnectionBadge: Tooltip shows base URL, lastEventId, lastMessageAt
+- [x] All 150 GUI tests pass (vitest)
+- [x] No hardcoded endpoint paths in screen components
+
+---
+
+## Milestone: Jobs-First Scholarly Runs v0.18
+
+**Date**: 2026-02-03
+**Status**: ✓ Complete
+
+### Summary
+
+Implemented async job mode for scholarly exports with progress streaming and cancellation support:
+- POST /v1/run/scholarly now returns 202 with job_id immediately (no longer blocks)
+- JobExecutor processes scholarly jobs with ScholarlyRunner, emitting stage-based progress events
+- Gate-blocked is a terminal "completed" state (not an error) with pending_gates in result
+- Cancel support: POST /v1/jobs/{id}/cancel signals executor to stop running jobs
+- ScholarlyRunner accepts progress_callback and cancel_check for async operation
+
+### Key Additions (Sprint 18)
+
+| Item | Description | Tests |
+|------|-------------|-------|
+| B1 | JobType enum and ScholarlyJobConfig in models.py | ✓ |
+| B2 | ScholarlyJobResult model for job result payload | ✓ |
+| B3 | _execute_scholarly method in JobExecutor | ✓ |
+| B4 | Progress callbacks in ScholarlyRunner (10 stages) | ✓ |
+| B5 | Cancel flag checking in ScholarlyRunner | ✓ |
+| B6 | request_cancel() method in JobExecutor | ✓ |
+| B7 | POST /v1/run/scholarly returns 202 + job_id | ✓ |
+| B8 | Cancel route signals executor for running jobs | ✓ |
+| B9 | GUI types updated (ScholarlyJobResponse, etc.) | ✓ |
+| B10 | ApiClient.runScholarly returns async job response | ✓ |
+| B11 | ApiClient.getJob and cancelJob methods added | ✓ |
+
+### API Changes
+
+```
+POST /v1/run/scholarly
+  BEFORE: Sync execution, returns full result
+  AFTER:  Returns 202 Accepted + {job_id, reference, mode, force, session_id, message}
+
+GET /v1/jobs/{id}
+  NEW: result field with ScholarlyJobResult (output_dir, bundle_path, run_log_summary)
+
+POST /v1/jobs/{id}/cancel
+  UPDATED: Signals executor for running scholarly jobs
+```
+
+### Progress Stages (SSE Events)
+
+```
+lockfile → gates_check → translate → export_apparatus → export_translation →
+export_citations → export_quote → snapshot → bundle → finalize
+```
+
+### Test Results
+
+- **Backend**: All existing tests pass (1080+)
+- **Models import**: JobConfig, JobType, ScholarlyJobResult verified
+- **Executor import**: JobExecutor with request_cancel() verified
+- **ScholarlyRunner**: progress_callback and cancel_check verified
+
+### Non-Negotiables Validated
+
+- Deterministic outputs preserved: run_log.json, bundle hashes, forced_responsibility
+- Gate enforcement preserved: gate_blocked is terminal completed state with pending_gates
+- Reuses existing ScholarlyRunner (no duplication of translation/export logic)
+- ApiContract remains single source of truth for endpoint paths
+- Tests pass
+
+### Files Modified
+
+```
+src/redletters/engine_spine/models.py      # JobType, ScholarlyJobConfig, ScholarlyJobResult
+src/redletters/engine_spine/executor.py    # _execute_scholarly, request_cancel, cancel handling
+src/redletters/engine_spine/routes.py      # Async job mode for /run/scholarly, cancel signaling
+src/redletters/engine_spine/jobs.py        # scholarly_result in receipts
+src/redletters/engine_spine/status.py      # workspace_base in EngineState
+src/redletters/engine_spine/app.py         # Pass workspace_base to state.initialize
+src/redletters/run/scholarly.py            # progress_callback, cancel_check, _emit_progress
+gui/src/api/types.ts                       # ScholarlyJobResponse, ScholarlyJobResult
+gui/src/api/client.ts                      # runScholarly async, getJob, cancelJob
+```
+
+### Verification Checklist
+
+- [x] POST /v1/run/scholarly returns 202 + job_id (not full result)
+- [x] Scholarly jobs execute via JobExecutor._execute_scholarly
+- [x] Progress events emitted for each stage (lockfile, translate, etc.)
+- [x] Gate-blocked returns as completed state with pending_gates
+- [x] Cancel signals executor via request_cancel()
+- [x] ScholarlyRunner respects cancel_check between stages
+- [x] All existing tests pass (no regressions)
+- [x] GUI types and client updated for async response
 
 ---
 
@@ -1027,6 +1349,55 @@ tests/test_receipts.py::TestReceiptFormatting::test_summary_format PASSED
 ---
 
 ## Changelog
+
+### v0.20.0 (2026-02-03) - Jobs-First UX Loop
+- ReceiptViewer component: Self-fetching receipt display for terminal job states
+- ReceiptViewer: Collapsible sections (Timestamps, Artifacts, Source Pins, Config Snapshot)
+- ReceiptViewer: Copy JSON button with clipboard feedback
+- ReceiptViewer: Pending message for non-terminal states (queued, running, cancelling)
+- ReceiptViewer: Error handling with Retry button
+- Jobs drawer: ReceiptViewer integration for selected job details
+- ExportView: "View Receipt" button on success navigates to /jobs/{jobId}
+- JobProgressModal: onViewReceipt prop for post-completion navigation
+- Playwright E2E: Configuration with chromium project and webServer
+- Playwright E2E: Mock backend fixtures (capabilities, engine status, jobs, receipts)
+- E2E scenarios: Sources, Jobs, Explore, Export, Connection Status, Backend Mismatch, Navigation
+- test:e2e and test:e2e:ui npm scripts
+- Vitest exclude for e2e directory
+- **E2E fixes (Sprint 20.1)**: Auth token injection via addInitScript, port-based URL filtering for mock routes, strict mode selector fixes, SSE heartbeat mock
+- ConnectionBadge: Added data-testid for E2E targeting
+- 23 new ReceiptViewer unit tests
+- 15 E2E test scenarios (all passing)
+- 215 total GUI unit tests passing
+
+### v0.19.0 (2026-02-03) - Jobs-Native GUI
+- SSEManager class: Shared SSE connection with automatic reconnection and exponential backoff
+- SSEProvider/useSSE: React Context for shared SSE manager access
+- useJobEvents hook: Job-specific SSE subscriptions with health tracking
+- ConnectionBadge component: Persistent SSE health indicator (connected/reconnecting/disconnected)
+- ConnectionBadge tooltip: Base URL, lastEventId, lastMessageAt, reconnect attempt diagnostics
+- JobProgressModal: Progress modal with 10 scholarly workflow stages
+- JobProgressModal: Stage list with completion status, progress bar, percent display
+- JobProgressModal: Cancel button with "Cancel Requested..." pending state
+- JobProgressModal: Terminal states (success, gate_blocked, failed, canceled) with appropriate styling
+- Gate-blocked: Amber non-error styling (not red error) with pending gates list
+- ExportView: Async job flow using useJobEvents hook, shows JobProgressModal
+- Jobs screen: Cancel confirmation dialog with best-effort warning
+- Jobs screen: Job detail drawer with full result info and receipts
+- App header: ConnectionBadge integration for persistent SSE health visibility
+- Vitest: jsdom environment setup with @testing-library/react support
+- 65 new GUI tests (SSE, ConnectionBadge, JobProgressModal)
+- 150 total GUI tests passing
+
+### v0.18.0 (2026-02-03) - Jobs-First Scholarly Runs
+- POST /v1/run/scholarly now returns 202 with job_id immediately (async)
+- JobExecutor processes scholarly jobs with ScholarlyRunner
+- Progress events emitted for 10 stages (lockfile, gates, translate, exports, bundle)
+- Gate-blocked is terminal completed state with pending_gates in result
+- Cancel support: POST /v1/jobs/{id}/cancel signals executor
+- ScholarlyRunner accepts progress_callback and cancel_check
+- GUI types: ScholarlyJobResponse, ScholarlyJobResult
+- ApiClient: runScholarly async, getJob, cancelJob methods
 
 ### v0.17.0 (2026-02-03) - Contract-First GUI
 - ApiContract module: single source of truth for endpoint paths

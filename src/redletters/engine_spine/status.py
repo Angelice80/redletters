@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 
 from redletters import __version__
 from redletters.engine_spine.models import (
+    BackendShape,
     EngineHealth,
     EngineHeartbeat,
     EngineMode,
@@ -19,6 +20,8 @@ from redletters.engine_spine.models import (
 )
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from redletters.engine_spine.broadcaster import EventBroadcaster
     from redletters.engine_spine.database import EngineDatabase
     from redletters.engine_spine.executor import JobExecutor
@@ -55,6 +58,7 @@ class EngineStatusManager:
     - Health status
     - Uptime
     - Active jobs and queue depth
+    - Backend shape (Sprint 19: route availability for GUI mismatch detection)
     """
 
     def __init__(
@@ -75,6 +79,9 @@ class EngineStatusManager:
         # Track job counts (updated by job manager)
         self._active_jobs = 0
         self._queue_depth = 0
+
+        # Sprint 19: Backend shape (set by app after route registration)
+        self._backend_shape: "BackendShape | None" = None
 
     @property
     def mode(self) -> EngineMode:
@@ -110,6 +117,18 @@ class EngineStatusManager:
             uptime_seconds=self.uptime_seconds,
             active_jobs=self._active_jobs,
             queue_depth=self._queue_depth,
+            shape=self._backend_shape,
+        )
+
+    def set_backend_shape(self, shape: BackendShape) -> None:
+        """Set backend shape from route introspection.
+
+        Sprint 19: Called by app after routes are registered.
+        """
+        self._backend_shape = shape
+        logger.info(
+            f"Backend shape set: mode={shape.backend_mode}, "
+            f"translate={shape.has_translate}, sources_status={shape.has_sources_status}"
         )
 
     def _get_capabilities(self) -> list[str]:
@@ -244,6 +263,7 @@ class EngineState:
         self.broadcaster: "EventBroadcaster | None" = None
         self.status_manager: EngineStatusManager | None = None
         self.executor: "JobExecutor | None" = None  # Set by lifespan
+        self.workspace_base: "Path | None" = None  # Sprint 18: For job creation
         self._initialized = False
 
     @classmethod
@@ -258,11 +278,13 @@ class EngineState:
         db: "EngineDatabase",
         broadcaster: "EventBroadcaster",
         safe_mode: bool = False,
+        workspace_base: "Path | None" = None,
     ) -> None:
         """Initialize engine state."""
         self.db = db
         self.broadcaster = broadcaster
         self.status_manager = EngineStatusManager(db, broadcaster, safe_mode)
+        self.workspace_base = workspace_base
         self._initialized = True
 
     @property
@@ -276,6 +298,7 @@ class EngineState:
         self.broadcaster = None
         self.status_manager = None
         self.executor = None
+        self.workspace_base = None
         self._initialized = False
         EngineState._instance = None
 

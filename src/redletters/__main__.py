@@ -3278,6 +3278,422 @@ def claims_analyze(input_file: str, session_id: str, as_json: bool, out: str | N
         conn.close()
 
 
+# ============================================================================
+# Bundle CLI Commands (v0.12.0)
+# ============================================================================
+
+
+@cli.group()
+def bundle():
+    """Research bundle operations for scholarly reproducibility."""
+    pass
+
+
+@bundle.command("create")
+@click.option(
+    "--out",
+    "-o",
+    required=True,
+    type=click.Path(),
+    help="Output directory for the bundle",
+)
+@click.option(
+    "--lockfile",
+    "-l",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to lockfile.json",
+)
+@click.option(
+    "--snapshot",
+    "-s",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to snapshot.json",
+)
+@click.option(
+    "--inputs",
+    "-i",
+    multiple=True,
+    required=True,
+    type=click.Path(exists=True),
+    help="Input artifact file(s) to include",
+)
+@click.option(
+    "--include-schemas",
+    is_flag=True,
+    help="Include JSON schema files in bundle",
+)
+@click.option(
+    "--zip",
+    "create_zip",
+    is_flag=True,
+    help="Also create a zip archive of the bundle",
+)
+@click.option(
+    "--notes",
+    default="",
+    help="Optional notes to include in manifest",
+)
+@click.option("--json", "as_json", is_flag=True, help="Output result as JSON")
+def bundle_create(
+    out: str,
+    lockfile: str,
+    snapshot: str,
+    inputs: tuple[str, ...],
+    include_schemas: bool,
+    create_zip: bool,
+    notes: str,
+    as_json: bool,
+):
+    """Create a deterministic research bundle.
+
+    Assembles a reproducible bundle containing lockfile, snapshot, and output
+    artifacts with full integrity verification via SHA-256 hashes.
+
+    Examples:
+        redletters bundle create --out out/bundle -l lock.json -s snapshot.json -i apparatus.jsonl
+        redletters bundle create -o out/bundle -l lock.json -s snap.json -i app.jsonl -i trans.jsonl --zip
+        redletters bundle create -o out/bundle -l lock.json -s snap.json -i output.jsonl --include-schemas
+    """
+    from pathlib import Path as PathLib
+    from redletters.export.bundle import BundleCreator
+
+    output_dir = PathLib(out)
+    lockfile_path = PathLib(lockfile)
+    snapshot_path = PathLib(snapshot)
+    input_paths = [PathLib(p) for p in inputs]
+
+    creator = BundleCreator()
+    result = creator.create(
+        output_dir=output_dir,
+        lockfile_path=lockfile_path,
+        snapshot_path=snapshot_path,
+        input_paths=input_paths,
+        include_schemas=include_schemas,
+        create_zip=create_zip,
+        notes=notes,
+    )
+
+    if as_json:
+        output_data = {
+            "success": result.success,
+            "bundle_path": str(result.bundle_path) if result.bundle_path else None,
+            "manifest": result.manifest.to_dict() if result.manifest else None,
+            "errors": result.errors,
+            "warnings": result.warnings,
+        }
+        console.print(json.dumps(output_data, indent=2, ensure_ascii=False))
+    else:
+        if result.success:
+            console.print(f"[green]✓ Bundle created: {result.bundle_path}[/green]")
+            if result.manifest:
+                console.print(f"  Artifacts: {len(result.manifest.artifacts)}")
+                console.print(f"  Content hash: {result.manifest.content_hash[:16]}...")
+            if create_zip:
+                console.print(f"  Zip: {output_dir.with_suffix('.zip')}")
+            for warning in result.warnings:
+                console.print(f"  [yellow]⚠ {warning}[/yellow]")
+        else:
+            console.print("[red]✗ Bundle creation failed[/red]")
+            for error in result.errors:
+                console.print(f"  [red]{error}[/red]")
+            sys.exit(1)
+
+
+@bundle.command("verify")
+@click.argument("bundle_path", type=click.Path(exists=True))
+@click.option(
+    "--check-snapshot/--no-check-snapshot",
+    default=True,
+    help="Verify snapshot file hashes",
+)
+@click.option(
+    "--check-outputs/--no-check-outputs",
+    default=True,
+    help="Validate output files against schemas",
+)
+@click.option("--json", "as_json", is_flag=True, help="Output result as JSON")
+def bundle_verify(
+    bundle_path: str,
+    check_snapshot: bool,
+    check_outputs: bool,
+    as_json: bool,
+):
+    """Verify a research bundle's integrity.
+
+    Validates that all files in the bundle match their manifest hashes.
+    Optionally verifies snapshot integrity and validates outputs against schemas.
+
+    Exit code 0 if valid, 1 if invalid.
+
+    Examples:
+        redletters bundle verify out/bundle
+        redletters bundle verify out/bundle.zip
+        redletters bundle verify out/bundle --no-check-snapshot
+        redletters bundle verify out/bundle --json
+    """
+    from pathlib import Path as PathLib
+    from redletters.export.bundle import BundleVerifier
+
+    verifier = BundleVerifier()
+    result = verifier.verify(
+        bundle_path=PathLib(bundle_path),
+        check_snapshot=check_snapshot,
+        check_outputs=check_outputs,
+    )
+
+    if as_json:
+        console.print(json.dumps(result.to_dict(), indent=2, ensure_ascii=False))
+    else:
+        if result.valid:
+            console.print("[green]✓ Bundle verified successfully[/green]")
+            if result.manifest:
+                console.print(f"  Artifacts checked: {len(result.manifest.artifacts)}")
+                console.print(f"  Content hash: {result.manifest.content_hash[:16]}...")
+            if result.snapshot_valid is not None:
+                status = "✓" if result.snapshot_valid else "✗"
+                console.print(f"  Snapshot integrity: {status}")
+            if result.outputs_valid is not None:
+                status = "✓" if result.outputs_valid else "✗"
+                console.print(f"  Output validation: {status}")
+            for warning in result.warnings:
+                console.print(f"  [yellow]⚠ {warning}[/yellow]")
+        else:
+            console.print("[red]✗ Bundle verification failed[/red]")
+            for error in result.errors:
+                console.print(f"  [red]{error}[/red]")
+            for warning in result.warnings:
+                console.print(f"  [yellow]⚠ {warning}[/yellow]")
+            sys.exit(1)
+
+
+@bundle.command("inspect")
+@click.argument("bundle_path", type=click.Path(exists=True))
+@click.option("--json", "as_json", is_flag=True, help="Output as JSON")
+def bundle_inspect(bundle_path: str, as_json: bool):
+    """Inspect a research bundle's manifest.
+
+    Shows the bundle manifest without performing full verification.
+
+    Examples:
+        redletters bundle inspect out/bundle
+        redletters bundle inspect out/bundle --json
+    """
+    from pathlib import Path as PathLib
+    from redletters.export.bundle import BundleManifest
+    import zipfile
+
+    bundle_dir = PathLib(bundle_path)
+
+    # Handle zip
+    if bundle_dir.suffix == ".zip":
+        import tempfile
+
+        temp_dir = PathLib(tempfile.mkdtemp())
+        with zipfile.ZipFile(bundle_dir, "r") as zf:
+            zf.extractall(temp_dir)
+        bundle_dir = temp_dir
+
+    manifest_path = bundle_dir / "manifest.json"
+    if not manifest_path.exists():
+        console.print("[red]✗ manifest.json not found in bundle[/red]")
+        sys.exit(1)
+
+    try:
+        manifest = BundleManifest.load(manifest_path)
+    except Exception as e:
+        console.print(f"[red]✗ Failed to load manifest: {e}[/red]")
+        sys.exit(1)
+
+    if as_json:
+        console.print(json.dumps(manifest.to_dict(), indent=2, ensure_ascii=False))
+    else:
+        console.print(Panel("[bold]Bundle Manifest[/bold]", title="Research Bundle"))
+        console.print(f"  Tool version: {manifest.tool_version}")
+        console.print(f"  Schema version: {manifest.schema_version}")
+        console.print(f"  Created: {manifest.created_utc}")
+        console.print(f"  Lockfile hash: {manifest.lockfile_hash[:16]}...")
+        console.print(f"  Snapshot hash: {manifest.snapshot_hash[:16]}...")
+        console.print(f"  Content hash: {manifest.content_hash[:16]}...")
+        console.print(f"  Schemas included: {manifest.schemas_included}")
+        if manifest.notes:
+            console.print(f"  Notes: {manifest.notes}")
+
+        console.print(f"\n  [bold]Artifacts ({len(manifest.artifacts)}):[/bold]")
+        table = Table(show_header=True, header_style="bold")
+        table.add_column("Path")
+        table.add_column("Type")
+        table.add_column("Schema Ver")
+        table.add_column("SHA-256 (prefix)")
+
+        for artifact in manifest.artifacts:
+            table.add_row(
+                artifact.path,
+                artifact.artifact_type,
+                artifact.schema_version or "-",
+                artifact.sha256[:16] + "...",
+            )
+
+        console.print(table)
+
+
+# ============================================================================
+# Run CLI Commands (v0.13.0)
+# ============================================================================
+
+
+@cli.group()
+def run():
+    """End-to-end workflow execution commands."""
+    pass
+
+
+@run.command("scholarly")
+@click.argument("reference")
+@click.option(
+    "--out",
+    "-o",
+    required=True,
+    type=click.Path(),
+    help="Output directory for all artifacts",
+)
+@click.option(
+    "--mode",
+    "-m",
+    type=click.Choice(["readable", "traceable"]),
+    default="traceable",
+    help="Translation mode (default: traceable)",
+)
+@click.option(
+    "--include-schemas",
+    is_flag=True,
+    help="Include JSON schema files in bundle",
+)
+@click.option(
+    "--zip",
+    "create_zip",
+    is_flag=True,
+    help="Also create a zip archive of the bundle",
+)
+@click.option(
+    "--force",
+    is_flag=True,
+    help="Proceed despite pending gates (records responsibility)",
+)
+@click.option(
+    "--data-root",
+    type=click.Path(),
+    help="Override data root for installed sources",
+)
+@click.option(
+    "--session",
+    "-s",
+    default="scholarly-run",
+    help="Session ID for gate acknowledgements",
+)
+@click.option("--json", "as_json", is_flag=True, help="Output result as JSON")
+def run_scholarly(
+    reference: str,
+    out: str,
+    mode: str,
+    include_schemas: bool,
+    create_zip: bool,
+    force: bool,
+    data_root: str | None,
+    session: str,
+    as_json: bool,
+):
+    """Execute a complete scholarly workflow for a reference.
+
+    Runs the entire scholarly pipeline in a single deterministic command:
+    - Generates lockfile from installed packs
+    - Checks for pending gates (refuses unless --force)
+    - Runs translation for the reference
+    - Exports all artifacts (apparatus, translation, citations, quote)
+    - Creates snapshot with file hashes
+    - Packages everything into a verified bundle
+    - Writes deterministic run_log.json
+
+    The output directory will contain:
+    - lockfile.json: Pack state with integrity hashes
+    - apparatus.jsonl: Variant apparatus data
+    - translation.jsonl: Translation with provenance
+    - citations.json: CSL-JSON bibliography
+    - quote.json: Quotable output with gate status
+    - snapshot.json: Reproducibility state
+    - bundle/: Complete verified bundle (with manifest.json)
+    - run_log.json: Detailed run log with all validations
+
+    Examples:
+        redletters run scholarly "John 1:1-18" -o out/run --mode traceable
+        redletters run scholarly "John 1:1" -o out/run --include-schemas --zip
+        redletters run scholarly "John 1:1" -o out/run --force  # bypass pending gates
+        redletters run scholarly "John 1:1-5" -o out/run --json
+    """
+    from pathlib import Path as PathLib
+    from redletters.run import ScholarlyRunner
+
+    runner = ScholarlyRunner(
+        data_root=data_root,
+        session_id=session,
+    )
+
+    result = runner.run(
+        reference=reference,
+        output_dir=PathLib(out),
+        mode=mode,  # type: ignore
+        include_schemas=include_schemas,
+        create_zip=create_zip,
+        force=force,
+    )
+
+    if as_json:
+        output_data = {
+            "success": result.success,
+            "output_dir": str(result.output_dir) if result.output_dir else None,
+            "bundle_path": str(result.bundle_path) if result.bundle_path else None,
+            "errors": result.errors,
+            "gate_blocked": result.gate_blocked,
+            "gate_refs": result.gate_refs,
+        }
+        if result.run_log:
+            output_data["run_log"] = result.run_log.to_dict()
+        console.print(json.dumps(output_data, indent=2, ensure_ascii=False))
+    else:
+        if result.success:
+            console.print("[green]✓ Scholarly run completed successfully[/green]")
+            console.print(f"  Output: {result.output_dir}")
+            console.print(f"  Bundle: {result.bundle_path}")
+            if result.run_log:
+                console.print(f"  Files created: {len(result.run_log.files_created)}")
+                console.print(
+                    f"  Validations: {len(result.run_log.validations)} checks"
+                )
+                if result.run_log.gates and result.run_log.gates.forced:
+                    console.print(
+                        f"  [yellow]⚠ Gates bypassed with --force ({result.run_log.gates.pending_count} pending)[/yellow]"
+                    )
+        elif result.gate_blocked:
+            console.print("[yellow]✗ Scholarly run blocked by pending gates[/yellow]")
+            console.print(f"  Pending gates: {', '.join(result.gate_refs[:5])}")
+            if len(result.gate_refs) > 5:
+                console.print(f"  ... and {len(result.gate_refs) - 5} more")
+            console.print("\n  [dim]To proceed anyway, use --force:[/dim]")
+            console.print(
+                f'    redletters run scholarly "{reference}" -o {out} --force'
+            )
+            console.print(
+                "\n  [dim]Or acknowledge gates first (see redletters translate --ack)[/dim]"
+            )
+            sys.exit(2)
+        else:
+            console.print("[red]✗ Scholarly run failed[/red]")
+            for error in result.errors:
+                console.print(f"  [red]{error}[/red]")
+            sys.exit(1)
+
+
 # Register engine spine CLI commands
 register_cli_commands(cli)
 

@@ -28,6 +28,12 @@ DOSSIER_SCHEMA_VERSION = "1.0.0"
 # Senses explain/conflicts schema version
 SENSES_SCHEMA_VERSION = "1.0.0"
 
+# Bundle manifest schema version (v0.12.0)
+BUNDLE_SCHEMA_VERSION = "1.0.0"
+
+# Run log schema version (v0.13.0)
+RUNLOG_SCHEMA_VERSION = "1.0.0"
+
 # Confidence bucketing algorithm version (for reproducibility)
 CONFIDENCE_BUCKETING_VERSION = "1.0.0"
 
@@ -47,6 +53,8 @@ def get_all_schema_versions():
         "citations": CITATIONS_SCHEMA_VERSION,
         "quote": QUOTE_SCHEMA_VERSION,
         "dossier": DOSSIER_SCHEMA_VERSION,
+        "bundle": BUNDLE_SCHEMA_VERSION,
+        "runlog": RUNLOG_SCHEMA_VERSION,
         "senses_explain": SENSES_SCHEMA_VERSION,
         "senses_conflicts": SENSES_SCHEMA_VERSION,
         "confidence_bucketing": CONFIDENCE_BUCKETING_VERSION,

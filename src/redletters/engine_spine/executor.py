@@ -46,6 +46,7 @@ class JobExecutor:
         self._shutdown = asyncio.Event()
         self._task: asyncio.Task | None = None
         self._current_job_id: str | None = None
+        self._cancel_requested: bool = False  # Sprint 18: Cancel flag for current job
 
     @property
     def is_running(self) -> bool:
@@ -56,6 +57,24 @@ class JobExecutor:
     def current_job_id(self) -> str | None:
         """Get currently executing job ID."""
         return self._current_job_id
+
+    def request_cancel(self, job_id: str) -> bool:
+        """Request cancellation of a running job.
+
+        Sprint 18: Sets cancel flag that's checked between stages.
+
+        Returns:
+            True if the job_id matches the currently running job
+        """
+        if self._current_job_id == job_id:
+            logger.info(f"Cancellation requested for job: {job_id}")
+            self._cancel_requested = True
+            return True
+        return False
+
+    def is_cancel_requested(self) -> bool:
+        """Check if cancellation has been requested for the current job."""
+        return self._cancel_requested
 
     def start(self) -> None:
         """Start the executor background task."""
@@ -134,10 +153,12 @@ class JobExecutor:
 
                 # Process the job
                 self._current_job_id = job_id
+                self._cancel_requested = False  # Reset cancel flag for new job
                 try:
                     await self._process_job(job_id)
                 finally:
                     self._current_job_id = None
+                    self._cancel_requested = False
 
             except Exception as e:
                 logger.exception(f"Executor loop error: {e}")
@@ -151,7 +172,7 @@ class JobExecutor:
             job_id: The job to process
         """
         from redletters.engine_spine.jobs import JobManager
-        from redletters.engine_spine.models import LogLevel
+        from redletters.engine_spine.models import JobType, LogLevel
 
         job_manager = JobManager(
             db=self._db,
@@ -179,35 +200,102 @@ class JobExecutor:
                 f"Starting job with config: {job.config.model_dump_json()}",
             )
 
-            # Update progress: initializing
-            await job_manager.update_progress(
-                job_id,
-                phase="initializing",
-                percent=0,
-                message="Loading translation engine",
-            )
-
-            # Execute translation work in thread pool (sync code)
-            # Use run_in_executor for Python 3.8 compatibility (to_thread is 3.9+)
+            # Route based on job type (Sprint 18)
+            job_type = job.config.job_type
             loop = asyncio.get_running_loop()
-            result = await loop.run_in_executor(
-                None,  # Default executor
-                self._execute_translation,
-                job_id,
-                job.config.model_dump(),
-                job_manager,
-            )
 
-            # Update progress: finalizing
-            await job_manager.update_progress(
-                job_id,
-                phase="finalizing",
-                percent=95,
-                message="Generating receipt",
-            )
+            if job_type == JobType.SCHOLARLY:
+                # Scholarly job - run ScholarlyRunner
+                await job_manager.update_progress(
+                    job_id,
+                    phase="initializing",
+                    percent=0,
+                    message="Starting scholarly workflow",
+                )
 
-            # Complete the job with outputs
-            await job_manager.complete_job(job_id, outputs=result.get("outputs", []))
+                result = await loop.run_in_executor(
+                    None,
+                    self._execute_scholarly,
+                    job_id,
+                    job.config.model_dump(),
+                    job_manager,
+                )
+
+                # Handle cancelled result (Sprint 18)
+                if result.get("cancelled"):
+                    await job_manager.update_progress(
+                        job_id,
+                        phase="cancelled",
+                        percent=100,
+                        message="Run cancelled by user",
+                    )
+                    await job_manager.cancel_job(job_id)
+                    await job_manager.log(
+                        job_id,
+                        LogLevel.INFO,
+                        "executor",
+                        "Job cancelled by user request",
+                    )
+                    logger.info(f"Job cancelled: {job_id}")
+                    return
+                # Handle gate-blocked as completed (not error)
+                elif result.get("gate_blocked"):
+                    await job_manager.update_progress(
+                        job_id,
+                        phase="gate_blocked",
+                        percent=100,
+                        message=f"Blocked by {len(result.get('pending_gates', []))} pending gate(s)",
+                    )
+                    await job_manager.complete_job(
+                        job_id,
+                        outputs=result.get("outputs", []),
+                        scholarly_result=result.get("scholarly_result"),
+                    )
+                elif result.get("success"):
+                    await job_manager.update_progress(
+                        job_id,
+                        phase="completed",
+                        percent=100,
+                        message="Scholarly run completed successfully",
+                    )
+                    await job_manager.complete_job(
+                        job_id,
+                        outputs=result.get("outputs", []),
+                        scholarly_result=result.get("scholarly_result"),
+                    )
+                else:
+                    # Failed
+                    errors = result.get("errors", ["Unknown error"])
+                    raise RuntimeError("; ".join(errors))
+            else:
+                # Translation job - existing logic
+                await job_manager.update_progress(
+                    job_id,
+                    phase="initializing",
+                    percent=0,
+                    message="Loading translation engine",
+                )
+
+                result = await loop.run_in_executor(
+                    None,
+                    self._execute_translation,
+                    job_id,
+                    job.config.model_dump(),
+                    job_manager,
+                )
+
+                # Update progress: finalizing
+                await job_manager.update_progress(
+                    job_id,
+                    phase="finalizing",
+                    percent=95,
+                    message="Generating receipt",
+                )
+
+                # Complete the job with outputs
+                await job_manager.complete_job(
+                    job_id, outputs=result.get("outputs", [])
+                )
 
             await job_manager.log(
                 job_id,
@@ -401,6 +489,237 @@ class JobExecutor:
             "score": 0.85,
             "token_count": len(text.split()),
             "demo": True,
+        }
+
+    def _execute_scholarly(
+        self,
+        job_id: str,
+        config: dict[str, Any],
+        job_manager: "JobManager",
+    ) -> dict[str, Any]:
+        """Execute scholarly workflow (sync, runs in thread pool).
+
+        Sprint 18: Jobs-first scholarly runs.
+
+        Args:
+            job_id: Job identifier
+            config: Job configuration dict with scholarly fields
+            job_manager: For progress updates
+
+        Returns:
+            Dict with scholarly_result, outputs, success/gate_blocked flags
+        """
+        from datetime import datetime, timezone
+        from pathlib import Path
+
+        from redletters.engine_spine.models import ArtifactInfo, ScholarlyJobResult
+        from redletters.run.scholarly import ScholarlyRunner, ScholarlyRunResult
+
+        # Extract scholarly config
+        reference = config.get("reference")
+        mode = config.get("mode", "traceable")
+        force = config.get("force", False)
+        session_id = config.get("session_id", f"scholarly-{job_id}")
+        include_schemas = config.get("include_schemas", False)
+        create_zip = config.get("create_zip", False)
+
+        if not reference:
+            return {
+                "success": False,
+                "errors": ["Reference is required for scholarly jobs"],
+                "scholarly_result": ScholarlyJobResult(
+                    success=False,
+                    errors=["Reference is required for scholarly jobs"],
+                ).model_dump(),
+            }
+
+        # Generate output directory
+        timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        output_dir = Path(
+            f"~/.greek2english/runs/scholarly-{timestamp}-{job_id[:12]}"
+        ).expanduser()
+
+        # Progress callback stages
+        stages = [
+            ("lockfile", 10, "Generating lockfile"),
+            ("gates_check", 20, "Checking gates"),
+            ("translate", 40, "Running translation"),
+            ("export_apparatus", 50, "Exporting apparatus"),
+            ("export_translation", 60, "Exporting translation"),
+            ("export_citations", 65, "Exporting citations"),
+            ("export_quote", 70, "Exporting quote"),
+            ("snapshot", 80, "Creating snapshot"),
+            ("bundle", 90, "Creating bundle"),
+            ("finalize", 95, "Finalizing"),
+        ]
+
+        current_stage_idx = 0
+
+        def progress_callback(stage: str, message: str | None = None):
+            """Callback for ScholarlyRunner to emit progress."""
+            nonlocal current_stage_idx
+            for idx, (stage_name, percent, default_msg) in enumerate(stages):
+                if stage_name == stage:
+                    current_stage_idx = idx
+                    self._sync_update_progress(
+                        job_manager,
+                        job_id,
+                        phase=stage,
+                        percent=percent,
+                        message=message or default_msg,
+                    )
+                    return
+            # Unknown stage - just log it
+            self._sync_update_progress(
+                job_manager,
+                job_id,
+                phase=stage,
+                percent=stages[current_stage_idx][1]
+                if current_stage_idx < len(stages)
+                else 50,
+                message=message,
+            )
+
+        # Create cancel check callback
+        def cancel_check() -> bool:
+            """Check if cancellation has been requested."""
+            return self.is_cancel_requested()
+
+        # Create runner with progress and cancel callbacks
+        runner = ScholarlyRunner(
+            session_id=session_id,
+            progress_callback=progress_callback,
+            cancel_check=cancel_check,
+        )
+
+        started_at = datetime.now(timezone.utc)
+
+        try:
+            result: ScholarlyRunResult = runner.run(
+                reference=reference,
+                output_dir=output_dir,
+                mode=mode,
+                include_schemas=include_schemas,
+                create_zip=create_zip,
+                force=force,
+            )
+        except Exception as e:
+            logger.exception(f"Scholarly run failed for job {job_id}")
+            return {
+                "success": False,
+                "errors": [str(e)],
+                "scholarly_result": ScholarlyJobResult(
+                    success=False,
+                    errors=[str(e)],
+                    started_at=started_at,
+                    completed_at=datetime.now(timezone.utc),
+                ).model_dump(),
+            }
+
+        completed_at = datetime.now(timezone.utc)
+
+        # Build result
+        outputs: list[ArtifactInfo] = []
+
+        # Handle cancelled result
+        if result.cancelled:
+            scholarly_result = ScholarlyJobResult(
+                success=False,
+                errors=["Run cancelled by user"],
+                started_at=started_at,
+                completed_at=completed_at,
+            )
+            return {
+                "success": False,
+                "cancelled": True,
+                "errors": ["Run cancelled by user"],
+                "scholarly_result": scholarly_result.model_dump(),
+            }
+
+        if result.gate_blocked:
+            # Gate blocked - completed state but no outputs
+            scholarly_result = ScholarlyJobResult(
+                success=False,
+                gate_blocked=True,
+                pending_gates=result.gate_refs,
+                errors=[f"Blocked by {len(result.gate_refs)} pending gate(s)"],
+                started_at=started_at,
+                completed_at=completed_at,
+            )
+            return {
+                "success": True,  # Job succeeded, but workflow was blocked
+                "gate_blocked": True,
+                "pending_gates": result.gate_refs,
+                "outputs": outputs,
+                "scholarly_result": scholarly_result.model_dump(),
+            }
+
+        if result.success and result.bundle_path:
+            # Collect artifact info for bundle contents
+            bundle_path = Path(result.bundle_path)
+            if bundle_path.exists():
+                for artifact_file in bundle_path.rglob("*"):
+                    if artifact_file.is_file():
+                        import hashlib
+
+                        content = artifact_file.read_bytes()
+                        sha256 = hashlib.sha256(content).hexdigest()
+                        outputs.append(
+                            ArtifactInfo(
+                                path=str(artifact_file),
+                                size_bytes=len(content),
+                                sha256=sha256,
+                            )
+                        )
+
+            # Build run_log summary
+            run_log_summary = None
+            if result.run_log:
+                run_log_summary = {
+                    "reference": result.run_log.reference
+                    if hasattr(result.run_log, "reference")
+                    else reference,
+                    "mode": mode,
+                    "verse_count": len(result.run_log.verse_ids)
+                    if hasattr(result.run_log, "verse_ids")
+                    else 0,
+                    "file_count": len(result.run_log.files)
+                    if hasattr(result.run_log, "files")
+                    else 0,
+                    "content_hash": result.run_log.content_hash
+                    if hasattr(result.run_log, "content_hash")
+                    else None,
+                }
+
+            scholarly_result = ScholarlyJobResult(
+                success=True,
+                gate_blocked=False,
+                output_dir=str(result.output_dir) if result.output_dir else None,
+                bundle_path=str(result.bundle_path) if result.bundle_path else None,
+                run_log_summary=run_log_summary,
+                started_at=started_at,
+                completed_at=completed_at,
+            )
+
+            return {
+                "success": True,
+                "gate_blocked": False,
+                "outputs": outputs,
+                "scholarly_result": scholarly_result.model_dump(),
+            }
+
+        # Failed
+        scholarly_result = ScholarlyJobResult(
+            success=False,
+            errors=result.errors,
+            started_at=started_at,
+            completed_at=completed_at,
+        )
+
+        return {
+            "success": False,
+            "errors": result.errors,
+            "scholarly_result": scholarly_result.model_dump(),
         }
 
     def _sync_update_progress(

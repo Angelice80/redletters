@@ -116,6 +116,27 @@ def __getattr__(name):
         from redletters.export.snapshot import SnapshotVerifier
 
         return SnapshotVerifier
+    # v0.12.0: Bundle exports
+    elif name == "BundleCreator":
+        from redletters.export.bundle import BundleCreator
+
+        return BundleCreator
+    elif name == "BundleVerifier":
+        from redletters.export.bundle import BundleVerifier
+
+        return BundleVerifier
+    elif name == "create_bundle":
+        from redletters.export.bundle import create_bundle
+
+        return create_bundle
+    elif name == "verify_bundle":
+        from redletters.export.bundle import verify_bundle
+
+        return verify_bundle
+    elif name == "BUNDLE_SCHEMA_VERSION":
+        from redletters.export.bundle import BUNDLE_SCHEMA_VERSION
+
+        return BUNDLE_SCHEMA_VERSION
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
@@ -142,4 +163,10 @@ __all__ = [
     # v0.8.0: Export friction
     "PendingGatesError",
     "PendingGate",
+    # v0.12.0: Bundle exports
+    "BundleCreator",
+    "BundleVerifier",
+    "create_bundle",
+    "verify_bundle",
+    "BUNDLE_SCHEMA_VERSION",
 ]

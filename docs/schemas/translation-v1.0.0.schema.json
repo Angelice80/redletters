@@ -1,0 +1,203 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://redletters.dev/schemas/translation-v1.0.0.schema.json",
+  "title": "Translation Export Record",
+  "description": "Schema for a single verse in translation JSONL export (v0.5.0+)",
+  "type": "object",
+  "required": [
+    "verse_id",
+    "normalized_ref",
+    "spine_text",
+    "tokens",
+    "confidence_summary",
+    "provenance",
+    "schema_version"
+  ],
+  "properties": {
+    "verse_id": {
+      "type": "string",
+      "description": "Stable verse identifier (e.g., 'John.1.18')"
+    },
+    "normalized_ref": {
+      "type": "string",
+      "description": "Normalized scripture reference"
+    },
+    "spine_text": {
+      "type": "string",
+      "description": "Greek text from spine source"
+    },
+    "tokens": {
+      "type": "array",
+      "description": "Token-level ledger entries",
+      "items": {
+        "$ref": "#/$defs/token"
+      }
+    },
+    "renderings": {
+      "type": "array",
+      "description": "Translation renderings (if available)",
+      "items": {
+        "type": "object"
+      }
+    },
+    "confidence_summary": {
+      "$ref": "#/$defs/confidence_summary"
+    },
+    "provenance": {
+      "$ref": "#/$defs/provenance"
+    },
+    "schema_version": {
+      "type": "string",
+      "description": "Schema version for this record",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    }
+  },
+  "$defs": {
+    "token": {
+      "type": "object",
+      "required": ["token_id", "position", "surface", "confidence"],
+      "properties": {
+        "token_id": {
+          "type": "string",
+          "description": "Stable token identifier"
+        },
+        "position": {
+          "type": "integer",
+          "description": "Position within the verse",
+          "minimum": 0
+        },
+        "surface": {
+          "type": "string",
+          "description": "Surface form of the Greek token"
+        },
+        "normalized": {
+          "type": "string",
+          "description": "Normalized form"
+        },
+        "lemma": {
+          "type": ["string", "null"],
+          "description": "Dictionary form (lemma)"
+        },
+        "morph": {
+          "type": ["string", "null"],
+          "description": "Morphological code"
+        },
+        "gloss": {
+          "type": "string",
+          "description": "English gloss"
+        },
+        "gloss_source": {
+          "type": "string",
+          "description": "Source of the gloss"
+        },
+        "confidence": {
+          "$ref": "#/$defs/confidence_layers"
+        },
+        "notes": {
+          "type": "array",
+          "description": "Additional notes",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "confidence_layers": {
+      "type": "object",
+      "description": "T/G/L/I confidence layers",
+      "required": ["textual", "grammatical", "lexical", "interpretive"],
+      "properties": {
+        "textual": {
+          "type": "number",
+          "description": "Textual confidence (0-1)",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "grammatical": {
+          "type": "number",
+          "description": "Grammatical confidence (0-1)",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "lexical": {
+          "type": "number",
+          "description": "Lexical confidence (0-1)",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "interpretive": {
+          "type": "number",
+          "description": "Interpretive confidence (0-1)",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "confidence_summary": {
+      "type": "object",
+      "description": "Aggregate confidence for the verse",
+      "required": ["textual", "grammatical", "lexical", "interpretive", "composite", "bucket"],
+      "properties": {
+        "textual": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "grammatical": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "lexical": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "interpretive": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "composite": {
+          "type": "number",
+          "description": "Geometric mean of all layers",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "bucket": {
+          "type": "string",
+          "description": "Confidence bucket (v0.8.0)",
+          "enum": ["high", "medium", "low"]
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "description": "Source provenance information",
+      "properties": {
+        "spine_source_id": {
+          "type": "string",
+          "description": "ID of the spine source"
+        },
+        "comparative_sources_used": {
+          "type": "array",
+          "description": "List of comparative source IDs",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evidence_class_summary": {
+          "type": "object",
+          "description": "Summary of evidence classes"
+        },
+        "sense_packs_used": {
+          "type": "array",
+          "description": "Sense packs used for glossing (v0.6.0)",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  }
+}

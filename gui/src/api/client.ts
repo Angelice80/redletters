@@ -33,6 +33,8 @@ import type {
   // Sprint 14: Scholarly Run types
   ScholarlyRunRequest,
   ScholarlyRunResponse,
+  // Sprint 18: Async job response
+  ScholarlyJobResponse,
   // Sprint 15: Gate Pending types
   PendingGatesResponse,
   // Sprint 16: Capabilities Handshake
@@ -41,6 +43,9 @@ import type {
   ApiErrorDetail,
   ErrorCategory,
   CapabilitiesValidation,
+  // Sprint 19: Backend mismatch detection
+  BackendMismatchInfo,
+  BackendShape,
 } from "./types";
 
 // Import const value separately (not as type)
@@ -313,6 +318,83 @@ function isVersionCompatible(current: string, required: string): boolean {
   return true; // Equal
 }
 
+/**
+ * Sprint 19: Detect backend mode mismatch from engine status.
+ *
+ * Called when a 404 is received for critical routes like /translate or /sources/status.
+ * Fetches engine status to determine if backend is running in wrong mode.
+ */
+export async function detectBackendMismatch(
+  baseUrl: string,
+  token: string,
+  failedPath: string,
+): Promise<BackendMismatchInfo> {
+  const noMismatch: BackendMismatchInfo = {
+    detected: false,
+    missingRoutes: [],
+    correctStartCommand: "python -m redletters engine start",
+  };
+
+  try {
+    // Fetch engine status to check backend shape
+    const response = await fetch(`${baseUrl}/v1/engine/status`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      return noMismatch; // Can't determine mismatch
+    }
+
+    const status = (await response.json()) as { shape?: BackendShape };
+
+    if (!status.shape) {
+      // Backend doesn't report shape - older version
+      return noMismatch;
+    }
+
+    const shape = status.shape;
+    const missingRoutes: string[] = [];
+
+    // Check which routes are missing
+    if (!shape.has_translate) missingRoutes.push("/translate");
+    if (!shape.has_sources_status) missingRoutes.push("/sources/status");
+    if (!shape.has_acknowledge) missingRoutes.push("/acknowledge");
+    if (!shape.has_variants_dossier) missingRoutes.push("/variants/dossier");
+
+    // Mismatch detected if backend is engine_only or critical routes missing
+    if (shape.backend_mode === "engine_only" || missingRoutes.length > 0) {
+      return {
+        detected: true,
+        backendMode: shape.backend_mode as "full" | "engine_only",
+        missingRoutes,
+        correctStartCommand: "python -m redletters engine start",
+      };
+    }
+
+    return noMismatch;
+  } catch {
+    // Network error or other issue - can't determine mismatch
+    return noMismatch;
+  }
+}
+
+/**
+ * Sprint 19: Check if a path is a critical GUI route that indicates mismatch if 404.
+ */
+function isCriticalRoutePath(path: string): boolean {
+  const criticalPaths = [
+    "/translate",
+    "/sources/status",
+    "/sources",
+    "/acknowledge",
+    "/variants/dossier",
+  ];
+  return criticalPaths.some((p) => path.includes(p));
+}
+
 export interface ApiClientConfig {
   baseUrl: string;
   token: string;
@@ -465,24 +547,10 @@ export class ApiClient {
   }
 
   /**
-   * GET /v1/jobs/{job_id} - Get job by ID.
-   */
-  async getJob(jobId: string): Promise<JobResponse> {
-    return this.request<JobResponse>("GET", this._contract.jobById(jobId));
-  }
-
-  /**
    * GET /v1/jobs/{job_id}/receipt - Get job receipt.
    */
   async getReceipt(jobId: string): Promise<JobReceipt> {
     return this.request<JobReceipt>("GET", this._contract.jobReceipt(jobId));
-  }
-
-  /**
-   * POST /v1/jobs/{job_id}/cancel - Cancel a job.
-   */
-  async cancelJob(jobId: string): Promise<JobResponse> {
-    return this.request<JobResponse>("POST", this._contract.jobCancel(jobId));
   }
 
   // --- Diagnostics ---
@@ -659,24 +727,44 @@ export class ApiClient {
     return this.request<PendingGatesResponse>("GET", `${path}?${params}`);
   }
 
-  // --- Scholarly Run (Sprint 14) ---
+  // --- Scholarly Run (Sprint 14 -> Sprint 18 async job mode) ---
 
   /**
-   * POST /v1/run/scholarly - Execute end-to-end scholarly run.
+   * POST /v1/run/scholarly - Enqueue scholarly run as async job.
    *
-   * Generates verified bundle with lockfile, apparatus, translation,
-   * citations, quote, snapshot, and run_log.json.
+   * Sprint 18: Now returns immediately with job_id.
+   * Monitor progress via SSE stream filtered by job_id.
+   * Gate-blocked is a terminal "completed" state (not an error).
    *
-   * If pending gates exist and force=false, returns gate_blocked=true.
+   * @returns Job ID and metadata for tracking
    */
   async runScholarly(
     request: ScholarlyRunRequest,
-  ): Promise<ScholarlyRunResponse> {
-    return this.request<ScholarlyRunResponse>(
+  ): Promise<ScholarlyJobResponse> {
+    return this.request<ScholarlyJobResponse>(
       "POST",
       this._contract.runScholarly(),
       request,
     );
+  }
+
+  /**
+   * GET /v1/jobs/{id} - Get job details (Sprint 18).
+   *
+   * For scholarly jobs, includes result payload with output paths.
+   */
+  async getJob(jobId: string): Promise<JobResponse> {
+    return this.request<JobResponse>("GET", this._contract.jobById(jobId));
+  }
+
+  /**
+   * POST /v1/jobs/{id}/cancel - Cancel a job (Sprint 18).
+   *
+   * For running jobs, signals the executor to cancel.
+   * For queued jobs, cancels immediately.
+   */
+  async cancelJob(jobId: string): Promise<JobResponse> {
+    return this.request<JobResponse>("POST", this._contract.jobCancel(jobId));
   }
 }
 

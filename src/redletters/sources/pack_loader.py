@@ -214,8 +214,8 @@ class PackLoader:
             manifest_data = json.load(f)
         self._manifest = PackManifest.from_dict(manifest_data)
 
-        # Load verse data from each book
-        for book in self._manifest.books:
+        # Load verse data from each book (use effective_coverage for v1.1 compat)
+        for book in self._manifest.effective_coverage:
             self._load_book(book)
 
         self._loaded = True
@@ -239,9 +239,16 @@ class PackLoader:
                 if not line or line.startswith("#"):
                     continue
 
+                # Skip header row
+                if line.startswith("verse_id"):
+                    continue
+
                 parts = line.split("\t", 1)
-                if len(parts) == 2:
-                    verse_id, text = parts
+                if len(parts) >= 2:
+                    verse_id, text = parts[0], parts[1]
+                    # Handle 3-column TSV (verse_id, text, normalized)
+                    if "\t" in text:
+                        text = text.split("\t")[0]
                     text = unicodedata.normalize("NFC", text)
                     self._verses[verse_id] = VerseText(
                         verse_id=verse_id,

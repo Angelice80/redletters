@@ -10,7 +10,15 @@ http://localhost:8000/api/v1
 
 ```bash
 redletters serve
-# or
+redletters serve --port 8080
+```
+
+> **Security Warning:** Using `--host 0.0.0.0` exposes the API to your entire
+> network. Only do this on trusted networks - the API has no authentication
+> by default.
+
+```bash
+# Only on trusted networks:
 redletters serve --host 0.0.0.0 --port 8080
 ```
 
@@ -272,7 +280,7 @@ curl "http://localhost:8000/api/v1/tokens?ref=Matthew%203:2"
 redletters init
 ```
 
-Creates the database at `~/.redletters/redletters.db` and loads demo data.
+Creates the database at `~/.greek2english/engine.db` and loads demo data.
 
 ### Query a Reference
 

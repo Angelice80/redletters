@@ -1,21 +1,36 @@
 /**
  * ExportView - Export workflow screen with wizard and scholarly run.
  *
+ * Sprint v0.19.0: Jobs-native GUI
+ * - Async job flow with immediate job_id return
+ * - Live progress via SSE subscription
+ * - Cancel support with cancel_requested state
+ * - Gate-blocked as terminal non-error state
+ *
  * Sprint v0.14.0: Task-shaped export interface with:
  * - Export Wizard (detect gates, acknowledge, choose type)
  * - Scholarly Run button triggering full workflow
  * - Gate enforcement matching backend rules
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAppStore, selectSettings } from "../store";
 import type { ApiClient } from "../api/client";
-import type { ApiErrorDetail } from "../api/types";
+import type {
+  ApiErrorDetail,
+  JobUIState,
+  SSEEvent,
+  JobProgress,
+  JobStateChanged,
+  ScholarlyJobResult,
+} from "../api/types";
 import {
   ApiErrorPanel,
   createApiErrorDetail,
 } from "../components/ApiErrorPanel";
+import { JobProgressModal } from "../components/JobProgressModal";
+import { useJobEvents } from "../api/sse";
 
 interface ExportViewProps {
   client: ApiClient | null;
@@ -31,29 +46,12 @@ interface GateInfo {
 }
 
 interface ExportWizardState {
-  step:
-    | "reference"
-    | "gates"
-    | "acknowledge"
-    | "export"
-    | "running"
-    | "complete";
+  step: "reference" | "gates" | "acknowledge" | "export";
   reference: string;
   pendingGates: GateInfo[];
   forceSelected: boolean;
   forceReason: string;
   exportType: ExportType;
-  result: ScholarlyRunResult | null;
-}
-
-interface ScholarlyRunResult {
-  success: boolean;
-  gate_blocked: boolean;
-  pending_gates: string[];
-  message: string;
-  output_dir?: string;
-  bundle_path?: string;
-  errors: string[];
 }
 
 // Styles
@@ -145,11 +143,6 @@ const disabledButtonStyle: React.CSSProperties = {
   cursor: "not-allowed",
 };
 
-const warningButtonStyle: React.CSSProperties = {
-  ...buttonStyle,
-  backgroundColor: "#f59e0b",
-};
-
 const dangerButtonStyle: React.CSSProperties = {
   ...buttonStyle,
   backgroundColor: "#ef4444",
@@ -208,37 +201,6 @@ const checkboxContainerStyle: React.CSSProperties = {
   marginTop: "16px",
 };
 
-const resultCardStyle: React.CSSProperties = {
-  backgroundColor: "#1a1a2e",
-  borderRadius: "6px",
-  padding: "16px",
-  marginTop: "16px",
-};
-
-const errorStyle: React.CSSProperties = {
-  padding: "12px",
-  backgroundColor: "#7f1d1d",
-  color: "#fca5a5",
-  borderRadius: "4px",
-  marginBottom: "16px",
-};
-
-const successStyle: React.CSSProperties = {
-  padding: "12px",
-  backgroundColor: "#14532d",
-  color: "#86efac",
-  borderRadius: "4px",
-  marginBottom: "16px",
-};
-
-const codeStyle: React.CSSProperties = {
-  fontFamily: "monospace",
-  backgroundColor: "#374151",
-  padding: "2px 6px",
-  borderRadius: "3px",
-  fontSize: "12px",
-};
-
 function StepIndicator({
   currentStep,
   steps,
@@ -290,15 +252,118 @@ export function ExportView({ client }: ExportViewProps) {
     forceSelected: false,
     forceReason: "",
     exportType: "bundle",
-    result: null,
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ApiErrorDetail | null>(null);
   const [mode, setMode] = useState<"readable" | "traceable">("traceable");
 
+  // Sprint 19: Job UI state for async job flow
+  const [jobState, setJobState] = useState<JobUIState>({ status: "idle" });
+  const [showModal, setShowModal] = useState(false);
+
+  // Get current job ID if running
+  const currentJobId =
+    jobState.status !== "idle" && "jobId" in jobState ? jobState.jobId : null;
+
+  // Sprint 19: SSE subscription for job events
+  const handleJobEvent = useCallback(
+    (event: SSEEvent) => {
+      if (!currentJobId) return;
+
+      switch (event.event_type) {
+        case "job.progress": {
+          const progressEvent = event as JobProgress;
+          if (progressEvent.job_id === currentJobId) {
+            setJobState({
+              status: "streaming",
+              jobId: currentJobId,
+              stage: progressEvent.phase,
+              percent: progressEvent.progress_percent ?? 0,
+              message: progressEvent.phase,
+            });
+          }
+          break;
+        }
+        case "job.state_changed": {
+          const stateEvent = event as JobStateChanged;
+          if (stateEvent.job_id !== currentJobId) return;
+
+          // Handle terminal states
+          if (stateEvent.new_state === "completed") {
+            // Fetch job to get result
+            fetchJobResult(currentJobId);
+          } else if (stateEvent.new_state === "cancelled") {
+            setJobState({ status: "canceled", jobId: currentJobId });
+          } else if (stateEvent.new_state === "failed") {
+            setJobState({
+              status: "completed_failed",
+              jobId: currentJobId,
+              errors: ["Job failed - check job details for more info"],
+            });
+          } else if (stateEvent.new_state === "cancelling") {
+            setJobState({ status: "cancel_requested", jobId: currentJobId });
+          }
+          break;
+        }
+      }
+    },
+    [currentJobId],
+  );
+
+  // SSE subscription hook - only active when we have a job
+  useJobEvents(
+    client?.baseUrl ?? "",
+    client?.token ?? "",
+    currentJobId,
+    handleJobEvent,
+    !!currentJobId &&
+      jobState.status !== "completed_success" &&
+      jobState.status !== "completed_gate_blocked" &&
+      jobState.status !== "completed_failed" &&
+      jobState.status !== "canceled",
+  );
+
+  // Fetch job result on completion
+  const fetchJobResult = useCallback(
+    async (jobId: string) => {
+      if (!client) return;
+
+      try {
+        const job = await client.getJob(jobId);
+        const result = job.result as ScholarlyJobResult | undefined;
+
+        if (result?.gate_blocked) {
+          setJobState({
+            status: "completed_gate_blocked",
+            jobId,
+            pendingGates: result.pending_gates ?? [],
+          });
+        } else if (result?.success) {
+          setJobState({
+            status: "completed_success",
+            jobId,
+            result,
+          });
+        } else {
+          setJobState({
+            status: "completed_failed",
+            jobId,
+            errors: result?.errors ?? ["Unknown error"],
+          });
+        }
+      } catch (err) {
+        setJobState({
+          status: "completed_failed",
+          jobId,
+          errors: [(err as Error).message],
+        });
+      }
+    },
+    [client],
+  );
+
   // Step 1: Check gates for reference
-  // Uses dedicated /v1/gates/pending endpoint for consistency with ScholarlyRunner
   const handleCheckGates = useCallback(async () => {
     if (!client || !wizard.reference.trim()) return;
 
@@ -306,14 +371,12 @@ export function ExportView({ client }: ExportViewProps) {
     setError(null);
 
     try {
-      // Use dedicated gates endpoint for consistent gate detection
       const response = await client.getPendingGates(
         wizard.reference.trim(),
         settings.sessionId,
       );
 
       if (response.pending_gates.length > 0) {
-        // Gates detected
         const gates: GateInfo[] = response.pending_gates.map((gate) => ({
           ref: gate.ref,
           significance: gate.significance,
@@ -326,7 +389,6 @@ export function ExportView({ client }: ExportViewProps) {
           pendingGates: gates,
         }));
       } else {
-        // No gates - skip to export
         setWizard((prev) => ({
           ...prev,
           step: "export",
@@ -334,7 +396,6 @@ export function ExportView({ client }: ExportViewProps) {
         }));
       }
     } catch (err) {
-      // Sprint 17: Include contract diagnostics in error
       const diagnosticsUrl = client.contract
         ? `${client.baseUrl}${client.contract.gatesPending()}`
         : "/v1/gates/pending";
@@ -395,18 +456,16 @@ export function ExportView({ client }: ExportViewProps) {
     });
   }, [navigate, wizard.pendingGates, wizard.reference, settings.sessionId]);
 
-  // Step 4: Run scholarly export
-  // Sprint 17: Uses ApiClient.runScholarly() instead of raw fetch()
+  // Sprint 19: Run scholarly export as async job
   const handleScholarlyRun = useCallback(async () => {
     if (!client) return;
 
     setLoading(true);
     setError(null);
-    setWizard((prev) => ({ ...prev, step: "running" }));
 
     try {
-      // Sprint 17: Use ApiClient method for contract-first routing
-      const result = await client.runScholarly({
+      // Enqueue job - returns immediately with job_id
+      const response = await client.runScholarly({
         reference: wizard.reference.trim(),
         mode,
         force: wizard.forceSelected,
@@ -415,30 +474,13 @@ export function ExportView({ client }: ExportViewProps) {
         create_zip: wizard.exportType === "bundle",
       });
 
-      if (result.gate_blocked) {
-        // Gate blocked - update wizard state
-        setWizard((prev) => ({
-          ...prev,
-          step: "gates",
-          pendingGates: result.pending_gates.map((ref: string) => ({
-            ref,
-            significance: "significant",
-            message: "Pending acknowledgement",
-          })),
-          result: null,
-        }));
-        // Gate blocked is expected flow, not an error - clear any previous error
-        setError(null);
-      } else {
-        // Success or failure
-        setWizard((prev) => ({
-          ...prev,
-          step: "complete",
-          result,
-        }));
-      }
+      // Set enqueued state and show modal
+      setJobState({
+        status: "enqueued",
+        jobId: response.job_id,
+      });
+      setShowModal(true);
     } catch (err) {
-      // Sprint 17: Include contract diagnostics in error
       const diagnosticsUrl = client.contract
         ? `${client.baseUrl}${client.contract.runScholarly()}`
         : "/v1/run/scholarly";
@@ -448,7 +490,6 @@ export function ExportView({ client }: ExportViewProps) {
       setError(
         createApiErrorDetail("POST", diagnosticsUrl, err, contractDiags),
       );
-      setWizard((prev) => ({ ...prev, step: "export" }));
     } finally {
       setLoading(false);
     }
@@ -461,6 +502,72 @@ export function ExportView({ client }: ExportViewProps) {
     settings,
   ]);
 
+  // Sprint 19: Cancel job
+  const handleCancelJob = useCallback(async () => {
+    if (!client || !currentJobId) return;
+
+    // Immediately show cancel_requested state
+    setJobState({ status: "cancel_requested", jobId: currentJobId });
+
+    try {
+      await client.cancelJob(currentJobId);
+      // State will be updated via SSE event
+    } catch (err) {
+      // Revert to streaming state on error
+      setJobState((prev) =>
+        prev.status === "cancel_requested" && "jobId" in prev
+          ? {
+              status: "streaming",
+              jobId: prev.jobId,
+              stage: "",
+              percent: 0,
+              message: "",
+            }
+          : prev,
+      );
+    }
+  }, [client, currentJobId]);
+
+  // Sprint 19: Close modal and reset state
+  const handleCloseModal = useCallback(() => {
+    setShowModal(false);
+    // Reset job state after a brief delay to allow closing animation
+    setTimeout(() => {
+      setJobState({ status: "idle" });
+    }, 200);
+  }, []);
+
+  // Sprint 19: Navigate to jobs screen
+  const handleViewInJobs = useCallback(() => {
+    handleCloseModal();
+    navigate("/jobs");
+  }, [handleCloseModal, navigate]);
+
+  // Sprint 20: Navigate to receipt view (job detail page)
+  const handleViewReceipt = useCallback(() => {
+    handleCloseModal();
+    if (currentJobId) {
+      navigate(`/jobs/${currentJobId}`);
+    }
+  }, [handleCloseModal, navigate, currentJobId]);
+
+  // Sprint 19: Navigate to resolve gates
+  const handleResolveGates = useCallback(() => {
+    handleCloseModal();
+    if (jobState.status === "completed_gate_blocked") {
+      // Update wizard state with pending gates
+      setWizard((prev) => ({
+        ...prev,
+        step: "gates",
+        pendingGates: jobState.pendingGates.map((ref) => ({
+          ref,
+          significance: "significant",
+          message: "Pending acknowledgement",
+        })),
+      }));
+    }
+  }, [handleCloseModal, jobState]);
+
   const handleReset = useCallback(() => {
     setWizard({
       step: "reference",
@@ -469,9 +576,10 @@ export function ExportView({ client }: ExportViewProps) {
       forceSelected: false,
       forceReason: "",
       exportType: "bundle",
-      result: null,
     });
     setError(null);
+    setJobState({ status: "idle" });
+    setShowModal(false);
   }, []);
 
   const currentStepIndex =
@@ -481,11 +589,7 @@ export function ExportView({ client }: ExportViewProps) {
         ? 1
         : wizard.step === "acknowledge"
           ? 2
-          : wizard.step === "export" ||
-              wizard.step === "running" ||
-              wizard.step === "complete"
-            ? 3
-            : 0;
+          : 3;
 
   if (!client) {
     return (
@@ -736,7 +840,7 @@ export function ExportView({ client }: ExportViewProps) {
               onClick={handleScholarlyRun}
               disabled={loading}
             >
-              {loading ? "Running..." : "Run Scholarly Export"}
+              {loading ? "Starting..." : "Run Scholarly Export"}
             </button>
             <button style={secondaryButtonStyle} onClick={handleReset}>
               Start Over
@@ -748,93 +852,6 @@ export function ExportView({ client }: ExportViewProps) {
           >
             This will generate: lockfile, apparatus, translation, citations,
             quote, snapshot, verified bundle, and run_log.json
-          </div>
-        </div>
-      )}
-
-      {/* Running */}
-      {wizard.step === "running" && (
-        <div style={sectionStyle}>
-          <div style={sectionHeaderStyle}>Running Scholarly Export...</div>
-          <div style={{ color: "#9ca3af" }}>
-            Generating verified bundle for {wizard.reference}. This may take a
-            moment.
-          </div>
-          <div
-            style={{
-              marginTop: "16px",
-              padding: "12px",
-              backgroundColor: "#1a1a2e",
-              borderRadius: "4px",
-            }}
-          >
-            <div style={{ color: "#60a5fa" }}>Processing...</div>
-          </div>
-        </div>
-      )}
-
-      {/* Complete */}
-      {wizard.step === "complete" && wizard.result && (
-        <div style={sectionStyle}>
-          <div style={sectionHeaderStyle}>Export Complete</div>
-
-          {wizard.result.success ? (
-            <div style={successStyle}>
-              Scholarly run completed successfully!
-            </div>
-          ) : (
-            <div style={errorStyle}>
-              Export completed with errors. Check the run log for details.
-            </div>
-          )}
-
-          <div style={resultCardStyle}>
-            <div style={{ marginBottom: "12px" }}>
-              <span style={{ color: "#9ca3af" }}>Reference: </span>
-              <span style={{ color: "#eaeaea" }}>{wizard.reference}</span>
-            </div>
-
-            {wizard.result.output_dir && (
-              <div style={{ marginBottom: "12px" }}>
-                <span style={{ color: "#9ca3af" }}>Output Directory: </span>
-                <code style={codeStyle}>{wizard.result.output_dir}</code>
-              </div>
-            )}
-
-            {wizard.result.bundle_path && (
-              <div style={{ marginBottom: "12px" }}>
-                <span style={{ color: "#9ca3af" }}>Bundle Path: </span>
-                <code style={codeStyle}>{wizard.result.bundle_path}</code>
-              </div>
-            )}
-
-            {wizard.result.errors.length > 0 && (
-              <div style={{ marginTop: "12px" }}>
-                <div
-                  style={{
-                    color: "#f59e0b",
-                    fontSize: "13px",
-                    marginBottom: "4px",
-                  }}
-                >
-                  Warnings/Errors:
-                </div>
-                {wizard.result.errors.map((err, i) => (
-                  <div key={i} style={{ color: "#fca5a5", fontSize: "12px" }}>
-                    - {err}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div style={{ display: "flex", gap: "12px", marginTop: "20px" }}>
-            <button style={primaryButtonStyle} onClick={handleReset}>
-              Export Another
-            </button>
-            <Link to="/jobs">
-              <button style={secondaryButtonStyle}>View in Jobs</button>
-            </Link>
           </div>
         </div>
       )}
@@ -856,6 +873,18 @@ export function ExportView({ client }: ExportViewProps) {
           </Link>
         </div>
       </div>
+
+      {/* Sprint 19: Job Progress Modal */}
+      {showModal && (
+        <JobProgressModal
+          state={jobState}
+          onCancel={handleCancelJob}
+          onClose={handleCloseModal}
+          onViewInJobs={handleViewInJobs}
+          onViewReceipt={handleViewReceipt}
+          onResolveGates={handleResolveGates}
+        />
+      )}
     </div>
   );
 }
