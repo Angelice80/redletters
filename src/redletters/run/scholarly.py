@@ -700,10 +700,14 @@ class ScholarlyRunner:
         translation_path = output_dir / "translation.jsonl"
         try:
             translation_exporter = TranslationExporter()
-            # Get ledger from translate result
-            ledger_data = (
+            # Get ledger from translate result (convert VerseLedger objects to dicts)
+            raw_ledger = (
                 result.ledger if hasattr(result, "ledger") and result.ledger else []
             )
+            # Convert VerseLedger dataclass objects to dicts if needed
+            ledger_data = [
+                v.to_dict() if hasattr(v, "to_dict") else v for v in raw_ledger
+            ]
             if ledger_data:
                 translation_exporter.export_to_file(
                     ledger_data=ledger_data,

@@ -640,6 +640,7 @@ export function ExportView({ client }: ExportViewProps) {
               onChange={(e) =>
                 setWizard((prev) => ({ ...prev, reference: e.target.value }))
               }
+              data-testid="export-reference"
             />
           </div>
 
@@ -651,6 +652,7 @@ export function ExportView({ client }: ExportViewProps) {
               onChange={(e) =>
                 setMode(e.target.value as "readable" | "traceable")
               }
+              data-testid="export-mode"
             >
               <option value="traceable">Traceable (full evidence)</option>
               <option value="readable">Readable (flowing text)</option>
@@ -684,6 +686,7 @@ export function ExportView({ client }: ExportViewProps) {
             }
             onClick={handleCheckGates}
             disabled={loading || !wizard.reference.trim()}
+            data-testid="export-check-gates"
           >
             {loading ? "Checking..." : "Check Gates & Continue"}
           </button>
@@ -839,6 +842,7 @@ export function ExportView({ client }: ExportViewProps) {
               style={loading ? disabledButtonStyle : primaryButtonStyle}
               onClick={handleScholarlyRun}
               disabled={loading}
+              data-testid="export-run"
             >
               {loading ? "Starting..." : "Run Scholarly Export"}
             </button>
