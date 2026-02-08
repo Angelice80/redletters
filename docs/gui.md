@@ -7,15 +7,32 @@ variant analysis, export, and source management.
 
 - Node.js 18+
 - Rust toolchain (for Tauri desktop builds)
-- Python backend running (`redletters serve`)
+- Python backend running (`redletters engine start` for modern API, or `redletters serve` for legacy)
 
 ## Starting the GUI
 
-### Development Mode
+### Quick Start (Recommended)
 
 ```bash
-# Terminal 1: Start the Python backend
-redletters serve
+redletters gui
+```
+
+That's it. This starts the backend and opens the GUI in your browser.
+Press Ctrl+C to stop everything.
+
+For development with hot reload:
+
+```bash
+redletters gui --dev
+```
+
+### Manual Mode (Two Terminals)
+
+If you prefer separate control:
+
+```bash
+# Terminal 1: Start the Python backend (Engine Spine)
+redletters engine start --port 47200
 
 # Terminal 2: Start the GUI
 cd gui
@@ -25,8 +42,8 @@ npm run dev
 
 Open http://localhost:5173 in your browser.
 
-> **Note:** The GUI requires the backend to be running. If you see connection
-> errors, ensure `redletters serve` is running and accessible.
+> **Note:** The GUI requires the Engine Spine backend on port 47200. The legacy
+> `redletters serve` command (port 8000) does not provide all GUI-required endpoints.
 
 ### Desktop Application
 
@@ -223,10 +240,10 @@ Errors include a "Copy Diagnostics" button for easy bug reporting.
 
 When the GUI cannot reach the backend, a connection panel appears:
 
-1. **Check the port**: Ensure port matches running backend
+1. **Check the port**: Ensure port matches running backend (default: 47200)
 2. **Click "Check Health"**: Test connectivity to backend
 3. **Quick Fix Steps**:
-   - Start backend: `redletters serve`
+   - Start backend: `redletters engine start --port 47200`
    - Verify: `curl http://127.0.0.1:47200/v1/engine/status`
    - Check firewall settings
 
@@ -370,8 +387,8 @@ If incompatible, core actions are disabled until resolved. The modal shows:
 
 ### Standard Workflow (Recommended)
 
-1. Start backend: `redletters serve`
-2. Open GUI (http://localhost:5173 or desktop app)
+1. Start everything: `redletters gui`
+2. GUI opens automatically in browser
 3. Navigate to **Explore**
 4. Enter reference, select Traceable mode
 5. Review renderings and variants
@@ -414,7 +431,7 @@ When you see an error, use the "Copy Diagnostics" button to capture full details
 
 | Error | Icon | Likely Cause | Fix |
 |-------|------|--------------|-----|
-| **Network Error** | ⚡ | Connection refused | Start backend: `redletters serve` |
+| **Network Error** | ⚡ | Connection refused | Start backend: `redletters engine start` |
 | **Authentication (401)** | 🔒 | Token invalid/expired | Refresh auth token |
 | **Not Found (404)** | 🔍 | Endpoint missing | Upgrade backend to v0.16.0+ |
 | **Gate Blocked (409)** | 🚧 | Variants need acknowledgement | Acknowledge in Gate screen |
@@ -423,7 +440,7 @@ When you see an error, use the "Copy Diagnostics" button to capture full details
 
 ### "Not Connected" panel appears
 
-1. Ensure `redletters serve` is running
+1. Ensure `redletters engine start --port 47200` is running
 2. Check the port in the connection panel (default: 47200)
 3. Click "Check Health" to test connectivity
 4. Verify no firewall is blocking localhost connections
@@ -501,7 +518,7 @@ Use this checklist to verify the GUI Intuition + Truthful State features work co
 
 ### Fresh Install (No Packs) → Wizard → Translation
 
-- [ ] Start backend: `redletters serve`
+- [ ] Start backend: `redletters engine start --port 47200`
 - [ ] Open GUI in browser (http://localhost:5173)
 - [ ] **Expected**: Bootstrap Wizard appears automatically
 - [ ] Click through Welcome → Backend Connection (shows green check)
@@ -574,7 +591,7 @@ Use this checklist to verify the Jobs-Native GUI features work correctly.
 
 #### SSE Connection Badge
 
-- [ ] Start backend: `redletters serve`
+- [ ] Start backend: `redletters engine start --port 47200`
 - [ ] Open GUI, look at header (top-right area)
 - [ ] **Expected**: ConnectionBadge shows "Connected" with green dot
 - [ ] Click badge to show tooltip

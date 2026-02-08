@@ -87,11 +87,6 @@ const errorValueStyle: React.CSSProperties = {
   color: "#fca5a5",
 };
 
-const successValueStyle: React.CSSProperties = {
-  ...valueStyle,
-  color: "#86efac",
-};
-
 const fixSectionStyle: React.CSSProperties = {
   backgroundColor: "#1a1a2e",
   borderRadius: "8px",

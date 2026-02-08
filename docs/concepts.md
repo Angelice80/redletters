@@ -177,21 +177,87 @@ Use `redletters packs lock` to capture your exact environment for reproducibilit
 
 ---
 
-## Command Comparison
+## Command Taxonomy
 
-| Command | Purpose | Requires Gates? |
-|---------|---------|-----------------|
-| `query` | Quick lookup with multiple renderings | No |
-| `translate` | Receipt-grade output with full provenance | Depends on mode |
-| `quote` | Generate citeable output | Yes (or --force) |
-| `export` | Machine-readable bulk export | Yes (or --force) |
+Understanding when to use each command is essential for effective scholarly work.
 
-### When to Use Each
+### Quick Reference
 
-- **query**: Exploring a passage, seeing rendering options
-- **translate**: Studying a passage in depth, examining choices
-- **quote**: Creating citations for publication
-- **export**: Building datasets, feeding other tools
+| Command | Purpose | Output Type | Gate Check? |
+|---------|---------|-------------|-------------|
+| `query` | Quick exploration | Multiple renderings | No |
+| `translate` | Deep study | Full receipts | Depends on mode |
+| `quote` | Citation generation | Citeable JSON | Yes (or --force) |
+| `export` | Bulk data | JSONL files | Yes (or --force) |
+
+### Detailed Comparison
+
+#### `query` – Exploration
+
+Use `query` when you want to quickly see what the tool produces for a passage:
+
+```bash
+redletters query "Matthew 5:3"
+```
+
+- **Output**: 3-5 rendering candidates with scores
+- **Receipts**: Summary level (not token-by-token)
+- **Gates**: Not checked – this is exploration, not export
+- **Best for**: Initial exploration, comparing rendering styles
+
+#### `translate` – Deep Analysis
+
+Use `translate` when you need full provenance and token-level analysis:
+
+```bash
+redletters translate "Matthew 5:3" --mode traceable --ledger
+```
+
+- **Output**: Single rendering with complete evidence
+- **Receipts**: Token-by-token ledger with sources
+- **Gates**: Checked in traceable mode (warnings, not blocking)
+- **Best for**: Scholarly analysis, understanding specific decisions
+
+#### `quote` – Citeable Output
+
+Use `quote` when you need to generate a citation for publication:
+
+```bash
+redletters quote "Matthew 5:3" --out quote.json
+```
+
+- **Output**: Structured JSON with provenance metadata
+- **Receipts**: Included with attribution requirements
+- **Gates**: **Blocking** – must acknowledge variants first
+- **Best for**: Publications, sharing with attribution
+
+#### `export` – Bulk Data
+
+Use `export` when building datasets or feeding other tools:
+
+```bash
+redletters export apparatus "Matthew 5" --out apparatus.jsonl
+```
+
+- **Output**: JSONL files for programmatic consumption
+- **Receipts**: Full machine-readable format
+- **Gates**: **Blocking** – must acknowledge or use `--force`
+- **Best for**: Research pipelines, data analysis
+
+### The `--force` Flag
+
+Both `quote` and `export` support `--force` to bypass gate checks:
+
+```bash
+redletters export apparatus "Mark 16" --out mark16.jsonl --force
+```
+
+When you use `--force`:
+- Output includes `forced_responsibility: true`
+- This is visible to anyone who reads the export
+- You're signaling "I know there are unreviewed variants"
+
+Use `--force` for drafts and exploration, not final publications.
 
 ---
 

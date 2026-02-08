@@ -156,6 +156,11 @@ const CATEGORY_CONFIG: Record<
   network: { icon: "⚡", label: "Network Error", color: "#f59e0b" },
   auth: { icon: "🔒", label: "Authentication Error", color: "#ef4444" },
   not_found: { icon: "🔍", label: "Endpoint Not Found", color: "#6366f1" },
+  backend_mismatch: {
+    icon: "🔀",
+    label: "Backend Mismatch",
+    color: "#f59e0b",
+  },
   gate_blocked: { icon: "🚧", label: "Gate Blocked", color: "#f59e0b" },
   service_unavailable: {
     icon: "⏳",

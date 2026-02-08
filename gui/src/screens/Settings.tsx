@@ -6,17 +6,20 @@ import { useState } from "react";
 import { useAppStore, selectSettings } from "../store";
 import type { EngineMode } from "../api/types";
 import { invoke } from "@tauri-apps/api/core";
+import { AUTH_TOKEN_KEY } from "../constants/storageKeys";
 
 interface SettingsProps {
   engineMode?: EngineMode;
   onReconnect: () => void;
   onTestReconnection: () => Promise<{ gaps: number; dupes: number }>;
+  onOpenConnectionSettings?: () => void;
 }
 
 export function Settings({
   engineMode,
   onReconnect,
   onTestReconnection,
+  onOpenConnectionSettings,
 }: SettingsProps) {
   const settings = useAppStore(selectSettings);
   const updateSettings = useAppStore((state) => state.updateSettings);
@@ -129,20 +132,83 @@ export function Settings({
           </span>
         </div>
 
-        <button
-          onClick={onReconnect}
-          style={{
-            padding: "8px 16px",
-            borderRadius: "4px",
-            border: "none",
-            backgroundColor: "#3b82f6",
-            color: "white",
-            cursor: "pointer",
-            fontSize: "14px",
-          }}
-        >
-          Reconnect
-        </button>
+        <div style={{ display: "flex", gap: "8px" }}>
+          <button
+            onClick={onReconnect}
+            style={{
+              padding: "8px 16px",
+              borderRadius: "4px",
+              border: "none",
+              backgroundColor: "#3b82f6",
+              color: "white",
+              cursor: "pointer",
+              fontSize: "14px",
+            }}
+          >
+            Reconnect
+          </button>
+          {onOpenConnectionSettings && (
+            <button
+              onClick={onOpenConnectionSettings}
+              style={{
+                padding: "8px 16px",
+                borderRadius: "4px",
+                border: "1px solid #4a4a6a",
+                backgroundColor: "transparent",
+                color: "#9ca3af",
+                cursor: "pointer",
+                fontSize: "14px",
+              }}
+            >
+              Update Token
+            </button>
+          )}
+        </div>
+      </section>
+
+      {/* Authentication */}
+      <section
+        style={{
+          padding: "16px",
+          backgroundColor: "#2d2d44",
+          borderRadius: "8px",
+          marginBottom: "16px",
+        }}
+      >
+        <h2 style={{ fontSize: "16px", fontWeight: 600, marginBottom: "16px" }}>
+          Authentication
+        </h2>
+
+        <div style={{ marginBottom: "16px" }}>
+          <div style={{ fontSize: "14px", marginBottom: "4px" }}>
+            Token Source:{" "}
+            <span style={{ fontWeight: 600, color: "#22c55e" }}>
+              {localStorage.getItem(AUTH_TOKEN_KEY)
+                ? "localStorage"
+                : "Not configured"}
+            </span>
+          </div>
+          <p style={{ fontSize: "12px", color: "#6b7280", marginTop: "4px" }}>
+            The auth token authenticates your GUI with the backend server.
+          </p>
+        </div>
+
+        {onOpenConnectionSettings && (
+          <button
+            onClick={onOpenConnectionSettings}
+            style={{
+              padding: "8px 16px",
+              borderRadius: "4px",
+              border: "none",
+              backgroundColor: "#6b7280",
+              color: "white",
+              cursor: "pointer",
+              fontSize: "14px",
+            }}
+          >
+            Manage Connection Settings
+          </button>
+        )}
       </section>
 
       {/* Engine Mode */}

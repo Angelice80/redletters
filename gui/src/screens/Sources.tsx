@@ -8,7 +8,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { BOOTSTRAP_COMPLETED_KEY } from "../constants/storageKeys";
 import type { ApiClient } from "../api/client";
 import { detectBackendMismatch } from "../api/client";
 import type {
@@ -150,21 +150,6 @@ const statusBarStyle: React.CSSProperties = {
   borderRadius: "8px",
   fontSize: "13px",
   color: "#9ca3af",
-};
-
-const spineAlertStyle: React.CSSProperties = {
-  padding: "16px",
-  backgroundColor: "#7f1d1d",
-  borderRadius: "8px",
-  marginBottom: "24px",
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-};
-
-const alertTextStyle: React.CSSProperties = {
-  color: "#fca5a5",
-  fontSize: "14px",
 };
 
 // Sprint 17: Bootstrap CTA styles
@@ -575,7 +560,7 @@ export function Sources({ client }: SourcesProps) {
               style={cancelButtonStyle}
               onClick={() => {
                 // Trigger bootstrap wizard by clearing the flag
-                localStorage.removeItem("redletters_bootstrap_completed");
+                localStorage.removeItem(BOOTSTRAP_COMPLETED_KEY);
                 window.location.reload();
               }}
             >
@@ -702,7 +687,7 @@ export function Sources({ client }: SourcesProps) {
             style={installButtonStyle}
             onClick={() => {
               // Trigger bootstrap wizard by clearing the flag
-              localStorage.removeItem("redletters_bootstrap_completed");
+              localStorage.removeItem(BOOTSTRAP_COMPLETED_KEY);
               window.location.reload();
             }}
           >

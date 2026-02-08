@@ -6,7 +6,7 @@
 
 import { describe, it, expect } from "vitest";
 import { ApiError, normalizeApiError, validateCapabilities } from "./client";
-import type { ApiCapabilities, ApiErrorDetail } from "./types";
+import type { ApiCapabilities } from "./types";
 
 describe("normalizeApiError", () => {
   it("normalizes network error (fetch failed)", () => {

@@ -4,7 +4,7 @@
  * Sprint 19: Jobs-native GUI
  */
 
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { JobProgressModal } from "./JobProgressModal";
 import type { JobUIState, ScholarlyJobResult } from "../api/types";
@@ -186,9 +186,12 @@ describe("JobProgressModal", () => {
 
   describe("completed_success state", () => {
     const result: ScholarlyJobResult = {
+      success: true,
       output_dir: "/output/scholarly-20250101",
       bundle_path: "/output/bundle.zip",
       run_log_summary: {
+        reference: "John 1:1-51",
+        mode: "traceable",
         verse_count: 100,
         file_count: 5,
       },
@@ -460,7 +463,7 @@ describe("JobProgressModal", () => {
       const state: JobUIState = {
         status: "completed_success",
         jobId: "job-123",
-        result: { output_dir: "/out" },
+        result: { output_dir: "/out", success: true },
       };
       const { container } = render(
         <JobProgressModal

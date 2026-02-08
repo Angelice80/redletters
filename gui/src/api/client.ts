@@ -32,7 +32,6 @@ import type {
   DossierScope,
   // Sprint 14: Scholarly Run types
   ScholarlyRunRequest,
-  ScholarlyRunResponse,
   // Sprint 18: Async job response
   ScholarlyJobResponse,
   // Sprint 15: Gate Pending types
@@ -47,6 +46,7 @@ import type {
   BackendMismatchInfo,
   BackendShape,
 } from "./types";
+import { AUTH_TOKEN_KEY } from "../constants/storageKeys";
 
 // Import const value separately (not as type)
 import { GUI_VERSION } from "./types";
@@ -179,7 +179,7 @@ export function normalizeApiError(
 function categorizeHttpError(
   status: number,
   code: string,
-  message: string,
+  _message: string,
 ): { category: ErrorCategory; likelyCause: string; suggestions: string[] } {
   if (status === 401) {
     return {
@@ -188,7 +188,7 @@ function categorizeHttpError(
       suggestions: [
         "Refresh your authentication token",
         "Check that the token matches your backend configuration",
-        "In browser dev mode: localStorage.setItem('redletters_auth_token', 'YOUR_TOKEN')",
+        `In browser dev mode: localStorage.setItem('${AUTH_TOKEN_KEY}', 'YOUR_TOKEN')`,
       ],
     };
   }
@@ -255,6 +255,10 @@ function categorizeHttpError(
 
 /**
  * Sprint 17: Validate API capabilities against GUI requirements.
+ * Sprint 21: Distinguish critical vs non-critical endpoints.
+ *
+ * Critical endpoints (block if missing): translate, sources
+ * Non-critical endpoints (warn only): sources_status, gates_pending
  */
 export function validateCapabilities(
   capabilities: ApiCapabilities,
@@ -272,28 +276,52 @@ export function validateCapabilities(
     };
   }
 
-  // Check required endpoints
-  const requiredEndpoints = [
-    "translate",
-    "sources",
-    "sources_status",
-    "gates_pending",
-  ];
-  const missingEndpoints: string[] = [];
+  // Critical endpoints - block UI if missing
+  const criticalEndpoints = ["translate", "sources"];
+  // Non-critical endpoints - warn but allow read-only usage
+  const nonCriticalEndpoints = ["sources_status", "gates_pending"];
 
-  for (const endpoint of requiredEndpoints) {
+  const missingCritical: string[] = [];
+  const missingNonCritical: string[] = [];
+
+  for (const endpoint of criticalEndpoints) {
     if (
       !capabilities.endpoints[endpoint as keyof typeof capabilities.endpoints]
     ) {
-      missingEndpoints.push(endpoint);
+      missingCritical.push(endpoint);
     }
   }
 
-  if (missingEndpoints.length > 0) {
+  for (const endpoint of nonCriticalEndpoints) {
+    if (
+      !capabilities.endpoints[endpoint as keyof typeof capabilities.endpoints]
+    ) {
+      missingNonCritical.push(endpoint);
+    }
+  }
+
+  // Block only if critical endpoints are missing
+  if (missingCritical.length > 0) {
     return {
       valid: false,
-      error: `Backend is missing required endpoints: ${missingEndpoints.join(", ")}`,
-      missingEndpoints,
+      error: `Backend is missing critical endpoints: ${missingCritical.join(", ")}`,
+      missingEndpoints: missingCritical,
+      warnings:
+        missingNonCritical.length > 0
+          ? [
+              `Non-critical endpoints unavailable: ${missingNonCritical.join(", ")}`,
+            ]
+          : undefined,
+    };
+  }
+
+  // Valid but with warnings for non-critical missing endpoints
+  if (missingNonCritical.length > 0) {
+    return {
+      valid: true,
+      warnings: [
+        `Some features may be limited. Missing endpoints: ${missingNonCritical.join(", ")}`,
+      ],
     };
   }
 
@@ -327,7 +355,7 @@ function isVersionCompatible(current: string, required: string): boolean {
 export async function detectBackendMismatch(
   baseUrl: string,
   token: string,
-  failedPath: string,
+  _failedPath: string,
 ): Promise<BackendMismatchInfo> {
   const noMismatch: BackendMismatchInfo = {
     detected: false,
@@ -379,20 +407,6 @@ export async function detectBackendMismatch(
     // Network error or other issue - can't determine mismatch
     return noMismatch;
   }
-}
-
-/**
- * Sprint 19: Check if a path is a critical GUI route that indicates mismatch if 404.
- */
-function isCriticalRoutePath(path: string): boolean {
-  const criticalPaths = [
-    "/translate",
-    "/sources/status",
-    "/sources",
-    "/acknowledge",
-    "/variants/dossier",
-  ];
-  return criticalPaths.some((p) => path.includes(p));
 }
 
 export interface ApiClientConfig {

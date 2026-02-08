@@ -9,7 +9,6 @@
  */
 
 import { useState, useCallback, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import type { ApiClient } from "../api/client";
 import type { ApiCapabilities, SourcesStatusResponse } from "../api/types";
 
@@ -171,7 +170,6 @@ export function BootstrapWizard({
   onComplete,
   onSkip,
 }: BootstrapWizardProps) {
-  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState<WizardStep>("welcome");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

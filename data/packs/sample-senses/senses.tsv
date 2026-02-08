@@ -1,0 +1,53 @@
+lemma	sense_id	gloss	definition	domain	weight
+λόγος	logos.1	word	a word, statement, or message	communication	0.9
+λόγος	logos.2	reason	the faculty of reasoning	cognition	0.6
+λόγος	logos.3	account	a reckoning or calculation	commerce	0.5
+θεός	theos.1	God	the supreme deity	religion	0.95
+θεός	theos.2	god	a divine being	religion	0.7
+ἀγάπη	agape.1	love	selfless, unconditional love	emotion	0.95
+ἀγάπη	agape.2	love feast	a communal meal	social	0.4
+πίστις	pistis.1	faith	trust or belief	religion	0.9
+πίστις	pistis.2	faithfulness	reliability or fidelity	character	0.7
+πίστις	pistis.3	proof	evidence or pledge	legal	0.4
+χάρις	charis.1	grace	unmerited favor	religion	0.9
+χάρις	charis.2	gratitude	thankfulness	emotion	0.5
+χάρις	charis.3	kindness	a gracious act	character	0.6
+ἁμαρτία	hamartia.1	sin	missing the mark, wrongdoing	religion	0.95
+ἁμαρτία	hamartia.2	fault	a mistake or error	ethics	0.5
+ζωή	zoe.1	life	the state of being alive	existence	0.9
+ζωή	zoe.2	eternal life	life in the age to come	religion	0.8
+εἰρήνη	eirene.1	peace	tranquility, harmony	state	0.9
+εἰρήνη	eirene.2	peace (greeting)	a blessing formula	social	0.7
+ἀλήθεια	aletheia.1	truth	reality, that which is true	cognition	0.9
+ἀλήθεια	aletheia.2	truthfulness	honesty, sincerity	character	0.7
+δικαιοσύνη	dikaiosyne.1	righteousness	moral uprightness	ethics	0.9
+δικαιοσύνη	dikaiosyne.2	justice	fairness in judgment	legal	0.7
+δόξα	doxa.1	glory	honor, splendor	worship	0.9
+δόξα	doxa.2	opinion	view or reputation	cognition	0.5
+βασιλεία	basileia.1	kingdom	realm or reign	politics	0.9
+βασιλεία	basileia.2	kingship	royal authority	authority	0.7
+κόσμος	kosmos.1	world	the created order	creation	0.9
+κόσμος	kosmos.2	adornment	decoration, arrangement	aesthetics	0.3
+ὁδός	hodos.1	way	a path or road	travel	0.8
+ὁδός	hodos.2	way (of life)	manner of conduct	ethics	0.7
+ὁδός	hodos.3	journey	a trip or course	travel	0.5
+φῶς	phos.1	light	illumination	physical	0.9
+φῶς	phos.2	light (metaphor)	spiritual enlightenment	religion	0.8
+σκοτία	skotia.1	darkness	absence of light	physical	0.9
+σκοτία	skotia.2	darkness (metaphor)	spiritual ignorance	religion	0.8
+πνεῦμα	pneuma.1	spirit	immaterial aspect of a person	anthropology	0.85
+πνεῦμα	pneuma.2	Spirit	the Holy Spirit	religion	0.9
+πνεῦμα	pneuma.3	wind	moving air	nature	0.6
+πνεῦμα	pneuma.4	breath	respiration	physical	0.5
+σάρξ	sarx.1	flesh	bodily tissue	physical	0.8
+σάρξ	sarx.2	human nature	earthly orientation	anthropology	0.75
+σάρξ	sarx.3	body	physical form	physical	0.7
+ψυχή	psyche.1	soul	the inner self	anthropology	0.85
+ψυχή	psyche.2	life	vitality, being alive	existence	0.7
+ψυχή	psyche.3	person	an individual	social	0.5
+καρδία	kardia.1	heart	the center of thought and will	anthropology	0.9
+καρδία	kardia.2	heart (physical)	the organ	physical	0.3
+νοῦς	nous.1	mind	the faculty of understanding	cognition	0.9
+νοῦς	nous.2	attitude	disposition or mindset	psychology	0.7
+ἐκκλησία	ekklesia.1	church	assembly of believers	religion	0.9
+ἐκκλησία	ekklesia.2	assembly	a gathering of people	social	0.7

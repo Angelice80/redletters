@@ -9,7 +9,6 @@ import {
   computeDiff,
   getChangeTypeColor,
   getChangeTypeHighlight,
-  type ChangeType,
 } from "./renderingDiff";
 import type { TokenLedger, TokenConfidence } from "../api/types";
 

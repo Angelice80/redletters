@@ -2,6 +2,16 @@
 
 Common problems and solutions for Red Letters.
 
+## Top 5 Issues (Quick Reference)
+
+| Problem | Likely Cause | Quick Fix |
+|---------|--------------|-----------|
+| Empty query results | Database not initialized | `redletters init` |
+| Port already in use | Another process on port | `--port 47201` or kill process |
+| GUI shows "Backend Unreachable" | Engine not running | `redletters engine start` |
+| Export blocked by gates | Unacknowledged variants | `redletters gates acknowledge ...` |
+| Database locked | Multiple processes | Kill other redletters processes |
+
 ---
 
 ## 1. "No tokens found" or Empty Query Results
@@ -33,8 +43,8 @@ If `list-spans` shows results, `query` should work for those passages.
 ## 2. "Port already in use" When Starting Server
 
 **Symptoms:**
-- `redletters serve` fails with "Address already in use"
-- Error mentions port 8000 (or your specified port)
+- `redletters engine start` fails with "Address already in use"
+- Error mentions port 47200 (or your specified port)
 
 **Cause:** Another process is using that port.
 
@@ -42,14 +52,14 @@ If `list-spans` shows results, `query` should work for those passages.
 
 ```bash
 # Option 1: Use a different port
-redletters serve --port 8001
+redletters engine start --port 47201
 
 # Option 2: Find and stop the other process (macOS/Linux)
-lsof -i :8000
+lsof -i :47200
 kill <PID>
 
 # Option 3: Find and stop the other process (Windows)
-netstat -ano | findstr :8000
+netstat -ano | findstr :47200
 taskkill /PID <PID> /F
 ```
 
@@ -65,19 +75,23 @@ taskkill /PID <PID> /F
 
 **Solutions:**
 
-1. **Start the backend:**
+1. **Start the backend (Engine Spine):**
    ```bash
-   redletters serve
+   redletters engine start --port 47200
    ```
+   Note: The GUI expects the Engine Spine (port 47200), not the legacy `serve` command (port 8000).
 
 2. **Check the API endpoint in GUI Settings:**
-   - Default: `http://localhost:8000`
+   - Default: `http://localhost:47200`
    - Ensure it matches where the backend is running
 
 3. **Verify backend is responding:**
    ```bash
-   curl http://localhost:8000/api/v1/health
+   curl http://localhost:47200/
    ```
+
+4. **Use auto-detect:**
+   - Click "Auto-detect" in the connection panel to scan common ports (47200, 8000, 5000)
 
 4. **Check for firewall issues:**
    - Some security software blocks localhost connections

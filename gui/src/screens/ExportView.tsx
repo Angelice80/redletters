@@ -13,7 +13,7 @@
  * - Gate enforcement matching backend rules
  */
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAppStore, selectSettings } from "../store";
 import type { ApiClient } from "../api/client";

@@ -13,7 +13,6 @@ import type {
   TokenLedger,
   TokenConfidence,
   LedgerProvenance,
-  EvidenceClassSummary,
 } from "../api/types";
 
 // Styles
@@ -323,7 +322,7 @@ export function LedgerList({ ledgers }: LedgerListProps) {
   if (ledgers.length === 0) {
     return (
       <div style={{ color: "#6b7280", fontSize: "13px", padding: "16px" }}>
-        No ledger data available. Ledger is only populated in traceable mode.
+        No ledger data available for this translation.
       </div>
     );
   }

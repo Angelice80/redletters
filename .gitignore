@@ -65,3 +65,13 @@ node_modules/
 # Rust/Tauri
 target/
 
+# Artifacts (generated logs, not source)
+artifacts/screenshots/
+artifacts/sentry-queries.log
+artifacts/session-snapshots.log
+
+# MCP Visual Gate artifacts (local evidence, not committed)
+gui/_mcp_artifacts/latest/
+gui/_mcp_artifacts/releases/
+gui/_mcp_artifacts/index.json
+

@@ -5,23 +5,28 @@
  * - Clear connection status
  * - Quick fix hints (port, health endpoint)
  * - Auto-detect localhost capability
+ *
+ * Sprint 22: Added auto-detect backend feature.
  */
 
 import { useState, useCallback } from "react";
+import { detectBackendPort, type DetectedBackend } from "../api/constants";
 
 interface ConnectionPanelProps {
   port: number;
   onReconnect: () => void;
   onPortChange: (port: number) => void;
+  /** Opens connection settings modal for token entry */
+  onOpenSettings?: () => void;
 }
 
-// Styles
+// Styles - Sprint 22: Calmer colors (warning amber instead of panic red)
 const containerStyle: React.CSSProperties = {
   padding: "24px",
   margin: "16px",
-  backgroundColor: "#7f1d1d",
+  backgroundColor: "#1f2937", // Dark gray instead of dark red
   borderRadius: "8px",
-  border: "1px solid #991b1b",
+  border: "1px solid #f59e0b", // Amber border instead of red
 };
 
 const headerStyle: React.CSSProperties = {
@@ -35,22 +40,23 @@ const iconStyle: React.CSSProperties = {
   width: "40px",
   height: "40px",
   borderRadius: "50%",
-  backgroundColor: "#ef4444",
+  backgroundColor: "#f59e0b", // Amber instead of red
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   fontSize: "20px",
+  color: "#1f2937",
 };
 
 const titleStyle: React.CSSProperties = {
   fontSize: "18px",
   fontWeight: 600,
-  color: "#fecaca",
+  color: "#fcd34d", // Amber text instead of red
 };
 
 const subtitleStyle: React.CSSProperties = {
   fontSize: "14px",
-  color: "#fca5a5",
+  color: "#9ca3af", // Neutral gray instead of red tint
   marginTop: "4px",
 };
 
@@ -60,7 +66,7 @@ const sectionStyle: React.CSSProperties = {
 
 const labelStyle: React.CSSProperties = {
   fontSize: "12px",
-  color: "#fca5a5",
+  color: "#9ca3af", // Neutral gray
   textTransform: "uppercase",
   marginBottom: "8px",
 };
@@ -136,10 +142,14 @@ export function ConnectionPanel({
   port,
   onReconnect,
   onPortChange,
+  onOpenSettings,
 }: ConnectionPanelProps) {
   const [localPort, setLocalPort] = useState(port.toString());
   const [checking, setChecking] = useState(false);
   const [checkResult, setCheckResult] = useState<string | null>(null);
+  const [autoDetecting, setAutoDetecting] = useState(false);
+  const [detectedBackend, setDetectedBackend] =
+    useState<DetectedBackend | null>(null);
 
   const handlePortChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -184,26 +194,51 @@ export function ConnectionPanel({
           onReconnect();
         }
       } else if (response.status === 401) {
-        // Server is reachable but requires auth - this is actually good!
-        setCheckResult(
-          `Server found at port ${localPort}. Authentication required.`,
-        );
+        // Server is reachable but requires auth - prompt user to configure token
+        setCheckResult("auth_required");
         const newPort = parseInt(localPort, 10);
         if (!isNaN(newPort)) {
           onPortChange(newPort);
-          onReconnect();
         }
       } else {
         setCheckResult(`Server responded with ${response.status}`);
       }
     } catch (err) {
-      setCheckResult(
-        `Cannot reach server at port ${localPort}. Is the backend running?`,
-      );
+      const url = `http://127.0.0.1:${localPort}/`;
+      setCheckResult(`Cannot reach server at ${url} - Is the backend running?`);
     } finally {
       setChecking(false);
     }
   }, [localPort, onPortChange, onReconnect]);
+
+  const handleAutoDetect = useCallback(async () => {
+    setAutoDetecting(true);
+    setDetectedBackend(null);
+    setCheckResult(null);
+
+    const result = await detectBackendPort();
+    setAutoDetecting(false);
+
+    if (result) {
+      setDetectedBackend(result);
+      // Auto-update port field to detected port
+      setLocalPort(result.port.toString());
+    } else {
+      setCheckResult("No backend found on ports 47200, 8000, or 5000");
+    }
+  }, []);
+
+  const handleSwitchToDetected = useCallback(() => {
+    if (detectedBackend) {
+      onPortChange(detectedBackend.port);
+      setDetectedBackend(null);
+      if (detectedBackend.requiresAuth && onOpenSettings) {
+        onOpenSettings();
+      } else {
+        onReconnect();
+      }
+    }
+  }, [detectedBackend, onPortChange, onReconnect, onOpenSettings]);
 
   return (
     <div style={containerStyle}>
@@ -237,6 +272,16 @@ export function ConnectionPanel({
           <button style={buttonStyle} onClick={handleApplyPort}>
             Reconnect
           </button>
+          <button
+            style={{
+              ...secondaryButtonStyle,
+              backgroundColor: "#6366f1",
+            }}
+            onClick={handleAutoDetect}
+            disabled={autoDetecting}
+          >
+            {autoDetecting ? "Scanning..." : "Auto-detect"}
+          </button>
         </div>
         {checkResult && (
           <div
@@ -244,10 +289,72 @@ export function ConnectionPanel({
               ...statusStyle,
               color: checkResult.startsWith("Connected")
                 ? "#22c55e"
-                : "#fca5a5",
+                : checkResult === "auth_required"
+                  ? "#fcd34d"
+                  : "#fca5a5",
             }}
           >
-            {checkResult}
+            {checkResult === "auth_required" ? (
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "12px" }}
+              >
+                <span>Server found! Configure your auth token to connect.</span>
+                {onOpenSettings && (
+                  <button
+                    onClick={onOpenSettings}
+                    style={{
+                      ...buttonStyle,
+                      padding: "6px 12px",
+                      fontSize: "12px",
+                    }}
+                  >
+                    Configure Token
+                  </button>
+                )}
+              </div>
+            ) : (
+              checkResult
+            )}
+          </div>
+        )}
+        {detectedBackend && (
+          <div
+            style={{
+              ...statusStyle,
+              marginTop: "12px",
+              padding: "12px",
+              backgroundColor: "#1e3a5f",
+              borderRadius: "6px",
+              border: "1px solid #3b82f6",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                flexWrap: "wrap",
+              }}
+            >
+              <span style={{ color: "#93c5fd" }}>
+                Backend found on port {detectedBackend.port}
+                {detectedBackend.version && ` (v${detectedBackend.version})`}
+                {detectedBackend.requiresAuth && " - Auth required"}
+              </span>
+              <button
+                onClick={handleSwitchToDetected}
+                style={{
+                  ...buttonStyle,
+                  padding: "6px 12px",
+                  fontSize: "12px",
+                  backgroundColor: "#22c55e",
+                }}
+              >
+                {detectedBackend.requiresAuth
+                  ? "Configure & Connect"
+                  : "Switch to Port " + detectedBackend.port}
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -255,18 +362,35 @@ export function ConnectionPanel({
       <div style={hintsStyle}>
         <div style={hintTitleStyle}>Quick Fix Steps</div>
         <div style={hintItemStyle}>
-          1. Start the backend: <code style={codeStyle}>redletters serve</code>
+          1. Start the backend:{" "}
+          <code style={codeStyle}>
+            redletters engine start --port {localPort}
+          </code>
         </div>
         <div style={hintItemStyle}>
-          2. Verify it's running:{" "}
-          <code style={codeStyle}>curl http://127.0.0.1:47200/</code>
+          2. Click "Check Health" above to verify the server is running
         </div>
         <div style={hintItemStyle}>
-          3. If using a different port, update the port number above
+          3. If server found, configure your auth token (from{" "}
+          <code style={codeStyle}>redletters init</code>)
         </div>
         <div style={hintItemStyle}>
-          4. Check firewall settings if connection still fails
+          4. If using a different port, update the port number above
         </div>
+
+        {onOpenSettings && (
+          <button
+            onClick={onOpenSettings}
+            style={{
+              ...buttonStyle,
+              marginTop: "16px",
+              width: "100%",
+              backgroundColor: "#3b82f6",
+            }}
+          >
+            Configure Connection Settings
+          </button>
+        )}
       </div>
     </div>
   );

@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { renderHook } from "@testing-library/react";
 import {
   SSEManager,
   SSEProvider,
@@ -15,19 +15,6 @@ import {
 } from "./sse";
 import type { SSEEvent, SSEHealthInfo } from "./types";
 import type { ReactNode } from "react";
-
-// Mock fetch for SSE stream testing
-const createMockResponse = (
-  body: ReadableStream<Uint8Array> | null,
-  ok = true,
-  status = 200,
-) => ({
-  ok,
-  status,
-  statusText: ok ? "OK" : "Error",
-  body,
-  headers: new Headers(),
-});
 
 describe("BoundedSequenceSet", () => {
   it("adds and checks sequences", () => {
@@ -103,8 +90,8 @@ describe("BoundedSequenceSet", () => {
 
 describe("SSEManager", () => {
   let manager: SSEManager;
-  let onEvent: ReturnType<typeof vi.fn>;
-  let onHealthChange: ReturnType<typeof vi.fn>;
+  let onEvent: ReturnType<typeof vi.fn<(event: SSEEvent) => void>>;
+  let onHealthChange: ReturnType<typeof vi.fn<(health: SSEHealthInfo) => void>>;
 
   beforeEach(() => {
     onEvent = vi.fn();

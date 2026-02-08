@@ -317,7 +317,7 @@ export interface ApiErrorDetail {
       min_gui_version: string;
       features: string[];
       initialized: boolean;
-    };
+    } | null;
     resolvedEndpoints?: Record<string, string>;
   };
   // Sprint 19: Backend mismatch info (populated async for 404 errors)
@@ -325,10 +325,14 @@ export interface ApiErrorDetail {
 }
 
 // Sprint 17: Capability validation result
+// Sprint 21: Added warnings for non-critical issues
 export interface CapabilitiesValidation {
   valid: boolean;
   error?: string;
+  /** Critical endpoints that are missing - blocks UI */
   missingEndpoints?: string[];
+  /** Non-critical endpoints that are missing - warns only */
+  warnings?: string[];
   versionMismatch?: {
     required: string;
     current: string;

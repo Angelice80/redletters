@@ -11,26 +11,24 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { BrowserRouter } from "react-router-dom";
 import { ApiClient } from "../api/client";
 
 // Mock fetch to track all calls
 const mockFetch = vi.fn();
 
 // Store original fetch
-const originalFetch = global.fetch;
+const originalFetch = globalThis.fetch;
 
 describe("Screen API call verification", () => {
   beforeEach(() => {
     // Replace global fetch with mock
-    global.fetch = mockFetch;
+    globalThis.fetch = mockFetch;
     mockFetch.mockClear();
   });
 
   afterEach(() => {
     // Restore original fetch
-    global.fetch = originalFetch;
+    globalThis.fetch = originalFetch;
   });
 
   describe("ApiClient fetch calls use full URLs", () => {

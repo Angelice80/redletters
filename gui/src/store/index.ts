@@ -94,7 +94,7 @@ function generateSessionId(): string {
 }
 
 const DEFAULT_SETTINGS: Settings = {
-  enginePort: 47200,
+  enginePort: 47200, // Default to match Makefile and `redletters serve` default
   integritySizeThreshold: 100, // 100 MB
   sessionId: generateSessionId(),
 };

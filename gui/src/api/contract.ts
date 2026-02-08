@@ -352,14 +352,14 @@ export class ApiContract {
 export interface ContractDiagnostics {
   baseUrl: string;
   hasCapabilities: boolean;
-  capabilities: {
+  capabilities?: {
     version: string;
     api_version: string;
     min_gui_version: string;
     features: string[];
     initialized: boolean;
   } | null;
-  resolvedEndpoints: Record<string, string>;
+  resolvedEndpoints?: Record<string, string>;
 }
 
 /**

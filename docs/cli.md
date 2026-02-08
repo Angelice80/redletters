@@ -47,9 +47,35 @@ List all red-letter speech spans in the database.
 redletters list-spans
 ```
 
-### serve
+### gui
 
-Start the REST API server.
+Start the GUI with backend in one command.
+
+```bash
+redletters gui                # Start backend + open GUI in browser
+redletters gui --dev          # Start backend + GUI dev server (hot reload)
+redletters gui --no-browser   # Start backend only, don't open browser
+redletters gui --port 9000    # Use custom backend port
+```
+
+**Options:**
+- `--port INTEGER` - Backend port (default: 47200)
+- `--dev` - Run GUI in development mode with hot reload
+- `--no-browser` - Don't open browser automatically
+
+Press Ctrl+C to stop both backend and GUI.
+
+**How it works:**
+1. Starts the Engine Spine backend on port 47200
+2. Waits for backend to be ready
+3. Opens the GUI (built dist or dev server)
+4. Handles cleanup on Ctrl+C
+
+---
+
+### serve (Legacy) {#serve-legacy}
+
+Start the legacy REST API server. **For GUI usage, prefer `redletters gui` instead.**
 
 ```bash
 redletters serve
@@ -60,8 +86,36 @@ redletters serve --host 127.0.0.1 --port 9000
 - `--host TEXT` - Bind address (default: 127.0.0.1)
 - `--port INTEGER` - Bind port (default: 8000)
 
-> **Security Warning:** Using `--host 0.0.0.0` exposes the API to your entire network.
-> Only do this on trusted networks. The API has no authentication by default.
+> **Note:** The `serve` command runs the legacy API (port 8000). For the GUI and modern
+> workflows, use `redletters engine start` (port 47200) instead.
+
+#### Security Warning: Network Binding
+
+**Never use `--host 0.0.0.0` on untrusted networks.**
+
+```bash
+# DANGEROUS on public/shared networks:
+redletters serve --host 0.0.0.0 --port 8080
+```
+
+This exposes the API to your entire network **without authentication**. Anyone on
+your network can query, translate, and export data.
+
+Only use `0.0.0.0` binding when:
+- Running in an isolated VM or container
+- Behind a reverse proxy with authentication
+- On an air-gapped network
+
+For remote access, consider SSH tunneling instead:
+
+```bash
+# On server: bind to localhost only
+redletters serve --host 127.0.0.1 --port 8000
+
+# On client: tunnel through SSH
+ssh -L 8000:localhost:8000 user@server
+# Then access at http://localhost:8000
+```
 
 ---
 

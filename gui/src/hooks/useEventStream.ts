@@ -99,18 +99,27 @@ export function useEventStream(
     onConnect,
     onDisconnect,
     jobId,
-    reconnectDelayMs = 1000,
+    reconnectDelayMs = 2000, // Increased from 1000 to reduce noise when disconnected
     maxReconnectDelayMs = 30000,
   } = options;
 
   const [connected, setConnected] = useState(false);
   const [lastEventId, setLastEventId] = useState<number | null>(null);
 
+  // Use ref for lastEventId to avoid triggering reconnections on every event
+  const lastEventIdRef = useRef<number | null>(null);
+
   // Track seen sequence numbers for dedup
   const seenSequences = useRef<Set<number>>(new Set());
   const abortController = useRef<AbortController | null>(null);
   const reconnectAttempt = useRef(0);
   const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Track if we're currently connecting to prevent duplicate connections
+  const isConnecting = useRef(false);
+
+  // Store connect function ref to avoid dependency issues (defined early, updated later)
+  const connectRef = useRef<() => Promise<void>>(() => Promise.resolve());
 
   // For reconnection testing
   const preReconnectLastId = useRef<number | null>(null);
@@ -122,10 +131,16 @@ export function useEventStream(
   } | null>(null);
 
   const connect = useCallback(async () => {
+    // Prevent duplicate connections
+    if (isConnecting.current) {
+      return;
+    }
+
     if (abortController.current) {
       abortController.current.abort();
     }
 
+    isConnecting.current = true;
     abortController.current = new AbortController();
 
     try {
@@ -142,9 +157,9 @@ export function useEventStream(
         "Cache-Control": "no-cache",
       };
 
-      // Add Last-Event-ID for reconnection
-      if (lastEventId !== null) {
-        headers["Last-Event-ID"] = String(lastEventId);
+      // Add Last-Event-ID for reconnection (use ref to avoid dependency issues)
+      if (lastEventIdRef.current !== null) {
+        headers["Last-Event-ID"] = String(lastEventIdRef.current);
       }
 
       const response = await fetch(url, {
@@ -161,6 +176,7 @@ export function useEventStream(
       }
 
       // Connected successfully
+      isConnecting.current = false;
       setConnected(true);
       reconnectAttempt.current = 0;
       onConnect?.();
@@ -199,10 +215,11 @@ export function useEventStream(
             }
             seenSequences.current.add(seqNum);
 
-            // Update last event ID
+            // Update last event ID (both ref and state)
             if (frame.id) {
               const id = parseInt(frame.id, 10);
               if (!isNaN(id)) {
+                lastEventIdRef.current = id;
                 setLastEventId(id);
               }
             }
@@ -216,9 +233,12 @@ export function useEventStream(
       }
 
       // Stream ended normally
+      isConnecting.current = false;
       setConnected(false);
       onDisconnect?.();
     } catch (error) {
+      isConnecting.current = false;
+
       if ((error as Error).name === "AbortError") {
         // Intentional disconnect
         return;
@@ -250,7 +270,7 @@ export function useEventStream(
     onConnect,
     onDisconnect,
     jobId,
-    lastEventId,
+    // Note: lastEventId removed - we use lastEventIdRef to avoid reconnection loops
     reconnectDelayMs,
     maxReconnectDelayMs,
   ]);
@@ -270,8 +290,9 @@ export function useEventStream(
   const reconnect = useCallback(() => {
     disconnect();
     reconnectAttempt.current = 0;
-    connect();
-  }, [disconnect, connect]);
+    isConnecting.current = false; // Reset connecting state
+    connectRef.current();
+  }, [disconnect]);
 
   /**
    * Test reconnection for gap/dupe detection.
@@ -298,8 +319,9 @@ export function useEventStream(
 
       // Wait 2 seconds
       setTimeout(() => {
-        // Reconnect
-        connect();
+        // Reconnect using ref
+        isConnecting.current = false;
+        connectRef.current();
 
         // Wait for some events, then analyze
         setTimeout(() => {
@@ -324,12 +346,15 @@ export function useEventStream(
         }, 3000); // Wait 3 seconds for events
       }, 2000);
     });
-  }, [lastEventId, disconnect, connect]);
+  }, [lastEventId, disconnect]);
 
-  // Connect when enabled
+  // Update connect ref after connect is defined
+  connectRef.current = connect;
+
+  // Connect when enabled - use stable dependencies only
   useEffect(() => {
     if (enabled && token) {
-      connect();
+      connectRef.current();
     } else {
       disconnect();
     }
@@ -337,7 +362,8 @@ export function useEventStream(
     return () => {
       disconnect();
     };
-  }, [enabled, token, connect, disconnect]);
+    // Only re-run when enabled/token/baseUrl change, not on every connect recreation
+  }, [enabled, token, baseUrl, disconnect]);
 
   return {
     connected,

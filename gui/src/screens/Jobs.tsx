@@ -28,6 +28,8 @@ import {
   createApiErrorDetail,
 } from "../components/ApiErrorPanel";
 import { ReceiptViewer } from "../components/ReceiptViewer";
+import { SkeletonJobItem, EmptyState } from "../components/Skeleton";
+import { theme } from "../theme";
 
 interface JobsProps {
   client: ApiClient | null;
@@ -455,22 +457,56 @@ Message: ${job.error_message || "No message"}
         </button>
       </div>
 
-      {/* Job List */}
-      {sortedJobs.length === 0 ? (
+      {/* Loading skeleton when no client */}
+      {!client && (
         <div
           style={{
-            padding: "48px",
-            textAlign: "center",
-            backgroundColor: "#2d2d44",
-            borderRadius: "8px",
-            color: "#9ca3af",
+            display: "flex",
+            flexDirection: "column",
+            gap: theme.spacing.sm,
           }}
         >
-          {filter === "all"
-            ? 'No jobs yet. Click "Start Demo Job" to create one.'
-            : `No ${filter} jobs.`}
+          <SkeletonJobItem />
+          <SkeletonJobItem />
+          <SkeletonJobItem />
         </div>
-      ) : (
+      )}
+
+      {/* Empty state when connected but no jobs */}
+      {client && sortedJobs.length === 0 && (
+        <EmptyState
+          icon="&#128203;"
+          title={filter === "all" ? "No Jobs Yet" : `No ${filter} Jobs`}
+          description={
+            filter === "all"
+              ? "Jobs will appear here when you start a translation or scholarly export."
+              : `You don't have any ${filter} jobs at the moment.`
+          }
+          action={
+            filter === "all" ? (
+              <button
+                onClick={handleCreateDemoJob}
+                disabled={creating}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: "6px",
+                  border: "none",
+                  backgroundColor: theme.colors.primary,
+                  color: "white",
+                  cursor: creating ? "wait" : "pointer",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                }}
+              >
+                {creating ? "Creating..." : "Start Demo Job"}
+              </button>
+            ) : undefined
+          }
+        />
+      )}
+
+      {/* Job List */}
+      {client && sortedJobs.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {sortedJobs.map((job: JobResponse) => {
             const gateBlocked = isGateBlocked(job);

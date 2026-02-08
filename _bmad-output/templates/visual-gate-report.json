@@ -1,0 +1,39 @@
+{
+  "$schema": "Visual Gate Report v1",
+  "timestamp": "2026-01-01T00:00:00Z",
+  "gitCommit": "abcdef1",
+  "baseUrl": "http://localhost:1420",
+  "mcpNamespace": "mcp__puppeteer__",
+  "mcpTools": [
+    "puppeteer_navigate",
+    "puppeteer_screenshot",
+    "puppeteer_click",
+    "puppeteer_fill",
+    "puppeteer_evaluate"
+  ],
+  "steps": [
+    {
+      "step": 1,
+      "name": "explore-load",
+      "screenshot": "01-explore-load.png",
+      "assertions": [
+        {
+          "name": "page-loads",
+          "selector": null,
+          "expected": "no-error",
+          "actual": "no-error",
+          "pass": true
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "totalSteps": 12,
+    "passedSteps": 0,
+    "failedSteps": 0,
+    "totalAssertions": 0,
+    "passedAssertions": 0,
+    "failedAssertions": 0,
+    "gate": "UNKNOWN"
+  }
+}

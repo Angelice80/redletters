@@ -581,6 +581,221 @@ def serve(host: str, port: int):
     uvicorn.run("redletters.api.main:app", host=host, port=port, reload=True)
 
 
+@cli.command()
+@click.option("--port", default=47200, help="Backend port")
+@click.option("--no-browser", is_flag=True, help="Don't open browser automatically")
+@click.option("--dev", is_flag=True, help="Run GUI in dev mode (npm run dev)")
+def gui(port: int, no_browser: bool, dev: bool):
+    """Start the GUI with backend.
+
+    Starts the Engine Spine backend and opens the GUI in your browser.
+    Press Ctrl+C to stop both.
+
+    Examples:
+        redletters gui              # Start backend + open GUI
+        redletters gui --dev        # Start backend + GUI dev server
+        redletters gui --no-browser # Start backend only, print URL
+    """
+    import atexit
+    import signal
+    import subprocess
+    import time
+    import webbrowser
+
+    import httpx
+
+    from redletters.engine_spine.auth import get_stored_token
+
+    # Find GUI directory
+    gui_dir = Path(__file__).parent.parent.parent / "gui"
+    gui_dist = gui_dir / "dist" / "index.html"
+
+    if dev and not gui_dir.exists():
+        console.print("[red]Error: gui/ directory not found[/red]")
+        console.print("[dim]Run from the repository root, or use --no-browser[/dim]")
+        sys.exit(1)
+
+    # Track subprocesses for cleanup
+    processes: list[subprocess.Popen] = []
+
+    def cleanup():
+        for proc in processes:
+            if proc.poll() is None:
+                proc.terminate()
+                try:
+                    proc.wait(timeout=3)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+
+    atexit.register(cleanup)
+
+    def handle_signal(signum, frame):
+        console.print("\n[yellow]Shutting down...[/yellow]")
+        cleanup()
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, handle_signal)
+    signal.signal(signal.SIGTERM, handle_signal)
+
+    # Auto-initialize database if needed
+    db_path = settings.db_path
+    if not db_path.exists():
+        console.print("[bold blue]Initializing database with demo data...[/bold blue]")
+        db_path.parent.mkdir(parents=True, exist_ok=True)
+        conn = get_connection(db_path)
+        init_db(conn)
+        load_demo_data(conn)
+        conn.close()
+        console.print("[green]✓ Database initialized[/green]")
+
+    # Start engine backend
+    console.print(f"[bold blue]Starting Engine Spine on port {port}...[/bold blue]")
+
+    engine_proc = subprocess.Popen(
+        [sys.executable, "-m", "redletters", "engine", "start", "--port", str(port)],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
+    processes.append(engine_proc)
+
+    # Wait for engine to be ready
+    console.print("[dim]Waiting for engine to start...[/dim]")
+    ready = False
+    for attempt in range(30):  # 30 attempts, ~6 seconds
+        time.sleep(0.2)
+        try:
+            # Engine generates token on first start, try to get it
+            token = get_stored_token()
+            headers = {"Authorization": f"Bearer {token}"} if token else {}
+            resp = httpx.get(
+                f"http://127.0.0.1:{port}/v1/engine/status",
+                headers=headers,
+                timeout=1.0,
+            )
+            if resp.status_code == 200:
+                ready = True
+                break
+            elif resp.status_code == 401 and attempt < 10:
+                # Token might not be written yet, keep trying
+                continue
+        except httpx.RequestError:
+            pass
+
+    if not ready:
+        console.print("[red]Error: Engine failed to start[/red]")
+        console.print("[dim]Try running: redletters engine start --port 47200[/dim]")
+        cleanup()
+        sys.exit(1)
+
+    console.print(f"[green]✓ Engine ready at http://127.0.0.1:{port}[/green]")
+
+    # Get token for auto-injection into GUI URL
+    token = get_stored_token()
+
+    if dev:
+        # Run GUI dev server
+        console.print("[bold blue]Starting GUI dev server...[/bold blue]")
+
+        gui_proc = subprocess.Popen(
+            ["npm", "run", "dev"],
+            cwd=gui_dir,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
+        processes.append(gui_proc)
+
+        time.sleep(2)  # Let vite start
+        gui_base = "http://localhost:5173"
+        gui_url = f"{gui_base}#token={token}" if token else gui_base
+        console.print(f"[green]✓ GUI dev server at {gui_base}[/green]")
+
+        if not no_browser:
+            webbrowser.open(gui_url)
+            console.print("[dim]Token auto-configured in browser[/dim]")
+
+        console.print("\n[bold]Press Ctrl+C to stop[/bold]")
+
+        # Stream GUI output
+        try:
+            while gui_proc.poll() is None:
+                line = gui_proc.stdout.readline()
+                if line:
+                    console.print(f"[dim]{line.decode().rstrip()}[/dim]")
+        except KeyboardInterrupt:
+            pass
+
+    elif gui_dist.exists():
+        # Serve built GUI
+        import http.server
+        import socket
+        import socketserver
+
+        gui_port = 5173
+
+        # Check if port is in use and try to free it
+        def is_port_in_use(p: int) -> bool:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                return s.connect_ex(("localhost", p)) == 0
+
+        if is_port_in_use(gui_port):
+            console.print(
+                f"[yellow]Port {gui_port} in use, attempting to free...[/yellow]"
+            )
+            try:
+                import subprocess as sp
+
+                # Try to kill process on port (macOS/Linux)
+                sp.run(
+                    f"lsof -ti:{gui_port} | xargs kill -9",
+                    shell=True,
+                    capture_output=True,
+                )
+                time.sleep(0.5)
+            except Exception:
+                pass
+
+            if is_port_in_use(gui_port):
+                console.print(f"[red]Error: Port {gui_port} still in use[/red]")
+                console.print(f"[dim]Run: lsof -ti:{gui_port} | xargs kill -9[/dim]")
+                cleanup()
+                sys.exit(1)
+
+        class Handler(http.server.SimpleHTTPRequestHandler):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, directory=str(gui_dir / "dist"), **kwargs)
+
+            def log_message(self, format, *args):
+                pass  # Suppress logging
+
+        gui_base = f"http://localhost:{gui_port}"
+        gui_url = f"{gui_base}#token={token}" if token else gui_base
+        console.print(f"[green]✓ GUI at {gui_base}[/green]")
+
+        if not no_browser:
+            webbrowser.open(gui_url)
+            console.print("[dim]Token auto-configured in browser[/dim]")
+
+        console.print("\n[bold]Press Ctrl+C to stop[/bold]")
+
+        with socketserver.TCPServer(("", gui_port), Handler) as httpd:
+            try:
+                httpd.serve_forever()
+            except KeyboardInterrupt:
+                pass
+
+    else:
+        # No GUI available, just run backend
+        console.print("[yellow]GUI not built. Run with --dev for dev server.[/yellow]")
+        console.print("[dim]Or build GUI: cd gui && npm run build[/dim]")
+        console.print(f"\n[bold]Backend running at http://127.0.0.1:{port}[/bold]")
+        console.print("[bold]Press Ctrl+C to stop[/bold]")
+
+        try:
+            engine_proc.wait()
+        except KeyboardInterrupt:
+            pass
+
+
 # Data management commands (Phase 2)
 @cli.group()
 def data():

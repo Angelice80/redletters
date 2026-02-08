@@ -1,26 +1,48 @@
 # API Reference
 
-## Base URL
+## Two Server Modes
+
+Red Letters provides two server modes:
+
+| Mode | Command | Default Port | Use Case |
+|------|---------|--------------|----------|
+| **Engine Spine** | `redletters engine start` | 47200 | GUI, modern workflows |
+| **Legacy REST API** | `redletters serve` | 8000 | Direct API access, scripting |
+
+**For GUI users:** Use `redletters engine start --port 47200`
+
+**For API scripting:** Use `redletters serve --port 8000`
+
+## Base URL (Legacy API)
 
 ```
 http://localhost:8000/api/v1
 ```
 
-## Starting the Server
+## Starting the Legacy Server
 
 ```bash
 redletters serve
 redletters serve --port 8080
 ```
 
-> **Security Warning:** Using `--host 0.0.0.0` exposes the API to your entire
-> network. Only do this on trusted networks - the API has no authentication
-> by default.
+#### Security Warning: Network Binding
+
+**Never use `--host 0.0.0.0` on untrusted networks.**
 
 ```bash
-# Only on trusted networks:
+# DANGEROUS on public/shared networks:
 redletters serve --host 0.0.0.0 --port 8080
 ```
+
+This exposes the API to your entire network **without authentication**. Anyone on
+your network can query, translate, and export data. Only use when:
+
+- Running in an isolated VM or container
+- Behind a reverse proxy with authentication
+- On an air-gapped network
+
+For remote access, use SSH tunneling instead (see [CLI Reference](cli.md#serve-legacy)).
 
 Interactive documentation available at:
 - Swagger UI: `http://localhost:8000/docs`

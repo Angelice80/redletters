@@ -181,7 +181,7 @@ class TranslateRequestModel(BaseModel):
     session_id: str = Field(
         default="api-default", description="Session ID for tracking"
     )
-    translator: Literal["fake", "literal", "fluent"] = Field(
+    translator: Literal["fake", "literal", "fluent", "traceable"] = Field(
         default="literal", description="Translator type to use"
     )
     options: dict = Field(default_factory=dict, description="Additional options")
@@ -223,6 +223,7 @@ async def translate_reference(request: TranslateRequestModel):
         GateResponsePayload,
         get_translator,
     )
+    from redletters.sources import InstalledSpineProvider
 
     # Determine reference to use (prefer reference, fall back to verse_id)
     ref = request.reference or request.verse_id
@@ -234,11 +235,45 @@ async def translate_reference(request: TranslateRequestModel):
 
     conn = get_connection(settings.db_path)
 
+    # Set up spine provider from installed source packs
+    spine_provider = None
+    source_id = "api"
+    source_license = ""
+
+    if request.translator in ("literal", "fluent", "traceable"):
+        installer = SourceInstaller()
+        for spine_id in ["morphgnt-sblgnt", "open-greek-nt"]:
+            if installer.is_installed(spine_id):
+                installed = installer.get_installed(spine_id)
+                if installed:
+                    source_id = installed.source_id
+                    source_license = installed.license
+                    spine_provider = InstalledSpineProvider(
+                        source_id=spine_id,
+                        require_installed=True,
+                    )
+                break
+
+        if spine_provider is None:
+            conn.close()
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    "No spine data installed. Install with: "
+                    "redletters sources install morphgnt-sblgnt"
+                ),
+            )
+
+    # Build options with spine provider
+    options = dict(request.options) if request.options else {}
+    if spine_provider:
+        options["spine_provider"] = spine_provider
+
     # Get the appropriate translator
     translator_instance = get_translator(
         translator_type=request.translator,
-        source_id="api",
-        source_license="",
+        source_id=source_id,
+        source_license=source_license,
     )
 
     try:
@@ -247,7 +282,7 @@ async def translate_reference(request: TranslateRequestModel):
             reference=ref,
             mode=request.mode,
             session_id=request.session_id,
-            options=request.options,
+            options=options,
             translator=translator_instance,
         )
     except ValueError as e:

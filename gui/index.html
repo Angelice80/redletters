@@ -20,6 +20,22 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Auto-configure auth token from URL hash (runs before React)
+      // URL format: http://localhost:5173/#token=rl_xxx
+      (function() {
+        var hash = window.location.hash;
+        if (hash && hash.indexOf('#token=') === 0) {
+          var token = hash.substring(7);
+          if (token && token.indexOf('rl_') === 0) {
+            console.log('[RedLetters] Auto-configuring token from URL');
+            localStorage.setItem('redletters_auth_token', token);
+            // Clear hash from URL
+            history.replaceState(null, '', window.location.pathname);
+          }
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

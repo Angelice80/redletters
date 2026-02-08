@@ -180,7 +180,7 @@ describe("ApiContract", () => {
       expect(snapshot.hasCapabilities).toBe(false);
       expect(snapshot.capabilities).toBeNull();
       expect(snapshot.resolvedEndpoints).toHaveProperty("translate");
-      expect(snapshot.resolvedEndpoints.translate).toBe("/translate");
+      expect(snapshot.resolvedEndpoints!.translate).toBe("/translate");
     });
 
     it("returns snapshot with capabilities", () => {
@@ -320,13 +320,13 @@ describe("SSE stream URL construction", () => {
 
 describe("all DEFAULT_ENDPOINTS use absolute paths", () => {
   it("all endpoints start with /", () => {
-    for (const [key, path] of Object.entries(DEFAULT_ENDPOINTS)) {
+    for (const [, path] of Object.entries(DEFAULT_ENDPOINTS)) {
       expect(path).toMatch(/^\//);
     }
   });
 
   it("no endpoints contain relative paths or full URLs", () => {
-    for (const [key, path] of Object.entries(DEFAULT_ENDPOINTS)) {
+    for (const [, path] of Object.entries(DEFAULT_ENDPOINTS)) {
       expect(path).not.toMatch(/^https?:\/\//);
       expect(path).not.toMatch(/^\.\./);
       expect(path).not.toMatch(/^[^/]/);

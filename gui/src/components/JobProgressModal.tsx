@@ -11,7 +11,6 @@
  * - Terminal state display (success, gate_blocked, failed, canceled)
  */
 
-import { useCallback } from "react";
 import type { JobUIState, ScholarlyJobResult } from "../api/types";
 
 interface JobProgressModalProps {
@@ -249,7 +248,6 @@ function StageList({
       {STAGES.map((stage, index) => {
         const isComplete = index < currentStage;
         const isCurrent = index === currentStage;
-        const isPending = index > currentStage;
 
         return (
           <div key={stage.id} style={stageItemStyle}>
