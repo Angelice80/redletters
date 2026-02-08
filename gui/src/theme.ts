@@ -145,6 +145,8 @@ export const commonStyles = {
     borderRadius: theme.borderRadius.lg,
     padding: theme.spacing.xl,
     border: `1px solid ${theme.colors.bgTertiary}`,
+    borderTop: "1px solid var(--rl-border-subtle)",
+    boxShadow: "var(--rl-shadow-md)",
   } as React.CSSProperties,
 
   // Section label

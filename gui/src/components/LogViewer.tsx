@@ -112,14 +112,16 @@ export function LogViewer({ logs, maxHeight = "400px" }: LogViewerProps) {
             flex: 1,
             padding: "4px 8px",
             borderRadius: "4px",
-            border: "1px solid #4a4a6a",
+            border: "1px solid var(--rl-border-strong)",
             backgroundColor: "var(--rl-bg-app)",
             color: "var(--rl-text)",
             fontSize: "var(--rl-fs-sm)",
           }}
         />
 
-        <span style={{ fontSize: "var(--rl-fs-sm)", color: "var(--rl-text-muted)" }}>
+        <span
+          style={{ fontSize: "var(--rl-fs-sm)", color: "var(--rl-text-muted)" }}
+        >
           {filteredLogs.length} / {logs.length} logs
         </span>
       </div>

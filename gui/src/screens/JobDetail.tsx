@@ -175,7 +175,7 @@ export function JobDetail({ client }: JobDetailProps) {
             style={{
               padding: "4px 12px",
               borderRadius: "4px",
-              border: "1px solid #4a4a6a",
+              border: "1px solid var(--rl-border-strong)",
               backgroundColor: "transparent",
               color: "var(--rl-text-muted)",
               cursor: "pointer",
@@ -307,12 +307,20 @@ export function JobDetail({ client }: JobDetailProps) {
             }}
           >
             <div
-              style={{ color: "var(--rl-error)", fontSize: "var(--rl-fs-sm)", fontWeight: 600 }}
+              style={{
+                color: "var(--rl-error)",
+                fontSize: "var(--rl-fs-sm)",
+                fontWeight: 600,
+              }}
             >
               {job.error_code}
             </div>
             <div
-              style={{ color: "var(--rl-text)", fontSize: "var(--rl-fs-base)", marginTop: "4px" }}
+              style={{
+                color: "var(--rl-text)",
+                fontSize: "var(--rl-fs-base)",
+                marginTop: "4px",
+              }}
             >
               {job.error_message}
             </div>

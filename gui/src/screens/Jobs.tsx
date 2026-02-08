@@ -384,14 +384,14 @@ Message: ${job.error_message || "No message"}
           marginBottom: "24px",
         }}
       >
-        <h1 style={{ fontSize: "var(--rl-fs-xl)", fontWeight: 600, margin: 0 }}>Jobs</h1>
+        <h1 style={{ margin: 0 }}>Jobs</h1>
         <div style={{ display: "flex", gap: "8px" }}>
           <button
             onClick={onRefresh}
             style={{
               padding: "8px 16px",
               borderRadius: "4px",
-              border: "1px solid #4a4a6a",
+              border: "1px solid var(--rl-border-strong)",
               backgroundColor: "transparent",
               color: "var(--rl-text)",
               cursor: "pointer",
@@ -521,12 +521,15 @@ Message: ${job.error_message || "No message"}
                   borderRadius: "8px",
                   cursor: "pointer",
                   transition: "background-color 0.15s",
+                  border: "1px solid var(--rl-border)",
+                  borderTop: "1px solid var(--rl-border-subtle)",
+                  boxShadow: "var(--rl-shadow-sm)",
                   borderLeft:
                     job.state === "failed"
                       ? "3px solid var(--rl-error)"
                       : gateBlocked
                         ? "3px solid var(--rl-warning)"
-                        : "none",
+                        : "1px solid var(--rl-border)",
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = "#3d3d54";
@@ -553,7 +556,12 @@ Message: ${job.error_message || "No message"}
                     >
                       {job.job_id}
                     </div>
-                    <div style={{ color: "var(--rl-text-muted)", fontSize: "var(--rl-fs-sm)" }}>
+                    <div
+                      style={{
+                        color: "var(--rl-text-muted)",
+                        fontSize: "var(--rl-fs-sm)",
+                      }}
+                    >
                       Created: {formatDate(job.created_at)}
                     </div>
                     {/* Sprint 19: Show reference for scholarly jobs */}
@@ -579,7 +587,12 @@ Message: ${job.error_message || "No message"}
                     {/* Progress */}
                     {job.state === "running" &&
                       job.progress_percent != null && (
-                        <span style={{ fontSize: "var(--rl-fs-sm)", color: "var(--rl-text-muted)" }}>
+                        <span
+                          style={{
+                            fontSize: "var(--rl-fs-sm)",
+                            color: "var(--rl-text-muted)",
+                          }}
+                        >
                           {job.progress_percent}%
                         </span>
                       )}
@@ -954,7 +967,12 @@ Message: ${job.error_message || "No message"}
                         >
                           Summary
                         </div>
-                        <div style={{ color: "var(--rl-text-muted)", fontSize: "var(--rl-fs-sm)" }}>
+                        <div
+                          style={{
+                            color: "var(--rl-text-muted)",
+                            fontSize: "var(--rl-fs-sm)",
+                          }}
+                        >
                           {getJobResult(selectedJob)?.run_log_summary
                             ?.verse_count ?? 0}{" "}
                           verses,{" "}

@@ -83,9 +83,7 @@ export function Settings({
 
   return (
     <div style={{ padding: "24px" }}>
-      <h1 style={{ fontSize: "var(--rl-fs-xl)", fontWeight: 600, marginBottom: "24px" }}>
-        Settings
-      </h1>
+      <h1 style={{ marginBottom: "24px" }}>Settings</h1>
 
       {/* Engine Connection */}
       <section
@@ -94,9 +92,18 @@ export function Settings({
           backgroundColor: "var(--rl-bg-card)",
           borderRadius: "8px",
           marginBottom: "16px",
+          border: "1px solid var(--rl-border)",
+          borderTop: "1px solid var(--rl-border-subtle)",
+          boxShadow: "var(--rl-shadow-md)",
         }}
       >
-        <h2 style={{ fontSize: "var(--rl-fs-md)", fontWeight: 600, marginBottom: "16px" }}>
+        <h2
+          style={{
+            fontSize: "var(--rl-fs-md)",
+            fontWeight: 600,
+            marginBottom: "16px",
+          }}
+        >
           Engine Connection
         </h2>
 
@@ -119,7 +126,7 @@ export function Settings({
               width: "120px",
               padding: "8px 12px",
               borderRadius: "4px",
-              border: "1px solid #4a4a6a",
+              border: "1px solid var(--rl-border-strong)",
               backgroundColor: "var(--rl-bg-app)",
               color: "var(--rl-text)",
               fontSize: "var(--rl-fs-base)",
@@ -157,7 +164,7 @@ export function Settings({
               style={{
                 padding: "8px 16px",
                 borderRadius: "4px",
-                border: "1px solid #4a4a6a",
+                border: "1px solid var(--rl-border-strong)",
                 backgroundColor: "transparent",
                 color: "var(--rl-text-muted)",
                 cursor: "pointer",
@@ -177,9 +184,18 @@ export function Settings({
           backgroundColor: "var(--rl-bg-card)",
           borderRadius: "8px",
           marginBottom: "16px",
+          border: "1px solid var(--rl-border)",
+          borderTop: "1px solid var(--rl-border-subtle)",
+          boxShadow: "var(--rl-shadow-md)",
         }}
       >
-        <h2 style={{ fontSize: "var(--rl-fs-md)", fontWeight: 600, marginBottom: "16px" }}>
+        <h2
+          style={{
+            fontSize: "var(--rl-fs-md)",
+            fontWeight: 600,
+            marginBottom: "16px",
+          }}
+        >
           Authentication
         </h2>
 
@@ -209,9 +225,9 @@ export function Settings({
             style={{
               padding: "8px 16px",
               borderRadius: "4px",
-              border: "none",
-              backgroundColor: "var(--rl-text-dim)",
-              color: "white",
+              border: "1px solid var(--rl-border-strong)",
+              backgroundColor: "transparent",
+              color: "var(--rl-text-muted)",
               cursor: "pointer",
               fontSize: "var(--rl-fs-base)",
             }}
@@ -228,9 +244,18 @@ export function Settings({
           backgroundColor: "var(--rl-bg-card)",
           borderRadius: "8px",
           marginBottom: "16px",
+          border: "1px solid var(--rl-border)",
+          borderTop: "1px solid var(--rl-border-subtle)",
+          boxShadow: "var(--rl-shadow-md)",
         }}
       >
-        <h2 style={{ fontSize: "var(--rl-fs-md)", fontWeight: 600, marginBottom: "16px" }}>
+        <h2
+          style={{
+            fontSize: "var(--rl-fs-md)",
+            fontWeight: 600,
+            marginBottom: "16px",
+          }}
+        >
           Engine Mode
         </h2>
 
@@ -295,9 +320,18 @@ export function Settings({
           backgroundColor: "var(--rl-bg-card)",
           borderRadius: "8px",
           marginBottom: "16px",
+          border: "1px solid var(--rl-border)",
+          borderTop: "1px solid var(--rl-border-subtle)",
+          boxShadow: "var(--rl-shadow-md)",
         }}
       >
-        <h2 style={{ fontSize: "var(--rl-fs-md)", fontWeight: 600, marginBottom: "16px" }}>
+        <h2
+          style={{
+            fontSize: "var(--rl-fs-md)",
+            fontWeight: 600,
+            marginBottom: "16px",
+          }}
+        >
           Integrity Settings
         </h2>
 
@@ -320,7 +354,7 @@ export function Settings({
               width: "120px",
               padding: "8px 12px",
               borderRadius: "4px",
-              border: "1px solid #4a4a6a",
+              border: "1px solid var(--rl-border-strong)",
               backgroundColor: "var(--rl-bg-app)",
               color: "var(--rl-text)",
               fontSize: "var(--rl-fs-base)",
@@ -345,9 +379,18 @@ export function Settings({
           backgroundColor: "var(--rl-bg-card)",
           borderRadius: "8px",
           marginBottom: "16px",
+          border: "1px solid var(--rl-border)",
+          borderTop: "1px solid var(--rl-border-subtle)",
+          boxShadow: "var(--rl-shadow-md)",
         }}
       >
-        <h2 style={{ fontSize: "var(--rl-fs-md)", fontWeight: 600, marginBottom: "16px" }}>
+        <h2
+          style={{
+            fontSize: "var(--rl-fs-md)",
+            fontWeight: 600,
+            marginBottom: "16px",
+          }}
+        >
           Connection Testing
         </h2>
 
@@ -368,9 +411,9 @@ export function Settings({
           style={{
             padding: "8px 16px",
             borderRadius: "4px",
-            border: "none",
-            backgroundColor: "var(--rl-text-dim)",
-            color: "white",
+            border: "1px solid var(--rl-border-strong)",
+            backgroundColor: "transparent",
+            color: "var(--rl-text-muted)",
             cursor: testing ? "wait" : "pointer",
             fontSize: "var(--rl-fs-base)",
             opacity: testing ? 0.6 : 1,
@@ -389,7 +432,11 @@ export function Settings({
             }}
           >
             <div
-              style={{ fontSize: "var(--rl-fs-base)", fontWeight: 600, marginBottom: "8px" }}
+              style={{
+                fontSize: "var(--rl-fs-base)",
+                fontWeight: 600,
+                marginBottom: "8px",
+              }}
             >
               {testResult.gaps === 0 && testResult.dupes === 0
                 ? "No gaps or duplicates detected"
@@ -489,7 +536,7 @@ export function Settings({
                 style={{
                   padding: "8px 16px",
                   borderRadius: "4px",
-                  border: "1px solid #4a4a6a",
+                  border: "1px solid var(--rl-border-strong)",
                   backgroundColor: "transparent",
                   color: "var(--rl-text-muted)",
                   cursor: "pointer",

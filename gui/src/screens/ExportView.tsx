@@ -78,6 +78,9 @@ const sectionStyle: React.CSSProperties = {
   borderRadius: "8px",
   padding: "20px",
   marginBottom: "16px",
+  border: "1px solid var(--rl-border)",
+  borderTop: "1px solid var(--rl-border-subtle)",
+  boxShadow: "var(--rl-shadow-md)",
 };
 
 const sectionHeaderStyle: React.CSSProperties = {
@@ -770,7 +773,10 @@ export function ExportView({ client }: ExportViewProps) {
               />
               <label
                 htmlFor="force-confirm"
-                style={{ color: "var(--rl-error)", fontSize: "var(--rl-fs-base)" }}
+                style={{
+                  color: "var(--rl-error)",
+                  fontSize: "var(--rl-fs-base)",
+                }}
               >
                 I understand this export will include unacknowledged variants
                 and my responsibility will be recorded in the run log.

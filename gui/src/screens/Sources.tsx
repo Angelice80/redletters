@@ -59,6 +59,9 @@ const sourceCardStyle: React.CSSProperties = {
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
+  border: "1px solid var(--rl-border)",
+  borderTop: "1px solid var(--rl-border-subtle)",
+  boxShadow: "var(--rl-shadow-md)",
 };
 
 const sourceInfoStyle: React.CSSProperties = {

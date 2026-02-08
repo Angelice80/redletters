@@ -17,6 +17,7 @@
         /* Borders */
         --rl-border: #2f2f4a;
         --rl-border-strong: #3d3d5c;
+        --rl-border-subtle: rgba(255, 255, 255, 0.04);
 
         /* Text hierarchy */
         --rl-text: #e8e8f0;
@@ -64,10 +65,16 @@
         --rl-space-6: 24px;
         --rl-space-8: 32px;
 
-        /* Shadows */
+        /* Shadows (elevated for dark theme visibility) */
         --rl-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
-        --rl-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
-        --rl-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+        --rl-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.55);
+        --rl-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.65);
+        --rl-shadow-glow: 0 0 24px rgba(212, 81, 59, 0.08);
+
+        /* Line-height scale */
+        --rl-lh-tight: 1.2;
+        --rl-lh-normal: 1.5;
+        --rl-lh-relaxed: 1.65;
 
         /* Transitions */
         --rl-transition-fast: 120ms ease;
@@ -86,10 +93,52 @@
         padding: 0;
         box-sizing: border-box;
       }
+      /* Typography rhythm */
+      h1 {
+        font-size: var(--rl-fs-xl);
+        font-weight: 700;
+        line-height: var(--rl-lh-tight);
+        letter-spacing: -0.01em;
+      }
+      h2 {
+        font-size: var(--rl-fs-md);
+        font-weight: 600;
+        line-height: var(--rl-lh-tight);
+        letter-spacing: -0.005em;
+      }
+      h3 {
+        font-size: var(--rl-fs-base);
+        font-weight: 600;
+        line-height: var(--rl-lh-tight);
+      }
+      p, span, div {
+        line-height: var(--rl-lh-normal);
+      }
+      /* Focus rings — keyboard accessibility */
+      button:focus-visible,
+      a:focus-visible,
+      input:focus-visible,
+      select:focus-visible,
+      [tabindex]:focus-visible {
+        outline: 2px solid var(--rl-primary);
+        outline-offset: 2px;
+      }
+      /* Button base reset */
+      button {
+        font-family: inherit;
+        font-size: var(--rl-fs-base);
+        border-radius: var(--rl-radius-sm);
+        transition: background-color var(--rl-transition-fast), box-shadow var(--rl-transition-fast);
+      }
       body {
         font-family: var(--rl-font-ui);
         background-color: var(--rl-bg-app);
+        background-image:
+          radial-gradient(ellipse 90% 50% at 50% 105%, rgba(212, 81, 59, 0.13) 0%, transparent 55%),
+          radial-gradient(ellipse 60% 50% at 90% 5%, rgba(59, 130, 246, 0.07) 0%, transparent 45%);
+        background-attachment: fixed;
         color: var(--rl-text);
+        min-height: 100vh;
       }
     </style>
   </head>

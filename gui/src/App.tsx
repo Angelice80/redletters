@@ -49,13 +49,14 @@ import type {
 const navLinkStyle: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
-  padding: "8px 12px",
+  padding: "9px 12px",
   color: "var(--rl-text-muted)",
   textDecoration: "none",
   borderRadius: "var(--rl-radius-sm)",
   fontSize: "var(--rl-fs-sm)",
+  fontWeight: 500,
   transition:
-    "background-color var(--rl-transition-fast), color var(--rl-transition-fast)",
+    "background-color var(--rl-transition-fast), color var(--rl-transition-fast), box-shadow var(--rl-transition-fast)",
   borderLeft: "3px solid transparent",
 };
 
@@ -63,7 +64,19 @@ const navLinkActiveStyle: React.CSSProperties = {
   ...navLinkStyle,
   backgroundColor: "var(--rl-accent-subtle)",
   color: "var(--rl-text)",
+  fontWeight: 600,
   borderLeft: "3px solid var(--rl-accent)",
+  boxShadow: "inset 0 0 12px rgba(212, 81, 59, 0.08)",
+};
+
+// Sidebar section header style
+const sidebarSectionStyle: React.CSSProperties = {
+  fontSize: "var(--rl-fs-xs)",
+  textTransform: "uppercase",
+  color: "var(--rl-text-dim)",
+  padding: "4px 12px",
+  letterSpacing: "0.08em",
+  fontWeight: 600,
 };
 
 export function App() {
@@ -364,7 +377,6 @@ export function App() {
         style={{
           display: "flex",
           height: "100vh",
-          backgroundColor: "var(--rl-bg-app)",
           color: "var(--rl-text)",
         }}
       >
@@ -420,6 +432,7 @@ export function App() {
                 padding: "16px",
                 display: "flex",
                 flexDirection: "column",
+                borderRight: "1px solid var(--rl-border)",
                 ...(isMobileSidebar
                   ? {
                       position: "fixed",
@@ -428,6 +441,7 @@ export function App() {
                       bottom: 0,
                       zIndex: 1200,
                       boxShadow: "4px 0 20px rgba(0,0,0,0.5)",
+                      borderRight: "none",
                     }
                   : {}),
               }}
@@ -458,16 +472,7 @@ export function App() {
                 onClick={() => isMobileSidebar && setSidebarOpen(false)}
               >
                 {/* Study section */}
-                <div
-                  style={{
-                    fontSize: "var(--rl-fs-xs)",
-                    textTransform: "uppercase",
-                    color: "var(--rl-text-dim)",
-                    padding: "4px 12px",
-                    marginTop: "4px",
-                    letterSpacing: "0.06em",
-                  }}
-                >
+                <div style={{ ...sidebarSectionStyle, marginTop: "4px" }}>
                   Study
                 </div>
                 <NavLink
@@ -518,12 +523,10 @@ export function App() {
                 {/* Data section */}
                 <div
                   style={{
-                    fontSize: "var(--rl-fs-xs)",
-                    textTransform: "uppercase",
-                    color: "var(--rl-text-dim)",
-                    padding: "4px 12px",
-                    marginTop: "12px",
-                    letterSpacing: "0.06em",
+                    ...sidebarSectionStyle,
+                    marginTop: "16px",
+                    paddingTop: "12px",
+                    borderTop: "1px solid var(--rl-border)",
                   }}
                 >
                   Data
@@ -597,12 +600,10 @@ export function App() {
                 {/* System section */}
                 <div
                   style={{
-                    fontSize: "var(--rl-fs-xs)",
-                    textTransform: "uppercase",
-                    color: "var(--rl-text-dim)",
-                    padding: "4px 12px",
-                    marginTop: "12px",
-                    letterSpacing: "0.06em",
+                    ...sidebarSectionStyle,
+                    marginTop: "16px",
+                    paddingTop: "12px",
+                    borderTop: "1px solid var(--rl-border)",
                   }}
                 >
                   System
@@ -674,9 +675,11 @@ export function App() {
                 style={{
                   marginTop: "auto",
                   padding: "12px",
-                  backgroundColor: "var(--rl-bg-app)",
-                  borderRadius: "var(--rl-radius-sm)",
+                  backgroundColor: "rgba(18, 18, 31, 0.6)",
+                  borderRadius: "var(--rl-radius-md)",
                   fontSize: "var(--rl-fs-xs)",
+                  borderTop: "1px solid var(--rl-border)",
+                  border: "1px solid var(--rl-border)",
                 }}
               >
                 <div
