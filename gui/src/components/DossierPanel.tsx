@@ -16,7 +16,7 @@ import type {
 
 // Styles
 const panelStyle: React.CSSProperties = {
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "8px",
   overflow: "hidden",
   marginTop: "16px",
@@ -27,15 +27,15 @@ const headerStyle: React.CSSProperties = {
   justifyContent: "space-between",
   alignItems: "center",
   padding: "12px 16px",
-  backgroundColor: "#2d2d44",
+  backgroundColor: "var(--rl-bg-card)",
   cursor: "pointer",
   userSelect: "none",
 };
 
 const headerTextStyle: React.CSSProperties = {
-  fontSize: "14px",
+  fontSize: "var(--rl-fs-base)",
   fontWeight: 600,
-  color: "#9ca3af",
+  color: "var(--rl-text-muted)",
   textTransform: "uppercase",
 };
 
@@ -46,7 +46,7 @@ const contentStyle: React.CSSProperties = {
 const variantSectionStyle: React.CSSProperties = {
   marginBottom: "16px",
   paddingBottom: "16px",
-  borderBottom: "1px solid #374151",
+  borderBottom: "1px solid var(--rl-border-strong)",
 };
 
 const variantHeaderStyle: React.CSSProperties = {
@@ -63,7 +63,7 @@ const refStyle: React.CSSProperties = {
 };
 
 const badgeStyle: React.CSSProperties = {
-  fontSize: "10px",
+  fontSize: "var(--rl-fs-xs)",
   padding: "2px 6px",
   borderRadius: "3px",
   marginLeft: "8px",
@@ -78,66 +78,66 @@ const witnessGroupStyle: React.CSSProperties = {
 
 const witnessTypeStyle: React.CSSProperties = {
   padding: "8px",
-  backgroundColor: "#2d2d44",
+  backgroundColor: "var(--rl-bg-card)",
   borderRadius: "4px",
 };
 
 const witnessTypeLabelStyle: React.CSSProperties = {
-  fontSize: "10px",
-  color: "#6b7280",
+  fontSize: "var(--rl-fs-xs)",
+  color: "var(--rl-text-dim)",
   textTransform: "uppercase",
   marginBottom: "4px",
 };
 
 const witnessListStyle: React.CSSProperties = {
-  fontSize: "12px",
-  color: "#eaeaea",
+  fontSize: "var(--rl-fs-sm)",
+  color: "var(--rl-text)",
 };
 
 const readingCardStyle: React.CSSProperties = {
   padding: "10px",
-  backgroundColor: "#2d2d44",
+  backgroundColor: "var(--rl-bg-card)",
   borderRadius: "4px",
   marginBottom: "8px",
 };
 
 const readingLabelStyle: React.CSSProperties = {
-  fontSize: "10px",
+  fontSize: "var(--rl-fs-xs)",
   fontWeight: 600,
   textTransform: "uppercase",
   marginBottom: "6px",
 };
 
 const readingTextStyle: React.CSSProperties = {
-  fontSize: "16px",
+  fontSize: "var(--rl-fs-md)",
   fontFamily: "'SBL Greek', 'Cardo', 'Gentium Plus', serif",
-  color: "#eaeaea",
+  color: "var(--rl-text)",
   marginBottom: "4px",
 };
 
 const provenanceStyle: React.CSSProperties = {
   marginTop: "16px",
   padding: "12px",
-  backgroundColor: "#2d2d44",
+  backgroundColor: "var(--rl-bg-card)",
   borderRadius: "4px",
 };
 
 const provenanceLabelStyle: React.CSSProperties = {
-  fontSize: "11px",
-  color: "#6b7280",
+  fontSize: "var(--rl-fs-xs)",
+  color: "var(--rl-text-dim)",
   textTransform: "uppercase",
   marginBottom: "8px",
 };
 
 const provenanceTextStyle: React.CSSProperties = {
-  fontSize: "12px",
-  color: "#9ca3af",
+  fontSize: "var(--rl-fs-sm)",
+  color: "var(--rl-text-muted)",
 };
 
 const loadingStyle: React.CSSProperties = {
   padding: "16px",
   textAlign: "center",
-  color: "#6b7280",
+  color: "var(--rl-text-dim)",
 };
 
 const errorStyle: React.CSSProperties = {
@@ -145,16 +145,16 @@ const errorStyle: React.CSSProperties = {
   backgroundColor: "#7f1d1d",
   color: "#fca5a5",
   borderRadius: "4px",
-  fontSize: "13px",
+  fontSize: "var(--rl-fs-base)",
 };
 
 function getSignificanceBadgeStyle(significance: string): React.CSSProperties {
   const bgColor =
     significance === "major"
-      ? "#ef4444"
+      ? "var(--rl-error)"
       : significance === "significant"
-        ? "#f59e0b"
-        : "#4b5563";
+        ? "var(--rl-warning)"
+        : "var(--rl-border-strong)";
   return { ...badgeStyle, backgroundColor: bgColor, color: "white" };
 }
 
@@ -162,8 +162,8 @@ function getGatingBadgeStyle(gating: string): React.CSSProperties {
   return {
     ...badgeStyle,
     backgroundColor:
-      gating === "requires_acknowledgement" ? "#854d0e" : "#374151",
-    color: gating === "requires_acknowledgement" ? "#fde68a" : "#9ca3af",
+      gating === "requires_acknowledgement" ? "#854d0e" : "var(--rl-border-strong)",
+    color: gating === "requires_acknowledgement" ? "#fde68a" : "var(--rl-text-muted)",
   };
 }
 
@@ -173,17 +173,17 @@ function WitnessSummaryDisplay({
   summary: DossierWitnessSummary;
 }) {
   const groups = [
-    { label: "Papyri", witnesses: summary.papyri, color: "#22c55e" },
-    { label: "Uncials", witnesses: summary.uncials, color: "#3b82f6" },
+    { label: "Papyri", witnesses: summary.papyri, color: "var(--rl-success)" },
+    { label: "Uncials", witnesses: summary.uncials, color: "var(--rl-primary)" },
     { label: "Minuscules", witnesses: summary.minuscules, color: "#8b5cf6" },
-    { label: "Versions", witnesses: summary.versions, color: "#f59e0b" },
+    { label: "Versions", witnesses: summary.versions, color: "var(--rl-warning)" },
     { label: "Fathers", witnesses: summary.fathers, color: "#ec4899" },
-    { label: "Editions", witnesses: summary.editions, color: "#6b7280" },
+    { label: "Editions", witnesses: summary.editions, color: "var(--rl-text-dim)" },
   ].filter((g) => g.witnesses.length > 0);
 
   if (groups.length === 0) {
     return (
-      <div style={{ color: "#6b7280", fontSize: "12px" }}>
+      <div style={{ color: "var(--rl-text-dim)", fontSize: "var(--rl-fs-sm)" }}>
         No witness data available
       </div>
     );
@@ -226,7 +226,7 @@ function VariantDossierCard({ variant }: { variant: DossierVariant }) {
             <span
               style={{
                 ...badgeStyle,
-                backgroundColor: "#22c55e",
+                backgroundColor: "var(--rl-success)",
                 color: "white",
               }}
             >
@@ -239,9 +239,9 @@ function VariantDossierCard({ variant }: { variant: DossierVariant }) {
           style={{
             background: "none",
             border: "none",
-            color: "#6b7280",
+            color: "var(--rl-text-dim)",
             cursor: "pointer",
-            fontSize: "12px",
+            fontSize: "var(--rl-fs-sm)",
           }}
         >
           {expanded ? "Hide details" : "Show details"}
@@ -250,12 +250,12 @@ function VariantDossierCard({ variant }: { variant: DossierVariant }) {
 
       {/* Reason summary */}
       <div style={{ marginBottom: "12px" }}>
-        <span style={{ color: "#9ca3af", fontSize: "13px" }}>
+        <span style={{ color: "var(--rl-text-muted)", fontSize: "var(--rl-fs-base)" }}>
           {variant.reason.summary}
         </span>
         {variant.reason.detail && (
           <span
-            style={{ color: "#6b7280", fontSize: "12px", marginLeft: "8px" }}
+            style={{ color: "var(--rl-text-dim)", fontSize: "var(--rl-fs-sm)", marginLeft: "8px" }}
           >
             ({variant.reason.detail})
           </span>
@@ -268,7 +268,7 @@ function VariantDossierCard({ variant }: { variant: DossierVariant }) {
           <div
             style={{
               ...readingLabelStyle,
-              color: reading.is_spine ? "#22c55e" : "#f59e0b",
+              color: reading.is_spine ? "var(--rl-success)" : "var(--rl-warning)",
             }}
           >
             {reading.is_spine
@@ -283,8 +283,8 @@ function VariantDossierCard({ variant }: { variant: DossierVariant }) {
               {reading.source_packs.length > 0 && (
                 <div
                   style={{
-                    fontSize: "11px",
-                    color: "#6b7280",
+                    fontSize: "var(--rl-fs-xs)",
+                    color: "var(--rl-text-dim)",
                     marginTop: "8px",
                   }}
                 >
@@ -345,7 +345,7 @@ export function DossierPanel({
         <span style={headerTextStyle}>
           Variant Dossier {dossier && `(${dossier.variants.length} variants)`}
         </span>
-        <span style={{ color: "#6b7280" }}>{expanded ? "−" : "+"}</span>
+        <span style={{ color: "var(--rl-text-dim)" }}>{expanded ? "−" : "+"}</span>
       </div>
 
       {expanded && (
@@ -358,7 +358,7 @@ export function DossierPanel({
             <>
               {/* Spine info */}
               <div style={{ marginBottom: "16px" }}>
-                <span style={{ color: "#6b7280", fontSize: "12px" }}>
+                <span style={{ color: "var(--rl-text-dim)", fontSize: "var(--rl-fs-sm)" }}>
                   Spine: {dossier.spine.source_id}
                 </span>
                 {dossier.spine.text && (
@@ -366,7 +366,7 @@ export function DossierPanel({
                     style={{
                       ...readingTextStyle,
                       marginTop: "4px",
-                      color: "#22c55e",
+                      color: "var(--rl-success)",
                     }}
                   >
                     {dossier.spine.text}
@@ -382,7 +382,7 @@ export function DossierPanel({
                     backgroundColor: "#1e3a5f",
                     borderRadius: "4px",
                     marginBottom: "16px",
-                    fontSize: "12px",
+                    fontSize: "var(--rl-fs-sm)",
                     color: "#93c5fd",
                   }}
                 >
@@ -394,7 +394,7 @@ export function DossierPanel({
               {dossier.variants.length === 0 ? (
                 <div
                   style={{
-                    color: "#6b7280",
+                    color: "var(--rl-text-dim)",
                     textAlign: "center",
                     padding: "16px",
                   }}
@@ -421,8 +421,8 @@ export function DossierPanel({
                   <div
                     style={{
                       marginTop: "4px",
-                      fontSize: "11px",
-                      color: "#6b7280",
+                      fontSize: "var(--rl-fs-xs)",
+                      color: "var(--rl-text-dim)",
                     }}
                   >
                     Generated: {new Date(dossier.generated_at).toLocaleString()}

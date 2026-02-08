@@ -45,12 +45,12 @@ interface TooltipProps {
 
 const tooltipStyle: React.CSSProperties = {
   position: "fixed",
-  backgroundColor: "#1a1a2e",
-  border: "1px solid #4b5563",
+  backgroundColor: "var(--rl-bg-app)",
+  border: "1px solid var(--rl-border-strong)",
   borderRadius: "4px",
   padding: "6px 10px",
-  fontSize: "12px",
-  color: "#eaeaea",
+  fontSize: "var(--rl-fs-sm)",
+  color: "var(--rl-text)",
   whiteSpace: "normal",
   lineHeight: 1.4,
   zIndex: 9999,

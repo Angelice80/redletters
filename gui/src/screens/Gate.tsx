@@ -35,38 +35,38 @@ const warningBannerStyle: React.CSSProperties = {
 };
 
 const warningIconStyle: React.CSSProperties = {
-  fontSize: "24px",
+  fontSize: "var(--rl-fs-xl)",
 };
 
 const titleStyle: React.CSSProperties = {
-  fontSize: "20px",
+  fontSize: "var(--rl-fs-lg)",
   fontWeight: 600,
   color: "#fef9c3",
 };
 
 const subtitleStyle: React.CSSProperties = {
-  fontSize: "14px",
+  fontSize: "var(--rl-fs-base)",
   color: "#fde68a",
   marginTop: "4px",
 };
 
 const sectionStyle: React.CSSProperties = {
-  backgroundColor: "#2d2d44",
+  backgroundColor: "var(--rl-bg-card)",
   borderRadius: "8px",
   padding: "20px",
   marginBottom: "16px",
 };
 
 const sectionHeaderStyle: React.CSSProperties = {
-  fontSize: "14px",
+  fontSize: "var(--rl-fs-base)",
   fontWeight: 600,
-  color: "#9ca3af",
+  color: "var(--rl-text-muted)",
   marginBottom: "16px",
   textTransform: "uppercase",
 };
 
 const variantCardStyle: React.CSSProperties = {
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "8px",
   padding: "16px",
   marginBottom: "12px",
@@ -95,31 +95,31 @@ const readingCardStyle: React.CSSProperties = {
 const readingSelectedStyle: React.CSSProperties = {
   ...readingCardStyle,
   backgroundColor: "#1e3a5f",
-  border: "2px solid #3b82f6",
+  border: "2px solid var(--rl-primary)",
 };
 
 const readingUnselectedStyle: React.CSSProperties = {
   ...readingCardStyle,
-  backgroundColor: "#1a1a2e",
-  border: "2px solid #4b5563",
+  backgroundColor: "var(--rl-bg-app)",
+  border: "2px solid var(--rl-border-strong)",
 };
 
 const readingLabelStyle: React.CSSProperties = {
-  fontSize: "11px",
+  fontSize: "var(--rl-fs-xs)",
   fontWeight: 600,
   textTransform: "uppercase",
   marginBottom: "8px",
 };
 
 const greekTextStyle: React.CSSProperties = {
-  fontSize: "18px",
+  fontSize: "var(--rl-fs-lg)",
   fontFamily: "'SBL Greek', 'Cardo', 'Gentium Plus', serif",
   marginBottom: "8px",
 };
 
 const witnessTextStyle: React.CSSProperties = {
-  fontSize: "12px",
-  color: "#6b7280",
+  fontSize: "var(--rl-fs-sm)",
+  color: "var(--rl-text-dim)",
 };
 
 const buttonRowStyle: React.CSSProperties = {
@@ -131,9 +131,9 @@ const buttonRowStyle: React.CSSProperties = {
 
 const primaryButtonStyle: React.CSSProperties = {
   padding: "12px 32px",
-  fontSize: "16px",
+  fontSize: "var(--rl-fs-md)",
   fontWeight: 500,
-  backgroundColor: "#22c55e",
+  backgroundColor: "var(--rl-success)",
   color: "white",
   border: "none",
   borderRadius: "6px",
@@ -142,10 +142,10 @@ const primaryButtonStyle: React.CSSProperties = {
 
 const secondaryButtonStyle: React.CSSProperties = {
   padding: "12px 24px",
-  fontSize: "14px",
+  fontSize: "var(--rl-fs-base)",
   fontWeight: 500,
-  backgroundColor: "#4b5563",
-  color: "#eaeaea",
+  backgroundColor: "var(--rl-border-strong)",
+  color: "var(--rl-text)",
   border: "none",
   borderRadius: "6px",
   cursor: "pointer",
@@ -153,7 +153,7 @@ const secondaryButtonStyle: React.CSSProperties = {
 
 const disabledButtonStyle: React.CSSProperties = {
   ...primaryButtonStyle,
-  backgroundColor: "#374151",
+  backgroundColor: "var(--rl-border-strong)",
   cursor: "not-allowed",
 };
 
@@ -162,26 +162,26 @@ const statusStripStyle: React.CSSProperties = {
   gap: "16px",
   marginTop: "24px",
   padding: "12px",
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "4px",
-  fontSize: "12px",
-  color: "#6b7280",
+  fontSize: "var(--rl-fs-sm)",
+  color: "var(--rl-text-dim)",
 };
 
 const requiredAckStyle: React.CSSProperties = {
   padding: "8px 12px",
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "4px",
   marginBottom: "8px",
-  fontSize: "13px",
+  fontSize: "var(--rl-fs-base)",
 };
 
 // Sprint 7: Styles for multi-ack button
 const multiAckButtonStyle: React.CSSProperties = {
   padding: "12px 24px",
-  fontSize: "14px",
+  fontSize: "var(--rl-fs-base)",
   fontWeight: 500,
-  backgroundColor: "#f59e0b",
+  backgroundColor: "var(--rl-warning)",
   color: "white",
   border: "none",
   borderRadius: "6px",
@@ -189,11 +189,11 @@ const multiAckButtonStyle: React.CSSProperties = {
 };
 
 const reasonBadgeStyle: React.CSSProperties = {
-  fontSize: "11px",
+  fontSize: "var(--rl-fs-xs)",
   padding: "2px 6px",
   borderRadius: "3px",
-  backgroundColor: "#374151",
-  color: "#9ca3af",
+  backgroundColor: "var(--rl-border-strong)",
+  color: "var(--rl-text-muted)",
   marginLeft: "8px",
 };
 
@@ -213,20 +213,20 @@ function VariantCard({
   return (
     <div style={variantCardStyle}>
       <div style={variantHeaderStyle}>
-        <span style={{ color: "#60a5fa", fontWeight: 500, fontSize: "16px" }}>
+        <span style={{ color: "#60a5fa", fontWeight: 500, fontSize: "var(--rl-fs-md)" }}>
           {variant.ref}
         </span>
         <span
           style={{
-            fontSize: "11px",
+            fontSize: "var(--rl-fs-xs)",
             padding: "4px 8px",
             borderRadius: "4px",
             backgroundColor:
               variant.significance === "major"
-                ? "#ef4444"
+                ? "var(--rl-error)"
                 : variant.significance === "significant"
-                  ? "#f59e0b"
-                  : "#4b5563",
+                  ? "var(--rl-warning)"
+                  : "var(--rl-border-strong)",
             color: "white",
           }}
         >
@@ -234,7 +234,7 @@ function VariantCard({
         </span>
       </div>
 
-      <div style={{ color: "#9ca3af", fontSize: "13px", marginBottom: "12px" }}>
+      <div style={{ color: "var(--rl-text-muted)", fontSize: "var(--rl-fs-base)", marginBottom: "12px" }}>
         Position {variant.position} in verse
       </div>
 
@@ -246,20 +246,20 @@ function VariantCard({
           }
           onClick={() => onSelect(0)}
         >
-          <div style={{ ...readingLabelStyle, color: "#22c55e" }}>
+          <div style={{ ...readingLabelStyle, color: "var(--rl-success)" }}>
             SBLGNT [default]
           </div>
-          <div style={{ ...greekTextStyle, color: "#eaeaea" }}>
+          <div style={{ ...greekTextStyle, color: "var(--rl-text)" }}>
             {variant.sblgnt_reading}
           </div>
           <div style={witnessTextStyle}>{variant.sblgnt_witnesses}</div>
           <div style={{ marginTop: "8px" }}>
             {selectedIndex === 0 ? (
-              <span style={{ color: "#22c55e", fontSize: "12px" }}>
+              <span style={{ color: "var(--rl-success)", fontSize: "var(--rl-fs-sm)" }}>
                 Selected
               </span>
             ) : (
-              <span style={{ color: "#6b7280", fontSize: "12px" }}>
+              <span style={{ color: "var(--rl-text-dim)", fontSize: "var(--rl-fs-sm)" }}>
                 Click to select
               </span>
             )}
@@ -277,20 +277,20 @@ function VariantCard({
             }
             onClick={() => onSelect(alt.index)}
           >
-            <div style={{ ...readingLabelStyle, color: "#f59e0b" }}>
+            <div style={{ ...readingLabelStyle, color: "var(--rl-warning)" }}>
               Alternate
             </div>
-            <div style={{ ...greekTextStyle, color: "#9ca3af" }}>
+            <div style={{ ...greekTextStyle, color: "var(--rl-text-muted)" }}>
               {alt.surface_text}
             </div>
             <div style={witnessTextStyle}>{alt.witnesses}</div>
             <div style={{ marginTop: "8px" }}>
               {selectedIndex === alt.index ? (
-                <span style={{ color: "#22c55e", fontSize: "12px" }}>
+                <span style={{ color: "var(--rl-success)", fontSize: "var(--rl-fs-sm)" }}>
                   Selected
                 </span>
               ) : (
-                <span style={{ color: "#6b7280", fontSize: "12px" }}>
+                <span style={{ color: "var(--rl-text-dim)", fontSize: "var(--rl-fs-sm)" }}>
                   Click to select
                 </span>
               )}
@@ -464,7 +464,7 @@ export function Gate({ client }: GateProps) {
   if (!gate) {
     return (
       <div style={containerStyle}>
-        <div style={{ color: "#ef4444", padding: "24px" }}>
+        <div style={{ color: "var(--rl-error)", padding: "24px" }}>
           No gate data available. Please start a translation first.
         </div>
         <button style={secondaryButtonStyle} onClick={handleCancel}>
@@ -495,17 +495,17 @@ export function Gate({ client }: GateProps) {
           }}
         >
           <div>
-            <span style={{ color: "#9ca3af", fontSize: "13px" }}>
+            <span style={{ color: "var(--rl-text-muted)", fontSize: "var(--rl-fs-base)" }}>
               Reference:{" "}
             </span>
             <span
-              style={{ color: "#eaeaea", fontSize: "16px", fontWeight: 500 }}
+              style={{ color: "var(--rl-text)", fontSize: "var(--rl-fs-md)", fontWeight: 500 }}
             >
               {gate.reference}
             </span>
           </div>
           <div>
-            <span style={{ color: "#9ca3af", fontSize: "13px" }}>
+            <span style={{ color: "var(--rl-text-muted)", fontSize: "var(--rl-fs-base)" }}>
               Variants requiring attention:{" "}
               {gate.required_acks.length ||
                 gate.variants_side_by_side.filter(
@@ -524,18 +524,18 @@ export function Gate({ client }: GateProps) {
           </div>
           {gate.required_acks.map((ack) => (
             <div key={ack.variant_ref} style={requiredAckStyle}>
-              <span style={{ color: "#f59e0b" }}>{ack.variant_ref}</span>
+              <span style={{ color: "var(--rl-warning)" }}>{ack.variant_ref}</span>
               <span
                 style={{
-                  fontSize: "11px",
+                  fontSize: "var(--rl-fs-xs)",
                   padding: "2px 6px",
                   borderRadius: "3px",
                   backgroundColor:
                     ack.significance === "major"
-                      ? "#ef4444"
+                      ? "var(--rl-error)"
                       : ack.significance === "significant"
-                        ? "#f59e0b"
-                        : "#4b5563",
+                        ? "var(--rl-warning)"
+                        : "var(--rl-border-strong)",
                   color: "white",
                   marginLeft: "8px",
                 }}
@@ -545,7 +545,7 @@ export function Gate({ client }: GateProps) {
               {/* Sprint 7: Show reason if available */}
               {ack.reason && <span style={reasonBadgeStyle}>{ack.reason}</span>}
               <div
-                style={{ color: "#6b7280", marginTop: "4px", fontSize: "12px" }}
+                style={{ color: "var(--rl-text-dim)", marginTop: "4px", fontSize: "var(--rl-fs-sm)" }}
               >
                 {ack.message}
               </div>
@@ -570,8 +570,8 @@ export function Gate({ client }: GateProps) {
       {/* Prompt */}
       <div
         style={{
-          color: "#9ca3af",
-          fontSize: "14px",
+          color: "var(--rl-text-muted)",
+          fontSize: "var(--rl-fs-base)",
           textAlign: "center",
           marginBottom: "16px",
         }}

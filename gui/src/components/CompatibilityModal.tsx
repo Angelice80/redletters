@@ -29,13 +29,13 @@ const overlayStyle: React.CSSProperties = {
 };
 
 const modalStyle: React.CSSProperties = {
-  backgroundColor: "#2d2d44",
+  backgroundColor: "var(--rl-bg-card)",
   borderRadius: "12px",
   padding: "32px",
   maxWidth: "500px",
   width: "90%",
   boxShadow: "0 20px 60px rgba(0, 0, 0, 0.5)",
-  border: "1px solid #ef4444",
+  border: "1px solid var(--rl-error)",
 };
 
 const iconStyle: React.CSSProperties = {
@@ -45,7 +45,7 @@ const iconStyle: React.CSSProperties = {
 };
 
 const headerStyle: React.CSSProperties = {
-  fontSize: "20px",
+  fontSize: "var(--rl-fs-lg)",
   fontWeight: 600,
   color: "#fca5a5",
   textAlign: "center",
@@ -53,14 +53,14 @@ const headerStyle: React.CSSProperties = {
 };
 
 const subHeaderStyle: React.CSSProperties = {
-  fontSize: "14px",
-  color: "#9ca3af",
+  fontSize: "var(--rl-fs-base)",
+  color: "var(--rl-text-muted)",
   textAlign: "center",
   marginBottom: "24px",
 };
 
 const detailsCardStyle: React.CSSProperties = {
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "8px",
   padding: "16px",
   marginBottom: "20px",
@@ -70,16 +70,16 @@ const detailRowStyle: React.CSSProperties = {
   display: "flex",
   justifyContent: "space-between",
   marginBottom: "8px",
-  fontSize: "13px",
+  fontSize: "var(--rl-fs-base)",
 };
 
 const labelStyle: React.CSSProperties = {
-  color: "#9ca3af",
+  color: "var(--rl-text-muted)",
 };
 
 const valueStyle: React.CSSProperties = {
-  color: "#eaeaea",
-  fontFamily: "monospace",
+  color: "var(--rl-text)",
+  fontFamily: "var(--rl-font-mono)",
 };
 
 const errorValueStyle: React.CSSProperties = {
@@ -88,16 +88,16 @@ const errorValueStyle: React.CSSProperties = {
 };
 
 const fixSectionStyle: React.CSSProperties = {
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "8px",
   padding: "16px",
   marginBottom: "20px",
-  borderLeft: "3px solid #f59e0b",
+  borderLeft: "3px solid var(--rl-warning)",
 };
 
 const fixTitleStyle: React.CSSProperties = {
-  color: "#f59e0b",
-  fontSize: "13px",
+  color: "var(--rl-warning)",
+  fontSize: "var(--rl-fs-base)",
   fontWeight: 600,
   marginBottom: "12px",
 };
@@ -105,8 +105,8 @@ const fixTitleStyle: React.CSSProperties = {
 const fixListStyle: React.CSSProperties = {
   margin: 0,
   paddingLeft: "16px",
-  color: "#9ca3af",
-  fontSize: "13px",
+  color: "var(--rl-text-muted)",
+  fontSize: "var(--rl-fs-base)",
 };
 
 const fixItemStyle: React.CSSProperties = {
@@ -114,12 +114,12 @@ const fixItemStyle: React.CSSProperties = {
 };
 
 const codeStyle: React.CSSProperties = {
-  backgroundColor: "#374151",
+  backgroundColor: "var(--rl-border-strong)",
   padding: "2px 6px",
   borderRadius: "3px",
-  fontFamily: "monospace",
-  fontSize: "12px",
-  color: "#f59e0b",
+  fontFamily: "var(--rl-font-mono)",
+  fontSize: "var(--rl-fs-sm)",
+  color: "var(--rl-warning)",
 };
 
 const buttonContainerStyle: React.CSSProperties = {
@@ -130,7 +130,7 @@ const buttonContainerStyle: React.CSSProperties = {
 
 const buttonStyle: React.CSSProperties = {
   padding: "12px 24px",
-  fontSize: "14px",
+  fontSize: "var(--rl-fs-base)",
   fontWeight: 500,
   border: "none",
   borderRadius: "6px",
@@ -139,19 +139,19 @@ const buttonStyle: React.CSSProperties = {
 
 const primaryButtonStyle: React.CSSProperties = {
   ...buttonStyle,
-  backgroundColor: "#3b82f6",
+  backgroundColor: "var(--rl-primary)",
   color: "white",
 };
 
 const secondaryButtonStyle: React.CSSProperties = {
   ...buttonStyle,
-  backgroundColor: "#4b5563",
-  color: "#eaeaea",
+  backgroundColor: "var(--rl-border-strong)",
+  color: "var(--rl-text)",
 };
 
 const copiedStyle: React.CSSProperties = {
   ...buttonStyle,
-  backgroundColor: "#22c55e",
+  backgroundColor: "var(--rl-success)",
   color: "white",
 };
 

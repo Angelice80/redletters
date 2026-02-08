@@ -39,10 +39,10 @@ const containerStyle: React.CSSProperties = {
 };
 
 const headerStyle: React.CSSProperties = {
-  fontSize: "24px",
+  fontSize: "var(--rl-fs-xl)",
   fontWeight: 600,
   marginBottom: "24px",
-  color: "#eaeaea",
+  color: "var(--rl-text)",
 };
 
 const formRowStyle: React.CSSProperties = {
@@ -59,18 +59,18 @@ const inputGroupStyle: React.CSSProperties = {
 };
 
 const labelStyle: React.CSSProperties = {
-  fontSize: "12px",
-  color: "#9ca3af",
+  fontSize: "var(--rl-fs-sm)",
+  color: "var(--rl-text-muted)",
   textTransform: "uppercase",
 };
 
 const inputStyle: React.CSSProperties = {
   padding: "10px 14px",
-  fontSize: "16px",
-  backgroundColor: "#2d2d44",
-  border: "1px solid #4b5563",
+  fontSize: "var(--rl-fs-md)",
+  backgroundColor: "var(--rl-bg-card)",
+  border: "1px solid var(--rl-border-strong)",
   borderRadius: "4px",
-  color: "#eaeaea",
+  color: "var(--rl-text)",
   width: "300px",
 };
 
@@ -82,9 +82,9 @@ const selectStyle: React.CSSProperties = {
 
 const buttonStyle: React.CSSProperties = {
   padding: "10px 20px",
-  fontSize: "14px",
+  fontSize: "var(--rl-fs-base)",
   fontWeight: 500,
-  backgroundColor: "#3b82f6",
+  backgroundColor: "var(--rl-primary)",
   color: "white",
   border: "none",
   borderRadius: "4px",
@@ -93,27 +93,27 @@ const buttonStyle: React.CSSProperties = {
 
 const buttonDisabledStyle: React.CSSProperties = {
   ...buttonStyle,
-  backgroundColor: "#4b5563",
+  backgroundColor: "var(--rl-border-strong)",
   cursor: "not-allowed",
 };
 
 const resultPanelStyle: React.CSSProperties = {
   marginTop: "24px",
-  backgroundColor: "#2d2d44",
+  backgroundColor: "var(--rl-bg-card)",
   borderRadius: "8px",
   padding: "20px",
 };
 
 const sectionHeaderStyle: React.CSSProperties = {
-  fontSize: "14px",
+  fontSize: "var(--rl-fs-base)",
   fontWeight: 600,
-  color: "#9ca3af",
+  color: "var(--rl-text-muted)",
   marginBottom: "8px",
   textTransform: "uppercase",
 };
 
 const greekTextStyle: React.CSSProperties = {
-  fontSize: "20px",
+  fontSize: "var(--rl-fs-lg)",
   fontFamily: "'SBL Greek', 'Cardo', 'Gentium Plus', serif",
   color: "#60a5fa",
   marginBottom: "16px",
@@ -121,14 +121,14 @@ const greekTextStyle: React.CSSProperties = {
 };
 
 const translationTextStyle: React.CSSProperties = {
-  fontSize: "18px",
-  color: "#eaeaea",
+  fontSize: "var(--rl-fs-lg)",
+  color: "var(--rl-text)",
   marginBottom: "24px",
   lineHeight: 1.6,
 };
 
 const confidenceBarStyle: React.CSSProperties = {
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "4px",
   padding: "16px",
   marginBottom: "16px",
@@ -143,28 +143,28 @@ const layerRowStyle: React.CSSProperties = {
 
 const layerLabelStyle: React.CSSProperties = {
   width: "100px",
-  fontSize: "13px",
-  color: "#9ca3af",
+  fontSize: "var(--rl-fs-base)",
+  color: "var(--rl-text-muted)",
 };
 
 const barContainerStyle: React.CSSProperties = {
   flex: 1,
   height: "8px",
-  backgroundColor: "#374151",
+  backgroundColor: "var(--rl-border-strong)",
   borderRadius: "4px",
   overflow: "hidden",
 };
 
 const scoreStyle: React.CSSProperties = {
   width: "50px",
-  fontSize: "13px",
-  color: "#eaeaea",
+  fontSize: "var(--rl-fs-base)",
+  color: "var(--rl-text)",
   textAlign: "right",
 };
 
 const expanderStyle: React.CSSProperties = {
   marginTop: "16px",
-  borderTop: "1px solid #4b5563",
+  borderTop: "1px solid var(--rl-border-strong)",
   paddingTop: "16px",
 };
 
@@ -178,24 +178,24 @@ const expanderHeaderStyle: React.CSSProperties = {
 
 const claimStyle: React.CSSProperties = {
   padding: "12px",
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "4px",
   marginBottom: "8px",
-  fontSize: "13px",
+  fontSize: "var(--rl-fs-base)",
 };
 
 const claimTypeStyle: React.CSSProperties = {
   display: "inline-block",
   padding: "2px 6px",
   borderRadius: "3px",
-  fontSize: "10px",
+  fontSize: "var(--rl-fs-xs)",
   fontWeight: 600,
   marginRight: "8px",
 };
 
 const variantStyle: React.CSSProperties = {
   padding: "12px",
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "4px",
   marginBottom: "8px",
 };
@@ -205,17 +205,17 @@ const statusStripStyle: React.CSSProperties = {
   gap: "16px",
   marginTop: "16px",
   padding: "12px",
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "4px",
-  fontSize: "12px",
-  color: "#6b7280",
+  fontSize: "var(--rl-fs-sm)",
+  color: "var(--rl-text-dim)",
 };
 
 function ConfidenceBar({ confidence }: { confidence: ConfidenceResult }) {
   const getBarColor = (score: number) => {
-    if (score >= 0.8) return "#22c55e";
-    if (score >= 0.6) return "#f59e0b";
-    return "#ef4444";
+    if (score >= 0.8) return "var(--rl-success)";
+    if (score >= 0.6) return "var(--rl-warning)";
+    return "var(--rl-error)";
   };
 
   return (
@@ -227,10 +227,10 @@ function ConfidenceBar({ confidence }: { confidence: ConfidenceResult }) {
           marginBottom: "12px",
         }}
       >
-        <span style={{ color: "#eaeaea", fontWeight: 500 }}>
+        <span style={{ color: "var(--rl-text)", fontWeight: 500 }}>
           Confidence: {(confidence.composite * 100).toFixed(0)}%
         </span>
-        <span style={{ color: "#9ca3af", fontSize: "12px" }}>
+        <span style={{ color: "var(--rl-text-muted)", fontSize: "var(--rl-fs-sm)" }}>
           Weakest: {confidence.weakest_layer}
         </span>
       </div>
@@ -264,9 +264,9 @@ function ConfidenceBar({ confidence }: { confidence: ConfidenceResult }) {
 
 function ClaimsList({ claims }: { claims: ClaimResult[] }) {
   const getTypeColor = (claimType: number) => {
-    if (claimType <= 1) return "#22c55e"; // TYPE0-1: Green
-    if (claimType <= 3) return "#f59e0b"; // TYPE2-3: Yellow
-    return "#ef4444"; // TYPE4+: Red
+    if (claimType <= 1) return "var(--rl-success)"; // TYPE0-1: Green
+    if (claimType <= 3) return "var(--rl-warning)"; // TYPE2-3: Yellow
+    return "var(--rl-error)"; // TYPE4+: Red
   };
 
   return (
@@ -277,19 +277,19 @@ function ClaimsList({ claims }: { claims: ClaimResult[] }) {
             style={{
               ...claimTypeStyle,
               backgroundColor: getTypeColor(claim.claim_type),
-              color: "#1a1a2e",
+              color: "var(--rl-bg-app)",
             }}
           >
             {claim.claim_type_label}
           </span>
           <span
-            style={{ color: claim.enforcement_allowed ? "#eaeaea" : "#ef4444" }}
+            style={{ color: claim.enforcement_allowed ? "var(--rl-text)" : "var(--rl-error)" }}
           >
             {claim.content}
           </span>
           {claim.warnings.length > 0 && (
             <div
-              style={{ marginTop: "6px", color: "#f59e0b", fontSize: "12px" }}
+              style={{ marginTop: "6px", color: "var(--rl-warning)", fontSize: "var(--rl-fs-sm)" }}
             >
               {claim.warnings.join("; ")}
             </div>
@@ -303,7 +303,7 @@ function ClaimsList({ claims }: { claims: ClaimResult[] }) {
 function VariantsList({ variants }: { variants: VariantDisplay[] }) {
   if (variants.length === 0) {
     return (
-      <div style={{ color: "#6b7280", fontSize: "13px" }}>
+      <div style={{ color: "var(--rl-text-dim)", fontSize: "var(--rl-fs-base)" }}>
         No variants at this passage.
       </div>
     );
@@ -323,15 +323,15 @@ function VariantsList({ variants }: { variants: VariantDisplay[] }) {
             <span style={{ color: "#60a5fa", fontWeight: 500 }}>{v.ref}</span>
             <span
               style={{
-                fontSize: "11px",
+                fontSize: "var(--rl-fs-xs)",
                 padding: "2px 6px",
                 borderRadius: "3px",
                 backgroundColor:
                   v.significance === "major"
-                    ? "#ef4444"
+                    ? "var(--rl-error)"
                     : v.significance === "significant"
-                      ? "#f59e0b"
-                      : "#4b5563",
+                      ? "var(--rl-warning)"
+                      : "var(--rl-border-strong)",
                 color: "white",
               }}
             >
@@ -339,14 +339,14 @@ function VariantsList({ variants }: { variants: VariantDisplay[] }) {
             </span>
           </div>
           <div style={{ marginBottom: "8px" }}>
-            <span style={{ color: "#22c55e", fontWeight: 500 }}>SBLGNT: </span>
+            <span style={{ color: "var(--rl-success)", fontWeight: 500 }}>SBLGNT: </span>
             <span
-              style={{ fontFamily: "'SBL Greek', serif", color: "#eaeaea" }}
+              style={{ fontFamily: "'SBL Greek', serif", color: "var(--rl-text)" }}
             >
               {v.sblgnt_reading}
             </span>
             <span
-              style={{ color: "#6b7280", fontSize: "12px", marginLeft: "8px" }}
+              style={{ color: "var(--rl-text-dim)", fontSize: "var(--rl-fs-sm)", marginLeft: "8px" }}
             >
               ({v.sblgnt_witnesses})
             </span>
@@ -356,16 +356,16 @@ function VariantsList({ variants }: { variants: VariantDisplay[] }) {
               key={alt.index}
               style={{ marginLeft: "16px", marginBottom: "4px" }}
             >
-              <span style={{ color: "#f59e0b" }}>Alt: </span>
+              <span style={{ color: "var(--rl-warning)" }}>Alt: </span>
               <span
-                style={{ fontFamily: "'SBL Greek', serif", color: "#9ca3af" }}
+                style={{ fontFamily: "'SBL Greek', serif", color: "var(--rl-text-muted)" }}
               >
                 {alt.surface_text}
               </span>
               <span
                 style={{
-                  color: "#6b7280",
-                  fontSize: "12px",
+                  color: "var(--rl-text-dim)",
+                  fontSize: "var(--rl-fs-sm)",
                   marginLeft: "8px",
                 }}
               >
@@ -375,7 +375,7 @@ function VariantsList({ variants }: { variants: VariantDisplay[] }) {
           ))}
           {v.acknowledged && (
             <div
-              style={{ color: "#22c55e", fontSize: "12px", marginTop: "8px" }}
+              style={{ color: "var(--rl-success)", fontSize: "var(--rl-fs-sm)", marginTop: "8px" }}
             >
               Acknowledged
             </div>
@@ -539,7 +539,7 @@ export function Translate({ client }: TranslateProps) {
             error.toLowerCase().includes("morphgnt-sblgnt") ||
             error.toLowerCase().includes("no tokens found")) && (
             <div style={{ marginTop: "12px" }}>
-              <span style={{ fontSize: "13px" }}>
+              <span style={{ fontSize: "var(--rl-fs-base)" }}>
                 The canonical spine source may not be installed.{" "}
               </span>
               <Link
@@ -547,7 +547,7 @@ export function Translate({ client }: TranslateProps) {
                 style={{
                   color: "#60a5fa",
                   textDecoration: "underline",
-                  fontSize: "13px",
+                  fontSize: "var(--rl-fs-base)",
                 }}
               >
                 Go to Sources to install it
@@ -583,10 +583,10 @@ export function Translate({ client }: TranslateProps) {
               style={expanderHeaderStyle}
               onClick={() => setShowClaims(!showClaims)}
             >
-              <span style={{ color: "#9ca3af", fontSize: "14px" }}>
+              <span style={{ color: "var(--rl-text-muted)", fontSize: "var(--rl-fs-base)" }}>
                 Claims ({result.claims.length})
               </span>
-              <span style={{ color: "#6b7280" }}>{showClaims ? "−" : "+"}</span>
+              <span style={{ color: "var(--rl-text-dim)" }}>{showClaims ? "−" : "+"}</span>
             </div>
             {showClaims && <ClaimsList claims={result.claims} />}
           </div>
@@ -597,10 +597,10 @@ export function Translate({ client }: TranslateProps) {
               style={expanderHeaderStyle}
               onClick={() => setShowVariants(!showVariants)}
             >
-              <span style={{ color: "#9ca3af", fontSize: "14px" }}>
+              <span style={{ color: "var(--rl-text-muted)", fontSize: "var(--rl-fs-base)" }}>
                 Variants ({result.variants.length})
               </span>
-              <span style={{ color: "#6b7280" }}>
+              <span style={{ color: "var(--rl-text-dim)" }}>
                 {showVariants ? "−" : "+"}
               </span>
             </div>
@@ -619,7 +619,7 @@ export function Translate({ client }: TranslateProps) {
                   <span
                     style={{
                       color: "#60a5fa",
-                      fontSize: "14px",
+                      fontSize: "var(--rl-fs-base)",
                       fontWeight: 500,
                     }}
                   >
@@ -627,7 +627,7 @@ export function Translate({ client }: TranslateProps) {
                     {result.ledger.reduce((sum, v) => sum + v.tokens.length, 0)}{" "}
                     tokens)
                   </span>
-                  <span style={{ color: "#6b7280" }}>
+                  <span style={{ color: "var(--rl-text-dim)" }}>
                     {showLedger ? "−" : "+"}
                   </span>
                 </div>
@@ -639,7 +639,7 @@ export function Translate({ client }: TranslateProps) {
           <div
             style={{ ...expanderStyle, borderTop: "none", paddingTop: "8px" }}
           >
-            <div style={{ fontSize: "12px", color: "#6b7280" }}>
+            <div style={{ fontSize: "var(--rl-fs-sm)", color: "var(--rl-text-dim)" }}>
               Provenance: {result.provenance.spine_source} | Sources:{" "}
               {result.provenance.sources_used.join(", ")}
             </div>
@@ -661,7 +661,7 @@ export function Translate({ client }: TranslateProps) {
           style={{
             textAlign: "center",
             padding: "48px",
-            color: "#6b7280",
+            color: "var(--rl-text-dim)",
           }}
         >
           Enter a scripture reference above to translate.

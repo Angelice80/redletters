@@ -61,29 +61,29 @@ const containerStyle: React.CSSProperties = {
 };
 
 const headerStyle: React.CSSProperties = {
-  fontSize: "24px",
+  fontSize: "var(--rl-fs-xl)",
   fontWeight: 600,
   marginBottom: "8px",
-  color: "#eaeaea",
+  color: "var(--rl-text)",
 };
 
 const subHeaderStyle: React.CSSProperties = {
-  fontSize: "14px",
-  color: "#9ca3af",
+  fontSize: "var(--rl-fs-base)",
+  color: "var(--rl-text-muted)",
   marginBottom: "24px",
 };
 
 const sectionStyle: React.CSSProperties = {
-  backgroundColor: "#2d2d44",
+  backgroundColor: "var(--rl-bg-card)",
   borderRadius: "8px",
   padding: "20px",
   marginBottom: "16px",
 };
 
 const sectionHeaderStyle: React.CSSProperties = {
-  fontSize: "16px",
+  fontSize: "var(--rl-fs-md)",
   fontWeight: 600,
-  color: "#eaeaea",
+  color: "var(--rl-text)",
   marginBottom: "16px",
 };
 
@@ -95,18 +95,18 @@ const inputGroupStyle: React.CSSProperties = {
 };
 
 const labelStyle: React.CSSProperties = {
-  fontSize: "12px",
-  color: "#9ca3af",
+  fontSize: "var(--rl-fs-sm)",
+  color: "var(--rl-text-muted)",
   textTransform: "uppercase",
 };
 
 const inputStyle: React.CSSProperties = {
   padding: "12px 14px",
-  fontSize: "16px",
-  backgroundColor: "#1a1a2e",
-  border: "1px solid #4b5563",
+  fontSize: "var(--rl-fs-md)",
+  backgroundColor: "var(--rl-bg-app)",
+  border: "1px solid var(--rl-border-strong)",
   borderRadius: "4px",
-  color: "#eaeaea",
+  color: "var(--rl-text)",
   width: "100%",
   maxWidth: "400px",
 };
@@ -118,9 +118,9 @@ const selectStyle: React.CSSProperties = {
 
 const buttonStyle: React.CSSProperties = {
   padding: "12px 24px",
-  fontSize: "14px",
+  fontSize: "var(--rl-fs-base)",
   fontWeight: 500,
-  backgroundColor: "#3b82f6",
+  backgroundColor: "var(--rl-primary)",
   color: "white",
   border: "none",
   borderRadius: "4px",
@@ -129,23 +129,23 @@ const buttonStyle: React.CSSProperties = {
 
 const primaryButtonStyle: React.CSSProperties = {
   ...buttonStyle,
-  backgroundColor: "#22c55e",
+  backgroundColor: "var(--rl-success)",
 };
 
 const secondaryButtonStyle: React.CSSProperties = {
   ...buttonStyle,
-  backgroundColor: "#4b5563",
+  backgroundColor: "var(--rl-border-strong)",
 };
 
 const disabledButtonStyle: React.CSSProperties = {
   ...buttonStyle,
-  backgroundColor: "#374151",
+  backgroundColor: "var(--rl-border-strong)",
   cursor: "not-allowed",
 };
 
 const dangerButtonStyle: React.CSSProperties = {
   ...buttonStyle,
-  backgroundColor: "#ef4444",
+  backgroundColor: "var(--rl-error)",
 };
 
 const stepIndicatorStyle: React.CSSProperties = {
@@ -161,34 +161,34 @@ const stepDotStyle: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  fontSize: "14px",
+  fontSize: "var(--rl-fs-base)",
   fontWeight: 600,
 };
 
 const stepActiveStyle: React.CSSProperties = {
   ...stepDotStyle,
-  backgroundColor: "#3b82f6",
+  backgroundColor: "var(--rl-primary)",
   color: "white",
 };
 
 const stepCompleteStyle: React.CSSProperties = {
   ...stepDotStyle,
-  backgroundColor: "#22c55e",
+  backgroundColor: "var(--rl-success)",
   color: "white",
 };
 
 const stepInactiveStyle: React.CSSProperties = {
   ...stepDotStyle,
-  backgroundColor: "#4b5563",
-  color: "#9ca3af",
+  backgroundColor: "var(--rl-border-strong)",
+  color: "var(--rl-text-muted)",
 };
 
 const gateCardStyle: React.CSSProperties = {
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "6px",
   padding: "12px 16px",
   marginBottom: "8px",
-  border: "1px solid #f59e0b",
+  border: "1px solid var(--rl-warning)",
 };
 
 const checkboxContainerStyle: React.CSSProperties = {
@@ -196,7 +196,7 @@ const checkboxContainerStyle: React.CSSProperties = {
   alignItems: "center",
   gap: "10px",
   padding: "12px",
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "6px",
   marginTop: "16px",
 };
@@ -228,7 +228,10 @@ function StepIndicator({
               style={{
                 width: "40px",
                 height: "2px",
-                backgroundColor: index < currentStep ? "#22c55e" : "#4b5563",
+                backgroundColor:
+                  index < currentStep
+                    ? "var(--rl-success)"
+                    : "var(--rl-border-strong)",
                 marginLeft: "8px",
               }}
             />
@@ -595,7 +598,7 @@ export function ExportView({ client }: ExportViewProps) {
     return (
       <div style={containerStyle}>
         <h1 style={headerStyle}>Export</h1>
-        <div style={{ color: "#9ca3af" }}>
+        <div style={{ color: "var(--rl-text-muted)" }}>
           Not connected to backend.{" "}
           <Link to="/settings" style={{ color: "#60a5fa" }}>
             Check connection settings
@@ -700,7 +703,7 @@ export function ExportView({ client }: ExportViewProps) {
             Step 2: Gates Detected ({wizard.pendingGates.length})
           </div>
 
-          <div style={{ marginBottom: "16px", color: "#f59e0b" }}>
+          <div style={{ marginBottom: "16px", color: "var(--rl-warning)" }}>
             The following textual variants require acknowledgement before
             export:
           </div>
@@ -719,11 +722,13 @@ export function ExportView({ client }: ExportViewProps) {
                 </span>
                 <span
                   style={{
-                    fontSize: "11px",
+                    fontSize: "var(--rl-fs-xs)",
                     padding: "2px 8px",
                     borderRadius: "4px",
                     backgroundColor:
-                      gate.significance === "major" ? "#ef4444" : "#f59e0b",
+                      gate.significance === "major"
+                        ? "var(--rl-error)"
+                        : "var(--rl-warning)",
                     color: "white",
                   }}
                 >
@@ -731,7 +736,11 @@ export function ExportView({ client }: ExportViewProps) {
                 </span>
               </div>
               <div
-                style={{ color: "#9ca3af", fontSize: "13px", marginTop: "4px" }}
+                style={{
+                  color: "var(--rl-text-muted)",
+                  fontSize: "var(--rl-fs-base)",
+                  marginTop: "4px",
+                }}
               >
                 {gate.message}
               </div>
@@ -761,7 +770,7 @@ export function ExportView({ client }: ExportViewProps) {
               />
               <label
                 htmlFor="force-confirm"
-                style={{ color: "#ef4444", fontSize: "14px" }}
+                style={{ color: "var(--rl-error)", fontSize: "var(--rl-fs-base)" }}
               >
                 I understand this export will include unacknowledged variants
                 and my responsibility will be recorded in the run log.
@@ -782,7 +791,7 @@ export function ExportView({ client }: ExportViewProps) {
         <div style={sectionStyle}>
           <div style={sectionHeaderStyle}>Step 3: Acknowledge Variants</div>
 
-          <div style={{ marginBottom: "16px", color: "#9ca3af" }}>
+          <div style={{ marginBottom: "16px", color: "var(--rl-text-muted)" }}>
             Review each variant and select your preferred reading before
             proceeding.
           </div>
@@ -792,7 +801,11 @@ export function ExportView({ client }: ExportViewProps) {
           </button>
 
           <div
-            style={{ marginTop: "16px", color: "#6b7280", fontSize: "13px" }}
+            style={{
+              marginTop: "16px",
+              color: "var(--rl-text-dim)",
+              fontSize: "var(--rl-fs-base)",
+            }}
           >
             After acknowledging, return here and click "Re-check Gates" to
             continue.
@@ -814,20 +827,24 @@ export function ExportView({ client }: ExportViewProps) {
           <div style={sectionHeaderStyle}>Step 4: Run Scholarly Export</div>
 
           <div style={{ marginBottom: "16px" }}>
-            <div style={{ color: "#9ca3af", marginBottom: "8px" }}>
+            <div style={{ color: "var(--rl-text-muted)", marginBottom: "8px" }}>
               Reference:{" "}
-              <span style={{ color: "#eaeaea" }}>{wizard.reference}</span>
+              <span style={{ color: "var(--rl-text)" }}>
+                {wizard.reference}
+              </span>
             </div>
-            <div style={{ color: "#9ca3af", marginBottom: "8px" }}>
-              Mode: <span style={{ color: "#eaeaea" }}>{mode}</span>
+            <div style={{ color: "var(--rl-text-muted)", marginBottom: "8px" }}>
+              Mode: <span style={{ color: "var(--rl-text)" }}>{mode}</span>
             </div>
-            <div style={{ color: "#9ca3af", marginBottom: "8px" }}>
+            <div style={{ color: "var(--rl-text-muted)", marginBottom: "8px" }}>
               Export Type:{" "}
-              <span style={{ color: "#eaeaea" }}>{wizard.exportType}</span>
+              <span style={{ color: "var(--rl-text)" }}>
+                {wizard.exportType}
+              </span>
             </div>
-            <div style={{ color: "#9ca3af" }}>
+            <div style={{ color: "var(--rl-text-muted)" }}>
               Gates:{" "}
-              <span style={{ color: "#22c55e" }}>
+              <span style={{ color: "var(--rl-success)" }}>
                 {wizard.pendingGates.length === 0
                   ? "All clear"
                   : wizard.forceSelected
@@ -852,7 +869,11 @@ export function ExportView({ client }: ExportViewProps) {
           </div>
 
           <div
-            style={{ marginTop: "16px", color: "#6b7280", fontSize: "13px" }}
+            style={{
+              marginTop: "16px",
+              color: "var(--rl-text-dim)",
+              fontSize: "var(--rl-fs-base)",
+            }}
           >
             This will generate: lockfile, apparatus, translation, citations,
             quote, snapshot, verified bundle, and run_log.json
@@ -861,8 +882,8 @@ export function ExportView({ client }: ExportViewProps) {
       )}
 
       {/* Quick Actions */}
-      <div style={{ ...sectionStyle, backgroundColor: "#1a1a2e" }}>
-        <div style={{ ...sectionHeaderStyle, fontSize: "14px" }}>
+      <div style={{ ...sectionStyle, backgroundColor: "var(--rl-bg-app)" }}>
+        <div style={{ ...sectionHeaderStyle, fontSize: "var(--rl-fs-base)" }}>
           Quick Actions
         </div>
         <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>

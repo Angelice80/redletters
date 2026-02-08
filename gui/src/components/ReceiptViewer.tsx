@@ -25,14 +25,14 @@ const TERMINAL_STATES: JobState[] = ["completed", "failed", "cancelled"];
 
 // Styles
 const containerStyle: React.CSSProperties = {
-  backgroundColor: "#2d2d44",
+  backgroundColor: "var(--rl-bg-card)",
   borderRadius: "8px",
   overflow: "hidden",
 };
 
 const headerStyle: React.CSSProperties = {
   padding: "12px 16px",
-  borderBottom: "1px solid #4b5563",
+  borderBottom: "1px solid var(--rl-border-strong)",
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
@@ -40,9 +40,9 @@ const headerStyle: React.CSSProperties = {
 
 const copyButtonStyle: React.CSSProperties = {
   padding: "4px 10px",
-  fontSize: "11px",
-  backgroundColor: "#374151",
-  color: "#9ca3af",
+  fontSize: "var(--rl-fs-xs)",
+  backgroundColor: "var(--rl-border-strong)",
+  color: "var(--rl-text-muted)",
   border: "none",
   borderRadius: "4px",
   cursor: "pointer",
@@ -63,19 +63,19 @@ const sectionHeaderStyle: React.CSSProperties = {
   padding: "8px 0",
   cursor: "pointer",
   userSelect: "none",
-  borderBottom: "1px solid #374151",
+  borderBottom: "1px solid var(--rl-border-strong)",
 };
 
 const sectionLabelStyle: React.CSSProperties = {
-  fontSize: "12px",
+  fontSize: "var(--rl-fs-sm)",
   fontWeight: 500,
-  color: "#9ca3af",
+  color: "var(--rl-text-muted)",
   textTransform: "uppercase",
 };
 
 const chevronStyle: React.CSSProperties = {
-  fontSize: "10px",
-  color: "#6b7280",
+  fontSize: "var(--rl-fs-xs)",
+  color: "var(--rl-text-dim)",
   transition: "transform 0.15s",
 };
 
@@ -84,43 +84,43 @@ const rowStyle: React.CSSProperties = {
   justifyContent: "space-between",
   alignItems: "flex-start",
   padding: "8px 0",
-  borderBottom: "1px solid #374151",
+  borderBottom: "1px solid var(--rl-border-strong)",
 };
 
 const labelStyle: React.CSSProperties = {
-  fontSize: "12px",
-  color: "#6b7280",
+  fontSize: "var(--rl-fs-sm)",
+  color: "var(--rl-text-dim)",
   minWidth: "100px",
 };
 
 const valueStyle: React.CSSProperties = {
-  fontSize: "12px",
-  color: "#eaeaea",
+  fontSize: "var(--rl-fs-sm)",
+  color: "var(--rl-text)",
   textAlign: "right",
   wordBreak: "break-all",
 };
 
 const codeStyle: React.CSSProperties = {
-  fontFamily: "monospace",
-  fontSize: "11px",
-  backgroundColor: "#374151",
+  fontFamily: "var(--rl-font-mono)",
+  fontSize: "var(--rl-fs-xs)",
+  backgroundColor: "var(--rl-border-strong)",
   padding: "2px 6px",
   borderRadius: "3px",
-  color: "#9ca3af",
+  color: "var(--rl-text-muted)",
   wordBreak: "break-all",
 };
 
 const artifactRowStyle: React.CSSProperties = {
   padding: "10px",
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "4px",
   marginBottom: "6px",
 };
 
 const artifactPathStyle: React.CSSProperties = {
-  fontSize: "12px",
+  fontSize: "var(--rl-fs-sm)",
   color: "#60a5fa",
-  fontFamily: "monospace",
+  fontFamily: "var(--rl-font-mono)",
   wordBreak: "break-all",
   marginBottom: "4px",
 };
@@ -128,8 +128,8 @@ const artifactPathStyle: React.CSSProperties = {
 const artifactMetaStyle: React.CSSProperties = {
   display: "flex",
   gap: "16px",
-  fontSize: "10px",
-  color: "#6b7280",
+  fontSize: "var(--rl-fs-xs)",
+  color: "var(--rl-text-dim)",
 };
 
 const errorBoxStyle: React.CSSProperties = {
@@ -140,10 +140,10 @@ const errorBoxStyle: React.CSSProperties = {
 };
 
 const preStyle: React.CSSProperties = {
-  fontFamily: "monospace",
-  fontSize: "11px",
-  color: "#9ca3af",
-  backgroundColor: "#1a1a2e",
+  fontFamily: "var(--rl-font-mono)",
+  fontSize: "var(--rl-fs-xs)",
+  color: "var(--rl-text-muted)",
+  backgroundColor: "var(--rl-bg-app)",
   padding: "12px",
   borderRadius: "4px",
   overflow: "auto",
@@ -156,7 +156,7 @@ const preStyle: React.CSSProperties = {
 const statusBadgeStyle: React.CSSProperties = {
   padding: "3px 8px",
   borderRadius: "4px",
-  fontSize: "11px",
+  fontSize: "var(--rl-fs-xs)",
   fontWeight: 600,
   textTransform: "uppercase",
 };
@@ -164,15 +164,15 @@ const statusBadgeStyle: React.CSSProperties = {
 const loadingStyle: React.CSSProperties = {
   padding: "24px",
   textAlign: "center",
-  color: "#6b7280",
-  fontSize: "13px",
-  backgroundColor: "#2d2d44",
+  color: "var(--rl-text-dim)",
+  fontSize: "var(--rl-fs-base)",
+  backgroundColor: "var(--rl-bg-card)",
   borderRadius: "8px",
 };
 
 const errorMessageStyle: React.CSSProperties = {
   padding: "16px",
-  backgroundColor: "#2d2d44",
+  backgroundColor: "var(--rl-bg-card)",
   borderRadius: "8px",
 };
 
@@ -180,17 +180,17 @@ const retryButtonStyle: React.CSSProperties = {
   padding: "6px 14px",
   borderRadius: "4px",
   border: "none",
-  backgroundColor: "#3b82f6",
+  backgroundColor: "var(--rl-primary)",
   color: "white",
   cursor: "pointer",
-  fontSize: "12px",
+  fontSize: "var(--rl-fs-sm)",
 };
 
 const pendingStyle: React.CSSProperties = {
   padding: "16px",
-  backgroundColor: "#2d2d44",
+  backgroundColor: "var(--rl-bg-card)",
   borderRadius: "8px",
-  color: "#9ca3af",
+  color: "var(--rl-text-muted)",
   textAlign: "center",
 };
 
@@ -216,7 +216,7 @@ function StatusBadge({ status }: { status: string }) {
     cancelled: { bg: "#78350f", text: "#fcd34d" },
   };
 
-  const color = colors[status] ?? { bg: "#374151", text: "#9ca3af" };
+  const color = colors[status] ?? { bg: "var(--rl-border-strong)", text: "var(--rl-text-muted)" };
 
   return (
     <span
@@ -313,7 +313,7 @@ function ReceiptContent({ receipt }: { receipt: JobReceipt }) {
       {/* Header */}
       <div style={headerStyle}>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <span style={{ fontWeight: 600, color: "#eaeaea" }}>Job Receipt</span>
+          <span style={{ fontWeight: 600, color: "var(--rl-text)" }}>Job Receipt</span>
           <StatusBadge status={receipt.receipt_status} />
         </div>
         <button style={copyButtonStyle} onClick={handleCopyJson}>
@@ -381,8 +381,8 @@ function ReceiptContent({ receipt }: { receipt: JobReceipt }) {
             <div
               style={{
                 color: "#fecaca",
-                fontSize: "12px",
-                fontFamily: "monospace",
+                fontSize: "var(--rl-fs-sm)",
+                fontFamily: "var(--rl-font-mono)",
                 whiteSpace: "pre-wrap",
                 maxHeight: "150px",
                 overflow: "auto",
@@ -495,7 +495,7 @@ export function ReceiptViewer({ jobId, jobState, client }: ReceiptViewerProps) {
   if (error) {
     return (
       <div style={errorMessageStyle}>
-        <div style={{ color: "#ef4444", marginBottom: "12px" }}>
+        <div style={{ color: "var(--rl-error)", marginBottom: "12px" }}>
           Failed to load receipt: {error}
         </div>
         <button onClick={fetchReceipt} style={retryButtonStyle}>

@@ -61,7 +61,7 @@ const iconStyle: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  fontSize: "24px",
+  fontSize: "var(--rl-fs-xl)",
 };
 
 const titleStyle: React.CSSProperties = {
@@ -99,7 +99,7 @@ const inputButtonStyle: React.CSSProperties = {
   color: theme.colors.textSecondary,
   cursor: "pointer",
   padding: "4px",
-  fontSize: "14px",
+  fontSize: "var(--rl-fs-base)",
 };
 
 const revealButtonStyle: React.CSSProperties = {
@@ -307,7 +307,7 @@ export function ConnectionSettingsModal({
 
         {errorMessage && (
           <div style={errorBannerStyle}>
-            <span style={{ fontSize: "20px" }}>{"\u26A0"}</span>
+            <span style={{ fontSize: "var(--rl-fs-lg)" }}>{"\u26A0"}</span>
             <div>
               <div
                 style={{

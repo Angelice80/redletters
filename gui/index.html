@@ -6,15 +6,90 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Red Letters</title>
     <style>
+      /* ── Red Letters Design Tokens ── */
+      :root {
+        /* Surface hierarchy (3-layer: app < panel < card) */
+        --rl-bg-app: #12121f;
+        --rl-bg-panel: #1a1a2e;
+        --rl-bg-card: #242440;
+        --rl-bg-hover: #2d2d50;
+
+        /* Borders */
+        --rl-border: #2f2f4a;
+        --rl-border-strong: #3d3d5c;
+
+        /* Text hierarchy */
+        --rl-text: #e8e8f0;
+        --rl-text-muted: #9ca3af;
+        --rl-text-dim: #6b7280;
+
+        /* Brand accent (ember red) */
+        --rl-accent: #d4513b;
+        --rl-accent-hover: #c0402e;
+        --rl-accent-subtle: rgba(212, 81, 59, 0.12);
+
+        /* Blue action (secondary) */
+        --rl-primary: #3b82f6;
+        --rl-primary-hover: #2563eb;
+
+        /* Semantic status */
+        --rl-success: #22c55e;
+        --rl-warning: #f59e0b;
+        --rl-error: #ef4444;
+
+        /* Typography */
+        --rl-font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        --rl-font-reading: 'Georgia', 'Cambria', 'Times New Roman', serif;
+        --rl-font-mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+        --rl-font-greek: 'SBL Greek', 'Cardo', 'Gentium Plus', serif;
+        --rl-fs-xs: 0.6875rem;
+        --rl-fs-sm: 0.75rem;
+        --rl-fs-base: 0.875rem;
+        --rl-fs-md: 1rem;
+        --rl-fs-lg: 1.25rem;
+        --rl-fs-xl: 1.5rem;
+
+        /* Radius */
+        --rl-radius-sm: 4px;
+        --rl-radius-md: 6px;
+        --rl-radius-lg: 8px;
+        --rl-radius-xl: 12px;
+
+        /* Spacing (4px base) */
+        --rl-space-1: 4px;
+        --rl-space-2: 8px;
+        --rl-space-3: 12px;
+        --rl-space-4: 16px;
+        --rl-space-5: 20px;
+        --rl-space-6: 24px;
+        --rl-space-8: 32px;
+
+        /* Shadows */
+        --rl-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+        --rl-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+        --rl-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+
+        /* Transitions */
+        --rl-transition-fast: 120ms ease;
+        --rl-transition-normal: 180ms ease;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        :root {
+          --rl-transition-fast: 0ms;
+          --rl-transition-normal: 0ms;
+        }
+      }
+
       * {
         margin: 0;
         padding: 0;
         box-sizing: border-box;
       }
       body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-        background-color: #1a1a2e;
-        color: #eaeaea;
+        font-family: var(--rl-font-ui);
+        background-color: var(--rl-bg-app);
+        color: var(--rl-text);
       }
     </style>
   </head>

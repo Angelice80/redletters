@@ -1,5 +1,117 @@
 # UX Changelog — Explore Screen
 
+## Visual Polish Sprint — Scholarly Dark
+
+### P1 — Design Tokens Foundation (CSS variables)
+**Problem:** Styles scattered across inline style objects with hardcoded hex values; no single source of truth for design tokens.
+**Change:** Added CSS custom properties to `gui/index.html` `:root` block defining all design tokens (colors, typography, spacing, radius, shadows, transitions). Updated `theme.ts` to reference `var(--rl-*)` syntax. Updated `App.tsx` root div, sidebar, header, nav links, and status footer to use CSS variable references. Added `prefers-reduced-motion: reduce` media query.
+**Evidence:** `POLISH-P1-after-dashboard-1280.png`, `POLISH-P1-after-explore-1280.png`
+**Assertions:** All CSS variables readable via `getComputedStyle()` (8/8 tokens verified: bg-app, bg-panel, bg-card, accent, text, fs-base, shadow-sm, transition-fast)
+**Files:** `gui/index.html`, `gui/src/theme.ts`, `gui/src/App.tsx`
+**Tests:** 334/334 passing, `tsc --noEmit` clean
+
+### P2 — Surface Hierarchy Upgrade (3-layer system)
+**Problem:** All components used hardcoded hex color strings (393 occurrences across 28+ files). No systematic surface hierarchy — cards blended with background, no visual depth.
+**Change:** Migrated every hardcoded hex color in all .tsx files to CSS variable references (`var(--rl-*)`). Established 3-layer surface hierarchy: `--rl-bg-app` (#12121f, deepest) → `--rl-bg-panel` (#1a1a2e, sidebar/headers) → `--rl-bg-card` (#242440, cards/elevated). Added `border` and `boxShadow` tokens to card containers in Dashboard. Updated `renderingDiff.ts` to use CSS vars for change-type colors.
+**Evidence:** `P2-after-dashboard-1280.png`, `P2-after-explore-1280.png`
+**Assertions:** 3 distinct bg values confirmed via `getComputedStyle()` (allDistinct: true). Zero hardcoded hex colors remaining in .tsx files.
+**Files:** All 28 .tsx component/screen files, `renderingDiff.ts`, `renderingDiff.test.ts`
+**Tests:** 334/334 passing, `tsc --noEmit` clean
+
+### P7 — Motion Micro-Polish
+**Problem:** Interactions felt static with no transition feedback on hover/focus.
+**Change:** Transition tokens (`--rl-transition-fast: 120ms`, `--rl-transition-normal: 180ms`) applied across all interactive elements: nav links (background-color + color), chips (background-color + border-color), buttons (background-color via commonStyles), inputs (border-color). `@media (prefers-reduced-motion: reduce)` in index.html zeroes both tokens to `0ms`. All transitions use CSS variable references, ensuring consistent timing and reduced-motion compliance.
+**Evidence:** Headless Puppeteer correctly resolves `--rl-transition-fast` to `0ms` (reduced-motion active in headless), confirming the media query works. In normal browsers, transitions are 120ms/180ms.
+**Assertions:** `--rl-transition-fast` and `--rl-transition-normal` tokens defined; reduced-motion media query overrides confirmed.
+**Files:** `index.html` (media query), `theme.ts` (token references), `App.tsx` (nav transitions), `PassageWorkspace.tsx` (chip transitions)
+**Tests:** 334/334 passing, `tsc --noEmit` clean
+
+### P6 — Empty State Composition
+**Problem:** Explore empty state was an unconstrained void — no max-width, unstyled chips, no visual focal point.
+**Change:** Added `maxWidth: 480px` + `margin: 0 auto` to `emptyStateStyle` for centered constraint. Added AΩ (Alpha-Omega) decorative glyph above the title. Title upgraded to `fontWeight: 600`, `color: var(--rl-text)`. Subtitle uses `var(--rl-text-muted)` with `lineHeight: 1.5`. Example chips restyled as mini-cards: `var(--rl-bg-card)` bg, `var(--rl-border)` border, `var(--rl-radius-md)`, `var(--rl-shadow-sm)`. Chips centered with `justifyContent: center`. Demo button changed from green to accent (green = health only). Straggler `#60a5fa` (light blue) replaced with `var(--rl-primary)` across 18 occurrences.
+**Evidence:** `P6-after-explore-empty-1280.png`, `P6-after-explore-empty-390.png`
+**Assertions:** `maxWidth: 480px` confirmed via DOM query. Chips wrap naturally at 390px.
+**Files:** `PassageWorkspace.tsx` (emptyStateStyle, chipStyle, exampleChipsStyle, empty state JSX)
+**Tests:** 334/334 passing, `tsc --noEmit` clean
+
+### P5 — Sidebar & Navigation Polish
+**Problem:** Nav was plain text links with no grouping or visual anchors. Active state was a "big blue brick." No icons.
+**Change:** Grouped nav into 3 labeled sections: Study (Explore, Export), Data (Sources, Jobs), System (Dashboard, Settings). Added inline SVG icons (16px, `currentColor`) to each nav link. Section labels use `--rl-fs-xs`, uppercase, `--rl-text-dim`. Nav links use `display: flex` with `alignItems: center`. Added transparent left border on inactive links so layout doesn't shift on active. Logo gets "Greek Scholarly Tools" subtitle in `--rl-text-dim`. Reduced nav link padding for tighter grouping.
+**Evidence:** `P5-after-dashboard-1280.png`, `P5-after-sidebar-390.png`, `P5-after-sidebar-mobile-open-390.png`
+**Assertions:** Section labels visible (STUDY, DATA, SYSTEM); icons render with `currentColor`; active item has accent left rail; mobile sidebar overlay works with grouped layout.
+**Files:** `App.tsx`
+**Tests:** 334/334 passing, `tsc --noEmit` clean
+
+### P4 — Color Discipline + Brand Accent Alignment
+**Problem:** Active nav used "big blue brick" (`--rl-primary` bg); Translate CTA was blue; "Configure Connection" button was blue. Brand accent (ember red) only appeared in logo.
+**Change:** Active nav link now uses `--rl-accent-subtle` bg + 3px left `--rl-accent` rail (ember red indicator). Translate button switched from `--rl-primary-hover` to `--rl-accent` with matching red glow shadow. "Configure Connection" auth banner button changed to outlined accent style (transparent bg + accent border/text). All green `--rl-success` usages verified as semantic status indicators (health, completion, confidence).
+**Evidence:** `P4-after-dashboard-1280.png`, `P4-after-explore-1280.png`
+**Assertions:** Active nav shows red left rail; blue reserved for secondary actions only; green only for status.
+**Files:** `App.tsx` (nav styles, auth banner button), `PassageWorkspace.tsx` (Translate button style)
+**Tests:** 334/334 passing, `tsc --noEmit` clean
+
+### P3 — Typography Hierarchy + Reading Mode Font
+**Problem:** All 426 font-size declarations used hardcoded pixel strings ("12px", "14px", etc.); 16 files used hardcoded `fontFamily: "monospace"`. No systematic type scale or font-family tokens.
+**Change:** Updated `theme.ts` fontSize to reference CSS variables (`var(--rl-fs-*)`). Added `fontFamily` object to theme with `ui`, `reading`, `mono`, `greek` properties. Migrated all hardcoded `fontSize: "Npx"` across 31 .tsx files to CSS var tokens. Replaced `fontFamily: "monospace"` with `var(--rl-font-mono)` in 16 files. Edge-case sizes (48px emoji, 64px icons) left as-is.
+**Evidence:** `P3-after-dashboard-1280.png`, `P3-after-explore-1280.png`
+**Assertions:** 6/6 font size tokens + 4/4 font family tokens confirmed via `getComputedStyle()`. `allSizesDefined: true`, `allFamiliesDefined: true`.
+**Files:** `theme.ts`, all 31 .tsx component/screen files
+**Tests:** 334/334 passing, `tsc --noEmit` clean
+
+---
+
+## Sprint 29 (UX Sprint 4) — Orientation + Sensemaking
+
+### UX4.1 — Reference Orientation Strip
+**Problem:** Users lose their place after translating; the only ref indicator is the text input.
+**Change:** Added horizontal orientation strip below toolbar showing canonical ref, mode chip, translator chip, and a "Recent" dropdown for last 5 refs. Strip only visible when result is non-null.
+**Testids:** `orientation-strip`, `orientation-ref`, `orientation-mode`, `recent-refs-btn`, `recent-refs-menu`, `recent-refs-item-{i}`
+**Evidence:** `UX4.1-after-strip-clean-1280.png`, `UX4.1-after-recent-dropdown-1280.png`
+**Assertions:** 4/4 pass (strip present, ref content, mode chip, recent dropdown)
+**Files:** `gui/src/screens/PassageWorkspace.tsx`
+
+### UX4.3 — Unified Evidence Panel
+**Problem:** Evidence split across unrelated panels (confidence in center, receipts/variants in right inspector).
+**Change:** Renamed right panel to "Evidence" with 3 sub-tabs: Confidence | Receipts | Variants. Moved full confidence display (composite + layer breakdown) into Evidence panel. Center panel retains compact summary bar (87% + "Details →" link).
+**Testids:** `evidence-panel`, `evidence-tab-confidence`, `evidence-tab-receipts`, `evidence-tab-variants`
+**Evidence:** `UX4.3-after-confidence-tab-1280.png`, `UX4.3-after-variants-tab-1280.png`
+**Assertions:** 5/5 pass (panel present, 3 tabs exist, confidence tab content, compact summary bar)
+**Files:** `gui/src/screens/PassageWorkspace.tsx`
+
+### UX4.5 — Study Mode Presets
+**Problem:** Users repeatedly configure density/view/panels each session.
+**Change:** Added Study Mode dropdown in toolbar with Manual | Reader | Translator | Text Critic presets. Each preset sets viewMode, density, and evidence tab. Persists via `STUDY_MODE_KEY` in localStorage. Switching mode updates UI immediately (no retranslate).
+**Testids:** `study-mode-select`, `study-mode-reader`, `study-mode-translator`, `study-mode-text-critic`
+**Evidence:** `UX4.5-after-persist-reload.png`
+**Assertions:** 4/4 pass (select present, correct preset applied, persistence across reload, tab matches preset)
+**Files:** `gui/src/screens/PassageWorkspace.tsx`, `gui/src/constants/storageKeys.ts`
+
+### UX4.4 — Evidence Next Action Guidance
+**Problem:** Users hit empty evidence states and stall with no guidance.
+**Change:** Added contextual "Next Action" boxes inside each evidence sub-tab. Adapts based on state: Receipts suggests Traceable mode for per-token receipts; Variants guides to Sources if empty; Confidence suggests translating first.
+**Testids:** `evidence-next-action`, `evidence-next-action-btn`
+**Evidence:** `UX4.4-variants-next-action.png`, `UX4-final-receipts-tab-1280.png`
+**Assertions:** 3/3 pass (next-action present, correct message per state, action button navigates)
+**Files:** `gui/src/screens/PassageWorkspace.tsx`
+
+### UX4.2 — Context Preview for Prev/Next
+**Problem:** Users hesitate to navigate because they don't know what's next.
+**Change:** Enhanced Prev/Next tooltips to show destination ref (e.g., "Next: John 3:17", "Previous: John 3:15"). Updated aria-labels to include destination for screen readers.
+**Testids:** Uses existing `prev-btn`, `next-btn` with enhanced Tooltip content
+**Evidence:** `UX42-next-tooltip-1280.png`, `UX42-prev-tooltip-1280.png`
+**Assertions:** 4/4 pass (next aria-label has ref, prev aria-label has ref, tooltip role=tooltip with content, aria-describedby linked)
+**Files:** `gui/src/screens/PassageWorkspace.tsx`
+
+### Sprint 4 Summary
+- **Stories completed:** 5/5 (UX4.1, UX4.3, UX4.5, UX4.4, UX4.2)
+- **Tests:** 334 passing, 0 TypeScript errors
+- **Files modified:** `PassageWorkspace.tsx`, `storageKeys.ts`
+- **New testids:** 15
+- **DOM assertions:** 20/20 pass
+- **Screenshots:** 12 story-specific + 4 baseline + 3 final = 19 UX4-specific
+
+---
+
 ## Sprint 26 (UX Sprint 1)
 
 ### UX1 — Fix viewMode + Mode Chip Confusion

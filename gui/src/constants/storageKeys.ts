@@ -20,3 +20,6 @@ export const AUTH_TOKEN_KEY = "redletters_auth_token";
 
 /** Token display density preference. Value: "compact" | "comfortable". Default: "comfortable". */
 export const TOKEN_DENSITY_KEY = "redletters_token_density";
+
+/** Study mode preset. Value: "reader" | "translator" | "text-critic". Default: none (manual). */
+export const STUDY_MODE_KEY = "redletters_study_mode";

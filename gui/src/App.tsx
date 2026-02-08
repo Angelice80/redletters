@@ -46,20 +46,24 @@ import type {
 } from "./api/types";
 
 // Nav link styles
-const navLinkStyle = {
-  display: "block",
-  padding: "12px 16px",
-  color: "#9ca3af",
+const navLinkStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  padding: "8px 12px",
+  color: "var(--rl-text-muted)",
   textDecoration: "none",
-  borderRadius: "4px",
-  fontSize: "14px",
-  transition: "background-color 0.15s, color 0.15s",
+  borderRadius: "var(--rl-radius-sm)",
+  fontSize: "var(--rl-fs-sm)",
+  transition:
+    "background-color var(--rl-transition-fast), color var(--rl-transition-fast)",
+  borderLeft: "3px solid transparent",
 };
 
-const navLinkActiveStyle = {
+const navLinkActiveStyle: React.CSSProperties = {
   ...navLinkStyle,
-  backgroundColor: "#3b82f6",
-  color: "white",
+  backgroundColor: "var(--rl-accent-subtle)",
+  color: "var(--rl-text)",
+  borderLeft: "3px solid var(--rl-accent)",
 };
 
 export function App() {
@@ -360,8 +364,8 @@ export function App() {
         style={{
           display: "flex",
           height: "100vh",
-          backgroundColor: "#1a1a2e",
-          color: "#eaeaea",
+          backgroundColor: "var(--rl-bg-app)",
+          color: "var(--rl-text)",
         }}
       >
         {/* UX3.2: Hamburger button for mobile */}
@@ -377,11 +381,11 @@ export function App() {
               zIndex: 1100,
               width: "36px",
               height: "36px",
-              backgroundColor: "#2d2d44",
-              border: "1px solid #4b5563",
-              borderRadius: "6px",
-              color: "#eaeaea",
-              fontSize: "20px",
+              backgroundColor: "var(--rl-bg-card)",
+              border: "1px solid var(--rl-border-strong)",
+              borderRadius: "var(--rl-radius-md)",
+              color: "var(--rl-text)",
+              fontSize: "var(--rl-fs-lg)",
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
@@ -412,7 +416,7 @@ export function App() {
               data-testid="sidebar-nav"
               style={{
                 width: "200px",
-                backgroundColor: "#2d2d44",
+                backgroundColor: "var(--rl-bg-panel)",
                 padding: "16px",
                 display: "flex",
                 flexDirection: "column",
@@ -428,36 +432,63 @@ export function App() {
                   : {}),
               }}
             >
-              <div
-                style={{
-                  fontSize: "20px",
-                  fontWeight: 700,
-                  color: "#ef4444",
-                  marginBottom: "24px",
-                  padding: "8px",
-                }}
-              >
-                Red Letters
+              <div style={{ padding: "8px", marginBottom: "16px" }}>
+                <div
+                  style={{
+                    fontSize: "var(--rl-fs-lg)",
+                    fontWeight: 700,
+                    color: "var(--rl-accent)",
+                  }}
+                >
+                  Red Letters
+                </div>
+                <div
+                  style={{
+                    fontSize: "var(--rl-fs-xs)",
+                    color: "var(--rl-text-dim)",
+                    letterSpacing: "0.03em",
+                  }}
+                >
+                  Greek Scholarly Tools
+                </div>
               </div>
 
               <div
-                style={{ display: "flex", flexDirection: "column", gap: "4px" }}
+                style={{ display: "flex", flexDirection: "column", gap: "2px" }}
                 onClick={() => isMobileSidebar && setSidebarOpen(false)}
               >
-                <NavLink
-                  to="/"
-                  style={({ isActive }) =>
-                    isActive ? navLinkActiveStyle : navLinkStyle
-                  }
+                {/* Study section */}
+                <div
+                  style={{
+                    fontSize: "var(--rl-fs-xs)",
+                    textTransform: "uppercase",
+                    color: "var(--rl-text-dim)",
+                    padding: "4px 12px",
+                    marginTop: "4px",
+                    letterSpacing: "0.06em",
+                  }}
                 >
-                  Dashboard
-                </NavLink>
+                  Study
+                </div>
                 <NavLink
                   to="/explore"
                   style={({ isActive }) =>
                     isActive ? navLinkActiveStyle : navLinkStyle
                   }
                 >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    style={{ marginRight: "8px", flexShrink: 0 }}
+                  >
+                    <path
+                      d="M2 2h5v5H2V2zm7 0h5v5H9V2zM2 9h5v5H2V9zm7 2.5a2.5 2.5 0 105 0 2.5 2.5 0 00-5 0z"
+                      stroke="currentColor"
+                      strokeWidth="1.3"
+                    />
+                  </svg>
                   Explore
                 </NavLink>
                 <NavLink
@@ -466,14 +497,69 @@ export function App() {
                     isActive ? navLinkActiveStyle : navLinkStyle
                   }
                 >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    style={{ marginRight: "8px", flexShrink: 0 }}
+                  >
+                    <path
+                      d="M8 2v8m0 0l-3-3m3 3l3-3M3 12h10"
+                      stroke="currentColor"
+                      strokeWidth="1.3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
                   Export
                 </NavLink>
+
+                {/* Data section */}
+                <div
+                  style={{
+                    fontSize: "var(--rl-fs-xs)",
+                    textTransform: "uppercase",
+                    color: "var(--rl-text-dim)",
+                    padding: "4px 12px",
+                    marginTop: "12px",
+                    letterSpacing: "0.06em",
+                  }}
+                >
+                  Data
+                </div>
                 <NavLink
                   to="/sources"
                   style={({ isActive }) =>
                     isActive ? navLinkActiveStyle : navLinkStyle
                   }
                 >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    style={{ marginRight: "8px", flexShrink: 0 }}
+                  >
+                    <ellipse
+                      cx="8"
+                      cy="4"
+                      rx="5"
+                      ry="2"
+                      stroke="currentColor"
+                      strokeWidth="1.3"
+                    />
+                    <path
+                      d="M3 4v4c0 1.1 2.24 2 5 2s5-.9 5-2V4"
+                      stroke="currentColor"
+                      strokeWidth="1.3"
+                    />
+                    <path
+                      d="M3 8v4c0 1.1 2.24 2 5 2s5-.9 5-2V8"
+                      stroke="currentColor"
+                      strokeWidth="1.3"
+                    />
+                  </svg>
                   Sources
                 </NavLink>
                 <NavLink
@@ -482,7 +568,75 @@ export function App() {
                     isActive ? navLinkActiveStyle : navLinkStyle
                   }
                 >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    style={{ marginRight: "8px", flexShrink: 0 }}
+                  >
+                    <rect
+                      x="2"
+                      y="3"
+                      width="12"
+                      height="10"
+                      rx="1.5"
+                      stroke="currentColor"
+                      strokeWidth="1.3"
+                    />
+                    <path
+                      d="M5 7h6M5 10h4"
+                      stroke="currentColor"
+                      strokeWidth="1.3"
+                      strokeLinecap="round"
+                    />
+                  </svg>
                   Jobs
+                </NavLink>
+
+                {/* System section */}
+                <div
+                  style={{
+                    fontSize: "var(--rl-fs-xs)",
+                    textTransform: "uppercase",
+                    color: "var(--rl-text-dim)",
+                    padding: "4px 12px",
+                    marginTop: "12px",
+                    letterSpacing: "0.06em",
+                  }}
+                >
+                  System
+                </div>
+                <NavLink
+                  to="/"
+                  style={({ isActive }) =>
+                    isActive ? navLinkActiveStyle : navLinkStyle
+                  }
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    style={{ marginRight: "8px", flexShrink: 0 }}
+                  >
+                    <rect
+                      x="2"
+                      y="2"
+                      width="12"
+                      height="12"
+                      rx="2"
+                      stroke="currentColor"
+                      strokeWidth="1.3"
+                    />
+                    <path
+                      d="M5 6h6M5 8.5h4M5 11h2"
+                      stroke="currentColor"
+                      strokeWidth="1.3"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  Dashboard
                 </NavLink>
                 <NavLink
                   to="/settings"
@@ -490,6 +644,27 @@ export function App() {
                     isActive ? navLinkActiveStyle : navLinkStyle
                   }
                 >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    style={{ marginRight: "8px", flexShrink: 0 }}
+                  >
+                    <circle
+                      cx="8"
+                      cy="8"
+                      r="2"
+                      stroke="currentColor"
+                      strokeWidth="1.3"
+                    />
+                    <path
+                      d="M8 1.5v2m0 9v2m-4.6-10.9l1.4 1.4m6.4 6.4l1.4 1.4M1.5 8h2m9 0h2M3.4 12.6l1.4-1.4m6.4-6.4l1.4-1.4"
+                      stroke="currentColor"
+                      strokeWidth="1.3"
+                      strokeLinecap="round"
+                    />
+                  </svg>
                   Settings
                 </NavLink>
               </div>
@@ -499,9 +674,9 @@ export function App() {
                 style={{
                   marginTop: "auto",
                   padding: "12px",
-                  backgroundColor: "#1a1a2e",
-                  borderRadius: "4px",
-                  fontSize: "11px",
+                  backgroundColor: "var(--rl-bg-app)",
+                  borderRadius: "var(--rl-radius-sm)",
+                  fontSize: "var(--rl-fs-xs)",
                 }}
               >
                 <div
@@ -520,13 +695,13 @@ export function App() {
                       backgroundColor:
                         displayConnectionState === "connected" &&
                         capabilitiesReady
-                          ? "#22c55e"
+                          ? "var(--rl-success)"
                           : displayConnectionState === "connected" &&
                               !capabilitiesReady
-                            ? "#f59e0b"
+                            ? "var(--rl-warning)"
                             : displayConnectionState === "degraded"
-                              ? "#f59e0b"
-                              : "#ef4444",
+                              ? "var(--rl-warning)"
+                              : "var(--rl-error)",
                     }}
                   />
                   <span style={{ textTransform: "capitalize" }}>
@@ -540,15 +715,22 @@ export function App() {
                 {displayConnectionState === "connected" &&
                   capabilitiesReady &&
                   capabilities && (
-                    <div style={{ color: "#6b7280", marginBottom: "4px" }}>
+                    <div
+                      style={{
+                        color: "var(--rl-text-dim)",
+                        marginBottom: "4px",
+                      }}
+                    >
                       Backend: v{capabilities.version}
                     </div>
                   )}
-                <div style={{ color: "#6b7280" }}>
+                <div style={{ color: "var(--rl-text-dim)" }}>
                   Port: {settings.enginePort}
                 </div>
                 {tokenSource && (
-                  <div style={{ color: "#6b7280" }}>Token: {tokenSource}</div>
+                  <div style={{ color: "var(--rl-text-dim)" }}>
+                    Token: {tokenSource}
+                  </div>
                 )}
                 {/* Show warning if capabilities check failed */}
                 {displayConnectionState === "connected" &&
@@ -558,7 +740,7 @@ export function App() {
                       style={{
                         color: "#fca5a5",
                         marginTop: "4px",
-                        fontSize: "10px",
+                        fontSize: "var(--rl-fs-xs)",
                       }}
                     >
                       Compatibility issue
@@ -585,8 +767,8 @@ export function App() {
               justifyContent: "flex-end",
               alignItems: "center",
               padding: "8px 16px",
-              backgroundColor: "#2d2d44",
-              borderBottom: "1px solid #374151",
+              backgroundColor: "var(--rl-bg-panel)",
+              borderBottom: "1px solid var(--rl-border)",
               flexShrink: 0,
             }}
           >
@@ -602,17 +784,17 @@ export function App() {
                   padding: "16px 20px",
                   backgroundColor: "#7f1d1d",
                   color: "#fecaca",
-                  fontSize: "14px",
+                  fontSize: "var(--rl-fs-base)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  borderBottom: "1px solid #ef4444",
+                  borderBottom: "1px solid var(--rl-error)",
                 }}
               >
                 <div
                   style={{ display: "flex", alignItems: "center", gap: "12px" }}
                 >
-                  <span style={{ fontSize: "20px" }}>&#9888;</span>
+                  <span style={{ fontSize: "var(--rl-fs-lg)" }}>&#9888;</span>
                   <span>
                     <strong>Authentication required.</strong> Configure your
                     connection to start using Red Letters.
@@ -622,13 +804,13 @@ export function App() {
                   onClick={handleOpenSettings}
                   style={{
                     padding: "8px 16px",
-                    backgroundColor: "#3b82f6",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "4px",
+                    backgroundColor: "transparent",
+                    color: "var(--rl-accent)",
+                    border: "1px solid var(--rl-accent)",
+                    borderRadius: "var(--rl-radius-sm)",
                     cursor: "pointer",
                     fontWeight: 500,
-                    fontSize: "13px",
+                    fontSize: "var(--rl-fs-base)",
                   }}
                 >
                   Configure Connection
@@ -646,14 +828,14 @@ export function App() {
                     padding: "12px 20px",
                     backgroundColor: "#78350f",
                     color: "#fcd34d",
-                    fontSize: "13px",
+                    fontSize: "var(--rl-fs-base)",
                     display: "flex",
                     alignItems: "center",
                     gap: "12px",
-                    borderBottom: "1px solid #f59e0b",
+                    borderBottom: "1px solid var(--rl-warning)",
                   }}
                 >
-                  <span style={{ fontSize: "16px" }}>&#9888;</span>
+                  <span style={{ fontSize: "var(--rl-fs-md)" }}>&#9888;</span>
                   <span>{compatibilityValidation.warnings[0]}</span>
                 </div>
               )}

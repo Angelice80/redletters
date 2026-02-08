@@ -18,9 +18,9 @@ interface ConnectionBadgeProps {
 }
 
 const STATE_COLORS: Record<SSEHealthState, string> = {
-  connected: "#22c55e",
-  reconnecting: "#f59e0b",
-  disconnected: "#ef4444",
+  connected: "var(--rl-success)",
+  reconnecting: "var(--rl-warning)",
+  disconnected: "var(--rl-error)",
 };
 
 const STATE_LABELS: Record<SSEHealthState, string> = {
@@ -36,10 +36,10 @@ const badgeContainerStyle: React.CSSProperties = {
   alignItems: "center",
   gap: "6px",
   padding: "4px 10px",
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "16px",
   cursor: "pointer",
-  fontSize: "11px",
+  fontSize: "var(--rl-fs-xs)",
   userSelect: "none",
   transition: "background-color 0.15s",
 };
@@ -60,14 +60,14 @@ const tooltipStyle: React.CSSProperties = {
   position: "absolute",
   top: "calc(100% + 8px)",
   right: 0,
-  backgroundColor: "#2d2d44",
-  border: "1px solid #4b5563",
+  backgroundColor: "var(--rl-bg-card)",
+  border: "1px solid var(--rl-border-strong)",
   borderRadius: "8px",
   padding: "12px",
   minWidth: "240px",
   boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
   zIndex: 1000,
-  fontSize: "12px",
+  fontSize: "var(--rl-fs-sm)",
 };
 
 const rowStyle: React.CSSProperties = {
@@ -78,24 +78,24 @@ const rowStyle: React.CSSProperties = {
 };
 
 const labelStyle: React.CSSProperties = {
-  color: "#9ca3af",
+  color: "var(--rl-text-muted)",
 };
 
 const valueStyle: React.CSSProperties = {
-  color: "#eaeaea",
-  fontFamily: "monospace",
-  fontSize: "11px",
+  color: "var(--rl-text)",
+  fontFamily: "var(--rl-font-mono)",
+  fontSize: "var(--rl-fs-xs)",
 };
 
 const reconnectButtonStyle: React.CSSProperties = {
   marginTop: "8px",
   padding: "6px 12px",
-  backgroundColor: "#3b82f6",
+  backgroundColor: "var(--rl-primary)",
   color: "white",
   border: "none",
   borderRadius: "4px",
   cursor: "pointer",
-  fontSize: "11px",
+  fontSize: "var(--rl-fs-xs)",
   width: "100%",
 };
 
@@ -143,7 +143,7 @@ export function ConnectionBadge({ health, onReconnect }: ConnectionBadgeProps) {
       />
 
       {/* Label */}
-      <span style={{ color: health.state === "connected" ? "#9ca3af" : color }}>
+      <span style={{ color: health.state === "connected" ? "var(--rl-text-muted)" : color }}>
         {label}
       </span>
 
@@ -152,10 +152,10 @@ export function ConnectionBadge({ health, onReconnect }: ConnectionBadgeProps) {
         <div style={tooltipStyle} onClick={(e) => e.stopPropagation()}>
           <div
             style={{
-              fontSize: "13px",
+              fontSize: "var(--rl-fs-base)",
               fontWeight: 600,
               marginBottom: "12px",
-              color: "#eaeaea",
+              color: "var(--rl-text)",
             }}
           >
             SSE Connection

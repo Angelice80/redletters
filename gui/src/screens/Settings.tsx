@@ -83,7 +83,7 @@ export function Settings({
 
   return (
     <div style={{ padding: "24px" }}>
-      <h1 style={{ fontSize: "24px", fontWeight: 600, marginBottom: "24px" }}>
+      <h1 style={{ fontSize: "var(--rl-fs-xl)", fontWeight: 600, marginBottom: "24px" }}>
         Settings
       </h1>
 
@@ -91,12 +91,12 @@ export function Settings({
       <section
         style={{
           padding: "16px",
-          backgroundColor: "#2d2d44",
+          backgroundColor: "var(--rl-bg-card)",
           borderRadius: "8px",
           marginBottom: "16px",
         }}
       >
-        <h2 style={{ fontSize: "16px", fontWeight: 600, marginBottom: "16px" }}>
+        <h2 style={{ fontSize: "var(--rl-fs-md)", fontWeight: 600, marginBottom: "16px" }}>
           Engine Connection
         </h2>
 
@@ -105,8 +105,8 @@ export function Settings({
             style={{
               display: "block",
               marginBottom: "4px",
-              fontSize: "13px",
-              color: "#9ca3af",
+              fontSize: "var(--rl-fs-base)",
+              color: "var(--rl-text-muted)",
             }}
           >
             Engine Port
@@ -120,13 +120,17 @@ export function Settings({
               padding: "8px 12px",
               borderRadius: "4px",
               border: "1px solid #4a4a6a",
-              backgroundColor: "#1a1a2e",
-              color: "#eaeaea",
-              fontSize: "14px",
+              backgroundColor: "var(--rl-bg-app)",
+              color: "var(--rl-text)",
+              fontSize: "var(--rl-fs-base)",
             }}
           />
           <span
-            style={{ marginLeft: "8px", fontSize: "12px", color: "#6b7280" }}
+            style={{
+              marginLeft: "8px",
+              fontSize: "var(--rl-fs-sm)",
+              color: "var(--rl-text-dim)",
+            }}
           >
             Default: 47200
           </span>
@@ -139,10 +143,10 @@ export function Settings({
               padding: "8px 16px",
               borderRadius: "4px",
               border: "none",
-              backgroundColor: "#3b82f6",
+              backgroundColor: "var(--rl-primary)",
               color: "white",
               cursor: "pointer",
-              fontSize: "14px",
+              fontSize: "var(--rl-fs-base)",
             }}
           >
             Reconnect
@@ -155,9 +159,9 @@ export function Settings({
                 borderRadius: "4px",
                 border: "1px solid #4a4a6a",
                 backgroundColor: "transparent",
-                color: "#9ca3af",
+                color: "var(--rl-text-muted)",
                 cursor: "pointer",
-                fontSize: "14px",
+                fontSize: "var(--rl-fs-base)",
               }}
             >
               Update Token
@@ -170,25 +174,31 @@ export function Settings({
       <section
         style={{
           padding: "16px",
-          backgroundColor: "#2d2d44",
+          backgroundColor: "var(--rl-bg-card)",
           borderRadius: "8px",
           marginBottom: "16px",
         }}
       >
-        <h2 style={{ fontSize: "16px", fontWeight: 600, marginBottom: "16px" }}>
+        <h2 style={{ fontSize: "var(--rl-fs-md)", fontWeight: 600, marginBottom: "16px" }}>
           Authentication
         </h2>
 
         <div style={{ marginBottom: "16px" }}>
-          <div style={{ fontSize: "14px", marginBottom: "4px" }}>
+          <div style={{ fontSize: "var(--rl-fs-base)", marginBottom: "4px" }}>
             Token Source:{" "}
-            <span style={{ fontWeight: 600, color: "#22c55e" }}>
+            <span style={{ fontWeight: 600, color: "var(--rl-success)" }}>
               {localStorage.getItem(AUTH_TOKEN_KEY)
                 ? "localStorage"
                 : "Not configured"}
             </span>
           </div>
-          <p style={{ fontSize: "12px", color: "#6b7280", marginTop: "4px" }}>
+          <p
+            style={{
+              fontSize: "var(--rl-fs-sm)",
+              color: "var(--rl-text-dim)",
+              marginTop: "4px",
+            }}
+          >
             The auth token authenticates your GUI with the backend server.
           </p>
         </div>
@@ -200,10 +210,10 @@ export function Settings({
               padding: "8px 16px",
               borderRadius: "4px",
               border: "none",
-              backgroundColor: "#6b7280",
+              backgroundColor: "var(--rl-text-dim)",
               color: "white",
               cursor: "pointer",
-              fontSize: "14px",
+              fontSize: "var(--rl-fs-base)",
             }}
           >
             Manage Connection Settings
@@ -215,28 +225,37 @@ export function Settings({
       <section
         style={{
           padding: "16px",
-          backgroundColor: "#2d2d44",
+          backgroundColor: "var(--rl-bg-card)",
           borderRadius: "8px",
           marginBottom: "16px",
         }}
       >
-        <h2 style={{ fontSize: "16px", fontWeight: 600, marginBottom: "16px" }}>
+        <h2 style={{ fontSize: "var(--rl-fs-md)", fontWeight: 600, marginBottom: "16px" }}>
           Engine Mode
         </h2>
 
         <div style={{ marginBottom: "16px" }}>
-          <div style={{ fontSize: "14px", marginBottom: "4px" }}>
+          <div style={{ fontSize: "var(--rl-fs-base)", marginBottom: "4px" }}>
             Current Mode:{" "}
             <span
               style={{
                 fontWeight: 600,
-                color: engineMode === "safe" ? "#f59e0b" : "#22c55e",
+                color:
+                  engineMode === "safe"
+                    ? "var(--rl-warning)"
+                    : "var(--rl-success)",
               }}
             >
               {engineMode === "safe" ? "Safe Mode" : "Normal"}
             </span>
           </div>
-          <p style={{ fontSize: "12px", color: "#6b7280", marginTop: "4px" }}>
+          <p
+            style={{
+              fontSize: "var(--rl-fs-sm)",
+              color: "var(--rl-text-dim)",
+              marginTop: "4px",
+            }}
+          >
             Safe mode disables job creation. Useful for diagnostics and
             recovery.
           </p>
@@ -248,17 +267,23 @@ export function Settings({
           style={{
             padding: "8px 16px",
             borderRadius: "4px",
-            border: "1px solid #f59e0b",
+            border: "1px solid var(--rl-warning)",
             backgroundColor: "transparent",
-            color: "#f59e0b",
+            color: "var(--rl-warning)",
             cursor: safeStarting ? "wait" : "pointer",
-            fontSize: "14px",
+            fontSize: "var(--rl-fs-base)",
             opacity: safeStarting ? 0.6 : 1,
           }}
         >
           {safeStarting ? "Starting..." : "Restart Engine in Safe Mode"}
         </button>
-        <p style={{ fontSize: "11px", color: "#6b7280", marginTop: "8px" }}>
+        <p
+          style={{
+            fontSize: "var(--rl-fs-xs)",
+            color: "var(--rl-text-dim)",
+            marginTop: "8px",
+          }}
+        >
           Or restart manually: <code>redletters engine start --safe-mode</code>
         </p>
       </section>
@@ -267,12 +292,12 @@ export function Settings({
       <section
         style={{
           padding: "16px",
-          backgroundColor: "#2d2d44",
+          backgroundColor: "var(--rl-bg-card)",
           borderRadius: "8px",
           marginBottom: "16px",
         }}
       >
-        <h2 style={{ fontSize: "16px", fontWeight: 600, marginBottom: "16px" }}>
+        <h2 style={{ fontSize: "var(--rl-fs-md)", fontWeight: 600, marginBottom: "16px" }}>
           Integrity Settings
         </h2>
 
@@ -281,8 +306,8 @@ export function Settings({
             style={{
               display: "block",
               marginBottom: "4px",
-              fontSize: "13px",
-              color: "#9ca3af",
+              fontSize: "var(--rl-fs-base)",
+              color: "var(--rl-text-muted)",
             }}
           >
             Size Threshold (MB)
@@ -296,13 +321,17 @@ export function Settings({
               padding: "8px 12px",
               borderRadius: "4px",
               border: "1px solid #4a4a6a",
-              backgroundColor: "#1a1a2e",
-              color: "#eaeaea",
-              fontSize: "14px",
+              backgroundColor: "var(--rl-bg-app)",
+              color: "var(--rl-text)",
+              fontSize: "var(--rl-fs-base)",
             }}
           />
           <span
-            style={{ marginLeft: "8px", fontSize: "12px", color: "#6b7280" }}
+            style={{
+              marginLeft: "8px",
+              fontSize: "var(--rl-fs-sm)",
+              color: "var(--rl-text-dim)",
+            }}
           >
             Files larger than this are skipped during integrity checks
           </span>
@@ -313,16 +342,22 @@ export function Settings({
       <section
         style={{
           padding: "16px",
-          backgroundColor: "#2d2d44",
+          backgroundColor: "var(--rl-bg-card)",
           borderRadius: "8px",
           marginBottom: "16px",
         }}
       >
-        <h2 style={{ fontSize: "16px", fontWeight: 600, marginBottom: "16px" }}>
+        <h2 style={{ fontSize: "var(--rl-fs-md)", fontWeight: 600, marginBottom: "16px" }}>
           Connection Testing
         </h2>
 
-        <p style={{ fontSize: "13px", color: "#9ca3af", marginBottom: "16px" }}>
+        <p
+          style={{
+            fontSize: "var(--rl-fs-base)",
+            color: "var(--rl-text-muted)",
+            marginBottom: "16px",
+          }}
+        >
           Test SSE reconnection with Last-Event-ID to verify no gaps or
           duplicates.
         </p>
@@ -334,10 +369,10 @@ export function Settings({
             padding: "8px 16px",
             borderRadius: "4px",
             border: "none",
-            backgroundColor: "#6b7280",
+            backgroundColor: "var(--rl-text-dim)",
             color: "white",
             cursor: testing ? "wait" : "pointer",
-            fontSize: "14px",
+            fontSize: "var(--rl-fs-base)",
             opacity: testing ? 0.6 : 1,
           }}
         >
@@ -349,12 +384,12 @@ export function Settings({
             style={{
               marginTop: "16px",
               padding: "12px",
-              backgroundColor: "#1a1a2e",
+              backgroundColor: "var(--rl-bg-app)",
               borderRadius: "4px",
             }}
           >
             <div
-              style={{ fontSize: "14px", fontWeight: 600, marginBottom: "8px" }}
+              style={{ fontSize: "var(--rl-fs-base)", fontWeight: 600, marginBottom: "8px" }}
             >
               {testResult.gaps === 0 && testResult.dupes === 0
                 ? "No gaps or duplicates detected"
@@ -362,11 +397,11 @@ export function Settings({
             </div>
             <div
               style={{
-                fontSize: "12px",
+                fontSize: "var(--rl-fs-sm)",
                 color:
                   testResult.gaps === 0 && testResult.dupes === 0
-                    ? "#22c55e"
-                    : "#ef4444",
+                    ? "var(--rl-success)"
+                    : "var(--rl-error)",
               }}
             >
               {testResult.gaps === 0 && testResult.dupes === 0
@@ -381,17 +416,17 @@ export function Settings({
       <section
         style={{
           padding: "16px",
-          backgroundColor: "#2d2d44",
+          backgroundColor: "var(--rl-bg-card)",
           borderRadius: "8px",
-          border: "1px solid #ef4444",
+          border: "1px solid var(--rl-error)",
         }}
       >
         <h2
           style={{
-            fontSize: "16px",
+            fontSize: "var(--rl-fs-md)",
             fontWeight: 600,
             marginBottom: "16px",
-            color: "#ef4444",
+            color: "var(--rl-error)",
           }}
         >
           Danger Zone
@@ -403,11 +438,11 @@ export function Settings({
             style={{
               padding: "8px 16px",
               borderRadius: "4px",
-              border: "1px solid #ef4444",
+              border: "1px solid var(--rl-error)",
               backgroundColor: "transparent",
-              color: "#ef4444",
+              color: "var(--rl-error)",
               cursor: "pointer",
-              fontSize: "14px",
+              fontSize: "var(--rl-fs-base)",
             }}
           >
             Reset Engine Data
@@ -416,14 +451,14 @@ export function Settings({
           <div
             style={{
               padding: "16px",
-              backgroundColor: "#1a1a2e",
+              backgroundColor: "var(--rl-bg-app)",
               borderRadius: "4px",
             }}
           >
             <p
               style={{
-                color: "#ef4444",
-                fontSize: "14px",
+                color: "var(--rl-error)",
+                fontSize: "var(--rl-fs-base)",
                 marginBottom: "16px",
               }}
             >
@@ -441,10 +476,10 @@ export function Settings({
                   padding: "8px 16px",
                   borderRadius: "4px",
                   border: "none",
-                  backgroundColor: "#ef4444",
+                  backgroundColor: "var(--rl-error)",
                   color: "white",
                   cursor: "pointer",
-                  fontSize: "14px",
+                  fontSize: "var(--rl-fs-base)",
                 }}
               >
                 Yes, Reset Everything
@@ -456,9 +491,9 @@ export function Settings({
                   borderRadius: "4px",
                   border: "1px solid #4a4a6a",
                   backgroundColor: "transparent",
-                  color: "#9ca3af",
+                  color: "var(--rl-text-muted)",
                   cursor: "pointer",
-                  fontSize: "14px",
+                  fontSize: "var(--rl-fs-base)",
                 }}
               >
                 Cancel

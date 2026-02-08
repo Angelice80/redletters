@@ -15,9 +15,9 @@ interface StatusPillProps {
 }
 
 const COLORS: Record<ConnectionState, { bg: string; text: string }> = {
-  connected: { bg: "#22c55e", text: "#ffffff" },
+  connected: { bg: "var(--rl-success)", text: "#ffffff" },
   degraded: { bg: "#f97316", text: "#ffffff" },
-  disconnected: { bg: "#ef4444", text: "#ffffff" },
+  disconnected: { bg: "var(--rl-error)", text: "#ffffff" },
 };
 
 const LABELS: Record<ConnectionState, string> = {
@@ -39,7 +39,7 @@ export function StatusPill({ state, className = "" }: StatusPillProps) {
         borderRadius: "9999px",
         backgroundColor: colors.bg,
         color: colors.text,
-        fontSize: "12px",
+        fontSize: "var(--rl-fs-sm)",
         fontWeight: 600,
         textTransform: "uppercase",
         letterSpacing: "0.05em",

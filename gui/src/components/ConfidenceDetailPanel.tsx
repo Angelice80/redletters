@@ -21,11 +21,11 @@ interface ConfidenceDetailPanelProps {
 }
 
 const panelStyle: React.CSSProperties = {
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "6px",
   padding: "12px",
   marginTop: "8px",
-  border: "1px solid #4b5563",
+  border: "1px solid var(--rl-border-strong)",
 };
 
 const headerStyle: React.CSSProperties = {
@@ -36,18 +36,18 @@ const headerStyle: React.CSSProperties = {
 };
 
 const titleStyle: React.CSSProperties = {
-  fontSize: "12px",
+  fontSize: "var(--rl-fs-sm)",
   fontWeight: 600,
-  color: "#9ca3af",
+  color: "var(--rl-text-muted)",
   textTransform: "capitalize" as const,
 };
 
 const closeStyle: React.CSSProperties = {
   background: "none",
   border: "none",
-  color: "#6b7280",
+  color: "var(--rl-text-dim)",
   cursor: "pointer",
-  fontSize: "14px",
+  fontSize: "var(--rl-fs-base)",
   padding: "2px 6px",
 };
 
@@ -63,26 +63,26 @@ const tokenRowStyle: React.CSSProperties = {
 };
 
 const scoreStyle: React.CSSProperties = {
-  fontSize: "11px",
-  fontFamily: "monospace",
+  fontSize: "var(--rl-fs-xs)",
+  fontFamily: "var(--rl-font-mono)",
   width: "36px",
   textAlign: "right" as const,
 };
 
 const surfaceStyle: React.CSSProperties = {
-  fontSize: "14px",
+  fontSize: "var(--rl-fs-base)",
   fontFamily: "'SBL Greek', 'Cardo', 'Gentium Plus', serif",
   color: "#60a5fa",
 };
 
 const glossStyle: React.CSSProperties = {
-  fontSize: "12px",
-  color: "#9ca3af",
+  fontSize: "var(--rl-fs-sm)",
+  color: "var(--rl-text-muted)",
 };
 
 const reasonStyle: React.CSSProperties = {
-  fontSize: "11px",
-  color: "#6b7280",
+  fontSize: "var(--rl-fs-xs)",
+  color: "var(--rl-text-dim)",
   fontStyle: "italic",
   marginLeft: "auto",
   maxWidth: "200px",
@@ -90,17 +90,17 @@ const reasonStyle: React.CSSProperties = {
 };
 
 const noReasonsStyle: React.CSSProperties = {
-  fontSize: "12px",
-  color: "#6b7280",
+  fontSize: "var(--rl-fs-sm)",
+  color: "var(--rl-text-dim)",
   fontStyle: "italic",
   padding: "12px 8px",
   textAlign: "center" as const,
 };
 
 function getScoreColor(score: number): string {
-  if (score >= 0.8) return "#22c55e";
-  if (score >= 0.6) return "#f59e0b";
-  return "#ef4444";
+  if (score >= 0.8) return "var(--rl-success)";
+  if (score >= 0.6) return "var(--rl-warning)";
+  return "var(--rl-error)";
 }
 
 const LAYER_LABELS: Record<string, string> = {

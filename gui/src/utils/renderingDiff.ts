@@ -252,11 +252,11 @@ export function computeDiff(
 export function getChangeTypeColor(changeType: ChangeType): string {
   switch (changeType) {
     case "lexical":
-      return "#3b82f6"; // Blue
+      return "var(--rl-primary)"; // Blue
     case "syntactic":
       return "#8b5cf6"; // Purple
     case "interpretive":
-      return "#f59e0b"; // Orange
+      return "var(--rl-warning)"; // Orange
     case "none":
     default:
       return "transparent";

@@ -186,9 +186,9 @@ describe("computeDiff", () => {
 
 describe("getChangeTypeColor", () => {
   it("returns correct colors for each change type", () => {
-    expect(getChangeTypeColor("lexical")).toBe("#3b82f6");
+    expect(getChangeTypeColor("lexical")).toBe("var(--rl-primary)");
     expect(getChangeTypeColor("syntactic")).toBe("#8b5cf6");
-    expect(getChangeTypeColor("interpretive")).toBe("#f59e0b");
+    expect(getChangeTypeColor("interpretive")).toBe("var(--rl-warning)");
     expect(getChangeTypeColor("none")).toBe("transparent");
   });
 });

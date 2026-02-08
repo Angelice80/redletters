@@ -34,15 +34,15 @@ const containerStyle: React.CSSProperties = {
 };
 
 const headerStyle: React.CSSProperties = {
-  fontSize: "24px",
+  fontSize: "var(--rl-fs-xl)",
   fontWeight: 600,
   marginBottom: "24px",
-  color: "#eaeaea",
+  color: "var(--rl-text)",
 };
 
 const subHeaderStyle: React.CSSProperties = {
-  fontSize: "14px",
-  color: "#9ca3af",
+  fontSize: "var(--rl-fs-base)",
+  color: "var(--rl-text-muted)",
   marginBottom: "16px",
 };
 
@@ -53,7 +53,7 @@ const sourceListStyle: React.CSSProperties = {
 };
 
 const sourceCardStyle: React.CSSProperties = {
-  backgroundColor: "#2d2d44",
+  backgroundColor: "var(--rl-bg-card)",
   borderRadius: "8px",
   padding: "16px",
   display: "flex",
@@ -68,53 +68,53 @@ const sourceInfoStyle: React.CSSProperties = {
 };
 
 const sourceNameStyle: React.CSSProperties = {
-  fontSize: "16px",
+  fontSize: "var(--rl-fs-md)",
   fontWeight: 500,
-  color: "#eaeaea",
+  color: "var(--rl-text)",
 };
 
 const sourceMetaStyle: React.CSSProperties = {
   display: "flex",
   gap: "12px",
-  fontSize: "12px",
-  color: "#9ca3af",
+  fontSize: "var(--rl-fs-sm)",
+  color: "var(--rl-text-muted)",
 };
 
 const badgeStyle: React.CSSProperties = {
   display: "inline-block",
   padding: "2px 8px",
   borderRadius: "4px",
-  fontSize: "11px",
+  fontSize: "var(--rl-fs-xs)",
   fontWeight: 500,
 };
 
 const spineBadgeStyle: React.CSSProperties = {
   ...badgeStyle,
-  backgroundColor: "#ef4444",
+  backgroundColor: "var(--rl-error)",
   color: "white",
 };
 
 const installedBadgeStyle: React.CSSProperties = {
   ...badgeStyle,
-  backgroundColor: "#22c55e",
-  color: "#1a1a2e",
+  backgroundColor: "var(--rl-success)",
+  color: "var(--rl-bg-app)",
 };
 
 const notInstalledBadgeStyle: React.CSSProperties = {
   ...badgeStyle,
-  backgroundColor: "#4b5563",
-  color: "#eaeaea",
+  backgroundColor: "var(--rl-border-strong)",
+  color: "var(--rl-text)",
 };
 
 const eulaBadgeStyle: React.CSSProperties = {
   ...badgeStyle,
-  backgroundColor: "#f59e0b",
-  color: "#1a1a2e",
+  backgroundColor: "var(--rl-warning)",
+  color: "var(--rl-bg-app)",
 };
 
 const buttonStyle: React.CSSProperties = {
   padding: "8px 16px",
-  fontSize: "13px",
+  fontSize: "var(--rl-fs-base)",
   fontWeight: 500,
   border: "none",
   borderRadius: "4px",
@@ -124,7 +124,7 @@ const buttonStyle: React.CSSProperties = {
 
 const installButtonStyle: React.CSSProperties = {
   ...buttonStyle,
-  backgroundColor: "#3b82f6",
+  backgroundColor: "var(--rl-primary)",
   color: "white",
 };
 
@@ -136,8 +136,8 @@ const uninstallButtonStyle: React.CSSProperties = {
 
 const disabledButtonStyle: React.CSSProperties = {
   ...buttonStyle,
-  backgroundColor: "#4b5563",
-  color: "#9ca3af",
+  backgroundColor: "var(--rl-border-strong)",
+  color: "var(--rl-text-muted)",
   cursor: "not-allowed",
 };
 
@@ -146,10 +146,10 @@ const statusBarStyle: React.CSSProperties = {
   gap: "16px",
   marginBottom: "24px",
   padding: "12px 16px",
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "8px",
-  fontSize: "13px",
-  color: "#9ca3af",
+  fontSize: "var(--rl-fs-base)",
+  color: "var(--rl-text-muted)",
 };
 
 // Sprint 17: Bootstrap CTA styles
@@ -158,27 +158,27 @@ const bootstrapCtaStyle: React.CSSProperties = {
   backgroundColor: "#1e3a5f",
   borderRadius: "8px",
   marginBottom: "24px",
-  border: "1px solid #3b82f6",
+  border: "1px solid var(--rl-primary)",
   textAlign: "center",
 };
 
 const bootstrapTitleStyle: React.CSSProperties = {
-  fontSize: "18px",
+  fontSize: "var(--rl-fs-lg)",
   fontWeight: 600,
   color: "#60a5fa",
   marginBottom: "8px",
 };
 
 const bootstrapTextStyle: React.CSSProperties = {
-  color: "#9ca3af",
-  fontSize: "14px",
+  color: "var(--rl-text-muted)",
+  fontSize: "var(--rl-fs-base)",
   marginBottom: "16px",
 };
 
 const emptyStateContainerStyle: React.CSSProperties = {
   textAlign: "center",
   padding: "48px",
-  backgroundColor: "#2d2d44",
+  backgroundColor: "var(--rl-bg-card)",
   borderRadius: "8px",
 };
 
@@ -197,7 +197,7 @@ const modalOverlayStyle: React.CSSProperties = {
 };
 
 const modalContentStyle: React.CSSProperties = {
-  backgroundColor: "#2d2d44",
+  backgroundColor: "var(--rl-bg-card)",
   borderRadius: "12px",
   padding: "24px",
   maxWidth: "500px",
@@ -207,15 +207,15 @@ const modalContentStyle: React.CSSProperties = {
 };
 
 const modalHeaderStyle: React.CSSProperties = {
-  fontSize: "18px",
+  fontSize: "var(--rl-fs-lg)",
   fontWeight: 600,
-  color: "#eaeaea",
+  color: "var(--rl-text)",
   marginBottom: "16px",
 };
 
 const modalTextStyle: React.CSSProperties = {
-  fontSize: "14px",
-  color: "#9ca3af",
+  fontSize: "var(--rl-fs-base)",
+  color: "var(--rl-text-muted)",
   lineHeight: 1.6,
   marginBottom: "16px",
 };
@@ -226,7 +226,7 @@ const checkboxContainerStyle: React.CSSProperties = {
   gap: "10px",
   marginBottom: "20px",
   padding: "12px",
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "6px",
 };
 
@@ -238,8 +238,8 @@ const modalButtonRowStyle: React.CSSProperties = {
 
 const cancelButtonStyle: React.CSSProperties = {
   ...buttonStyle,
-  backgroundColor: "#4b5563",
-  color: "#eaeaea",
+  backgroundColor: "var(--rl-border-strong)",
+  color: "var(--rl-text)",
 };
 
 interface EulaModalProps {
@@ -275,13 +275,13 @@ function EulaModal({
         )}
 
         {licenseInfo.notes && (
-          <div style={{ ...modalTextStyle, fontSize: "12px" }}>
+          <div style={{ ...modalTextStyle, fontSize: "var(--rl-fs-sm)" }}>
             <strong>Notes:</strong> {licenseInfo.notes}
           </div>
         )}
 
         {licenseInfo.license_url && (
-          <div style={{ ...modalTextStyle, fontSize: "12px" }}>
+          <div style={{ ...modalTextStyle, fontSize: "var(--rl-fs-sm)" }}>
             <a
               href={licenseInfo.license_url}
               target="_blank"
@@ -303,7 +303,11 @@ function EulaModal({
           />
           <label
             htmlFor="accept-eula"
-            style={{ color: "#eaeaea", fontSize: "14px", cursor: "pointer" }}
+            style={{
+              color: "var(--rl-text)",
+              fontSize: "var(--rl-fs-base)",
+              cursor: "pointer",
+            }}
           >
             I accept the license terms
           </label>
@@ -338,7 +342,11 @@ function getRoleBadge(role: string): React.ReactNode {
   }
   return (
     <span
-      style={{ ...badgeStyle, backgroundColor: "#374151", color: "#9ca3af" }}
+      style={{
+        ...badgeStyle,
+        backgroundColor: "var(--rl-border-strong)",
+        color: "var(--rl-text-muted)",
+      }}
     >
       {role.replace(/_/g, " ")}
     </span>
@@ -510,7 +518,9 @@ export function Sources({ client }: SourcesProps) {
     return (
       <div style={containerStyle}>
         <h1 style={headerStyle}>Sources</h1>
-        <div style={{ color: "#9ca3af" }}>Not connected to backend.</div>
+        <div style={{ color: "var(--rl-text-muted)" }}>
+          Not connected to backend.
+        </div>
       </div>
     );
   }
@@ -529,9 +539,9 @@ export function Sources({ client }: SourcesProps) {
         <span>
           Spine:{" "}
           {spineInstalled ? (
-            <span style={{ color: "#22c55e" }}>Installed</span>
+            <span style={{ color: "var(--rl-success)" }}>Installed</span>
           ) : (
-            <span style={{ color: "#ef4444" }}>Not installed</span>
+            <span style={{ color: "var(--rl-error)" }}>Not installed</span>
           )}
         </span>
       </div>
@@ -590,7 +600,13 @@ export function Sources({ client }: SourcesProps) {
 
       {/* Loading state */}
       {loading && (
-        <div style={{ textAlign: "center", padding: "48px", color: "#9ca3af" }}>
+        <div
+          style={{
+            textAlign: "center",
+            padding: "48px",
+            color: "var(--rl-text-muted)",
+          }}
+        >
           Loading sources...
         </div>
       )}
@@ -625,12 +641,12 @@ export function Sources({ client }: SourcesProps) {
                 {operationStatus[source.source_id] && (
                   <div
                     style={{
-                      fontSize: "12px",
+                      fontSize: "var(--rl-fs-sm)",
                       color: operationStatus[source.source_id].startsWith(
                         "Error",
                       )
                         ? "#fca5a5"
-                        : "#22c55e",
+                        : "var(--rl-success)",
                       marginTop: "4px",
                     }}
                   >
@@ -675,11 +691,15 @@ export function Sources({ client }: SourcesProps) {
       {!loading && sources.length === 0 && (
         <div style={emptyStateContainerStyle}>
           <div
-            style={{ fontSize: "18px", color: "#eaeaea", marginBottom: "8px" }}
+            style={{
+              fontSize: "var(--rl-fs-lg)",
+              color: "var(--rl-text)",
+              marginBottom: "8px",
+            }}
           >
             No Sources Configured
           </div>
-          <div style={{ color: "#9ca3af", marginBottom: "16px" }}>
+          <div style={{ color: "var(--rl-text-muted)", marginBottom: "16px" }}>
             The sources catalog is empty. Run the setup wizard to configure your
             data sources.
           </div>

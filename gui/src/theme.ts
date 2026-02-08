@@ -7,33 +7,33 @@
 
 export const theme = {
   colors: {
-    // Backgrounds
-    bgPrimary: "#1a1a2e", // Main background
-    bgSecondary: "#2d2d44", // Sidebar, cards
-    bgTertiary: "#374151", // Inputs, borders
-    bgHover: "#3d3d5c", // Hover states
+    // Backgrounds (3-layer surface system via CSS custom properties)
+    bgPrimary: "var(--rl-bg-panel)", // Panel/sidebar surface
+    bgSecondary: "var(--rl-bg-card)", // Cards, controls, elevated
+    bgTertiary: "var(--rl-border-strong)", // Input borders, dividers
+    bgHover: "var(--rl-bg-hover)", // Hover states
 
     // Text
-    textPrimary: "#eaeaea", // Main text
-    textSecondary: "#9ca3af", // Muted text
-    textTertiary: "#6b7280", // Disabled text
+    textPrimary: "var(--rl-text)", // Main text
+    textSecondary: "var(--rl-text-muted)", // Muted text
+    textTertiary: "var(--rl-text-dim)", // Disabled text
 
     // Brand
-    brandRed: "#ef4444", // Red Letters brand
+    brandRed: "var(--rl-accent)", // Ember red brand accent
     brandRedLight: "#fecaca", // Light red for text
     brandRedDark: "#7f1d1d", // Dark red for backgrounds
 
     // Status
-    success: "#22c55e",
+    success: "var(--rl-success)",
     successLight: "#86efac",
-    warning: "#f59e0b",
+    warning: "var(--rl-warning)",
     warningLight: "#fcd34d",
-    error: "#ef4444",
+    error: "var(--rl-error)",
     errorLight: "#fca5a5",
 
     // Actions
-    primary: "#3b82f6", // Primary buttons
-    primaryHover: "#2563eb",
+    primary: "var(--rl-primary)", // Primary buttons
+    primaryHover: "var(--rl-primary-hover)",
     secondary: "#4b5563", // Secondary buttons
     secondaryHover: "#6b7280",
   },
@@ -56,13 +56,20 @@ export const theme = {
   },
 
   fontSize: {
-    xs: "11px",
-    sm: "12px",
-    md: "13px",
-    base: "14px",
-    lg: "16px",
-    xl: "18px",
-    xxl: "20px",
+    xs: "var(--rl-fs-xs)", // 11px
+    sm: "var(--rl-fs-sm)", // 12px
+    md: "var(--rl-fs-base)", // 14px (was 13px, aligned to token scale)
+    base: "var(--rl-fs-base)", // 14px
+    lg: "var(--rl-fs-md)", // 16px
+    xl: "var(--rl-fs-lg)", // 20px
+    xxl: "var(--rl-fs-xl)", // 24px
+  },
+
+  fontFamily: {
+    ui: "var(--rl-font-ui)",
+    reading: "var(--rl-font-reading)",
+    mono: "var(--rl-font-mono)",
+    greek: "var(--rl-font-greek)",
   },
 
   fontWeight: {
@@ -73,15 +80,15 @@ export const theme = {
   },
 
   shadows: {
-    sm: "0 1px 2px rgba(0, 0, 0, 0.3)",
-    md: "0 4px 6px rgba(0, 0, 0, 0.4)",
-    lg: "0 10px 15px rgba(0, 0, 0, 0.5)",
+    sm: "var(--rl-shadow-sm)",
+    md: "var(--rl-shadow-md)",
+    lg: "var(--rl-shadow-lg)",
     xl: "0 20px 60px rgba(0, 0, 0, 0.5)",
   },
 
   transitions: {
-    fast: "0.15s ease",
-    normal: "0.2s ease",
+    fast: "var(--rl-transition-fast)",
+    normal: "var(--rl-transition-normal)",
     slow: "0.3s ease",
   },
 
@@ -151,7 +158,7 @@ export const commonStyles = {
 
   // Code/monospace
   code: {
-    fontFamily: "monospace",
+    fontFamily: "var(--rl-font-mono)",
     backgroundColor: theme.colors.bgTertiary,
     padding: "2px 6px",
     borderRadius: theme.borderRadius.sm,

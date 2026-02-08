@@ -52,7 +52,7 @@ export function Dashboard() {
           marginBottom: "24px",
         }}
       >
-        <h1 style={{ fontSize: "24px", fontWeight: 600, margin: 0 }}>
+        <h1 style={{ fontSize: "var(--rl-fs-xl)", fontWeight: 600, margin: 0 }}>
           Dashboard
         </h1>
         <StatusPill state={displayState} />
@@ -92,27 +92,29 @@ export function Dashboard() {
             <div
               style={{
                 padding: "16px",
-                backgroundColor: "#2d2d44",
-                borderRadius: "8px",
+                backgroundColor: "var(--rl-bg-card)",
+                borderRadius: "var(--rl-radius-lg)",
+                border: "1px solid var(--rl-border)",
+                boxShadow: "var(--rl-shadow-sm)",
               }}
             >
               <div
                 style={{
-                  color: "#9ca3af",
-                  fontSize: "12px",
+                  color: "var(--rl-text-muted)",
+                  fontSize: "var(--rl-fs-sm)",
                   marginBottom: "4px",
                 }}
               >
                 Version
               </div>
-              <div style={{ fontSize: "20px", fontWeight: 600 }}>
+              <div style={{ fontSize: "var(--rl-fs-lg)", fontWeight: 600 }}>
                 {engineStatus?.version ?? "---"}
               </div>
               <div
                 style={{
-                  color: "#6b7280",
-                  fontSize: "11px",
-                  fontFamily: "monospace",
+                  color: "var(--rl-text-dim)",
+                  fontSize: "var(--rl-fs-xs)",
+                  fontFamily: "var(--rl-font-mono)",
                 }}
               >
                 {engineStatus?.build_hash?.slice(0, 8) ?? ""}
@@ -123,14 +125,16 @@ export function Dashboard() {
             <div
               style={{
                 padding: "16px",
-                backgroundColor: "#2d2d44",
-                borderRadius: "8px",
+                backgroundColor: "var(--rl-bg-card)",
+                borderRadius: "var(--rl-radius-lg)",
+                border: "1px solid var(--rl-border)",
+                boxShadow: "var(--rl-shadow-sm)",
               }}
             >
               <div
                 style={{
-                  color: "#9ca3af",
-                  fontSize: "12px",
+                  color: "var(--rl-text-muted)",
+                  fontSize: "var(--rl-fs-sm)",
                   marginBottom: "4px",
                 }}
               >
@@ -138,9 +142,12 @@ export function Dashboard() {
               </div>
               <div
                 style={{
-                  fontSize: "20px",
+                  fontSize: "var(--rl-fs-lg)",
                   fontWeight: 600,
-                  color: engineStatus?.mode === "safe" ? "#f59e0b" : "#22c55e",
+                  color:
+                    engineStatus?.mode === "safe"
+                      ? "var(--rl-warning)"
+                      : "var(--rl-success)",
                 }}
               >
                 {engineStatus?.mode === "safe" ? "Safe Mode" : "Normal"}
@@ -151,20 +158,22 @@ export function Dashboard() {
             <div
               style={{
                 padding: "16px",
-                backgroundColor: "#2d2d44",
-                borderRadius: "8px",
+                backgroundColor: "var(--rl-bg-card)",
+                borderRadius: "var(--rl-radius-lg)",
+                border: "1px solid var(--rl-border)",
+                boxShadow: "var(--rl-shadow-sm)",
               }}
             >
               <div
                 style={{
-                  color: "#9ca3af",
-                  fontSize: "12px",
+                  color: "var(--rl-text-muted)",
+                  fontSize: "var(--rl-fs-sm)",
                   marginBottom: "4px",
                 }}
               >
                 Uptime
               </div>
-              <div style={{ fontSize: "20px", fontWeight: 600 }}>
+              <div style={{ fontSize: "var(--rl-fs-lg)", fontWeight: 600 }}>
                 {engineStatus
                   ? formatUptime(engineStatus.uptime_seconds)
                   : "---"}
@@ -175,20 +184,22 @@ export function Dashboard() {
             <div
               style={{
                 padding: "16px",
-                backgroundColor: "#2d2d44",
-                borderRadius: "8px",
+                backgroundColor: "var(--rl-bg-card)",
+                borderRadius: "var(--rl-radius-lg)",
+                border: "1px solid var(--rl-border)",
+                boxShadow: "var(--rl-shadow-sm)",
               }}
             >
               <div
                 style={{
-                  color: "#9ca3af",
-                  fontSize: "12px",
+                  color: "var(--rl-text-muted)",
+                  fontSize: "var(--rl-fs-sm)",
                   marginBottom: "4px",
                 }}
               >
                 Active Jobs
               </div>
-              <div style={{ fontSize: "20px", fontWeight: 600 }}>
+              <div style={{ fontSize: "var(--rl-fs-lg)", fontWeight: 600 }}>
                 {engineStatus?.active_jobs ?? "---"}
               </div>
             </div>
@@ -197,20 +208,22 @@ export function Dashboard() {
             <div
               style={{
                 padding: "16px",
-                backgroundColor: "#2d2d44",
-                borderRadius: "8px",
+                backgroundColor: "var(--rl-bg-card)",
+                borderRadius: "var(--rl-radius-lg)",
+                border: "1px solid var(--rl-border)",
+                boxShadow: "var(--rl-shadow-sm)",
               }}
             >
               <div
                 style={{
-                  color: "#9ca3af",
-                  fontSize: "12px",
+                  color: "var(--rl-text-muted)",
+                  fontSize: "var(--rl-fs-sm)",
                   marginBottom: "4px",
                 }}
               >
                 Queue Depth
               </div>
-              <div style={{ fontSize: "20px", fontWeight: 600 }}>
+              <div style={{ fontSize: "var(--rl-fs-lg)", fontWeight: 600 }}>
                 {engineStatus?.queue_depth ?? "---"}
               </div>
             </div>
@@ -219,14 +232,16 @@ export function Dashboard() {
             <div
               style={{
                 padding: "16px",
-                backgroundColor: "#2d2d44",
-                borderRadius: "8px",
+                backgroundColor: "var(--rl-bg-card)",
+                borderRadius: "var(--rl-radius-lg)",
+                border: "1px solid var(--rl-border)",
+                boxShadow: "var(--rl-shadow-sm)",
               }}
             >
               <div
                 style={{
-                  color: "#9ca3af",
-                  fontSize: "12px",
+                  color: "var(--rl-text-muted)",
+                  fontSize: "var(--rl-fs-sm)",
                   marginBottom: "4px",
                 }}
               >
@@ -234,10 +249,12 @@ export function Dashboard() {
               </div>
               <div
                 style={{
-                  fontSize: "20px",
+                  fontSize: "var(--rl-fs-lg)",
                   fontWeight: 600,
                   color:
-                    engineStatus?.health === "healthy" ? "#22c55e" : "#f59e0b",
+                    engineStatus?.health === "healthy"
+                      ? "var(--rl-success)"
+                      : "var(--rl-warning)",
                 }}
               >
                 {engineStatus?.health ?? "---"}
@@ -249,14 +266,14 @@ export function Dashboard() {
           <div
             style={{
               padding: "16px",
-              backgroundColor: "#2d2d44",
+              backgroundColor: "var(--rl-bg-card)",
               borderRadius: "8px",
             }}
           >
             <div
               style={{
-                color: "#9ca3af",
-                fontSize: "12px",
+                color: "var(--rl-text-muted)",
+                fontSize: "var(--rl-fs-sm)",
                 marginBottom: "8px",
               }}
             >
@@ -267,13 +284,13 @@ export function Dashboard() {
                 display: "grid",
                 gridTemplateColumns: "auto 1fr",
                 gap: "4px 16px",
-                fontSize: "13px",
+                fontSize: "var(--rl-fs-base)",
               }}
             >
-              <span style={{ color: "#6b7280" }}>API Version:</span>
+              <span style={{ color: "var(--rl-text-dim)" }}>API Version:</span>
               <span>{engineStatus?.api_version ?? "---"}</span>
 
-              <span style={{ color: "#6b7280" }}>Capabilities:</span>
+              <span style={{ color: "var(--rl-text-dim)" }}>Capabilities:</span>
               <span>{engineStatus?.capabilities?.join(", ") || "none"}</span>
             </div>
           </div>
@@ -283,10 +300,10 @@ export function Dashboard() {
             style={{
               marginTop: "16px",
               padding: "12px 16px",
-              backgroundColor: "#1a1a2e",
+              backgroundColor: "var(--rl-bg-app)",
               borderRadius: "4px",
-              fontSize: "12px",
-              color: "#6b7280",
+              fontSize: "var(--rl-fs-sm)",
+              color: "var(--rl-text-dim)",
             }}
           >
             Last heartbeat:{" "}

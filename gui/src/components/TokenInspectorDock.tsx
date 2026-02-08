@@ -15,17 +15,17 @@ interface TokenInspectorDockProps {
 }
 
 const dockStyle: React.CSSProperties = {
-  backgroundColor: "#2d2d44",
+  backgroundColor: "var(--rl-bg-card)",
   borderRadius: "6px",
-  border: "1px solid #4b5563",
+  border: "1px solid var(--rl-border-strong)",
   padding: "12px 16px",
   marginTop: "8px",
   minHeight: "56px",
 };
 
 const emptyStyle: React.CSSProperties = {
-  color: "#6b7280",
-  fontSize: "13px",
+  color: "var(--rl-text-dim)",
+  fontSize: "var(--rl-fs-base)",
   textAlign: "center",
   padding: "8px 0",
 };
@@ -38,54 +38,54 @@ const headerStyle: React.CSSProperties = {
 };
 
 const positionBadgeStyle: React.CSSProperties = {
-  fontSize: "10px",
-  color: "#9ca3af",
-  backgroundColor: "#374151",
+  fontSize: "var(--rl-fs-xs)",
+  color: "var(--rl-text-muted)",
+  backgroundColor: "var(--rl-border-strong)",
   padding: "2px 6px",
   borderRadius: "3px",
-  fontFamily: "monospace",
+  fontFamily: "var(--rl-font-mono)",
 };
 
 const clearBtnStyle: React.CSSProperties = {
-  fontSize: "11px",
-  color: "#9ca3af",
+  fontSize: "var(--rl-fs-xs)",
+  color: "var(--rl-text-muted)",
   backgroundColor: "transparent",
-  border: "1px solid #4b5563",
+  border: "1px solid var(--rl-border-strong)",
   borderRadius: "3px",
   padding: "2px 8px",
   cursor: "pointer",
 };
 
 const greekStyle: React.CSSProperties = {
-  fontSize: "18px",
+  fontSize: "var(--rl-fs-lg)",
   color: "#60a5fa",
   fontFamily: "serif",
   marginBottom: "4px",
 };
 
 const lemmaStyle: React.CSSProperties = {
-  fontSize: "12px",
-  color: "#9ca3af",
+  fontSize: "var(--rl-fs-sm)",
+  color: "var(--rl-text-muted)",
   fontStyle: "italic",
   marginBottom: "8px",
 };
 
 const glossStyle: React.CSSProperties = {
-  fontSize: "14px",
-  color: "#eaeaea",
+  fontSize: "var(--rl-fs-base)",
+  color: "var(--rl-text)",
   marginBottom: "8px",
 };
 
 const confRowStyle: React.CSSProperties = {
   display: "flex",
   gap: "12px",
-  fontSize: "11px",
-  color: "#9ca3af",
+  fontSize: "var(--rl-fs-xs)",
+  color: "var(--rl-text-muted)",
   flexWrap: "wrap",
 };
 
 function confidenceColor(score: number): string {
-  if (score >= 0.9) return "#22c55e";
+  if (score >= 0.9) return "var(--rl-success)";
   if (score >= 0.7) return "#facc15";
   if (score >= 0.5) return "#fb923c";
   return "#f87171";

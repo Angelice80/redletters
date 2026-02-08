@@ -23,7 +23,7 @@ const containerStyle: React.CSSProperties = {
   borderRadius: "8px",
   padding: "16px",
   marginBottom: "16px",
-  border: "1px solid #ef4444",
+  border: "1px solid var(--rl-error)",
 };
 
 const compactContainerStyle: React.CSSProperties = {
@@ -41,7 +41,7 @@ const headerStyle: React.CSSProperties = {
 
 const titleStyle: React.CSSProperties = {
   color: "#fca5a5",
-  fontSize: "14px",
+  fontSize: "var(--rl-fs-base)",
   fontWeight: 600,
   display: "flex",
   alignItems: "center",
@@ -53,13 +53,13 @@ const detailsContainerStyle: React.CSSProperties = {
   borderRadius: "4px",
   padding: "12px",
   marginBottom: "12px",
-  fontFamily: "monospace",
-  fontSize: "12px",
+  fontFamily: "var(--rl-font-mono)",
+  fontSize: "var(--rl-fs-sm)",
   lineHeight: 1.5,
 };
 
 const labelStyle: React.CSSProperties = {
-  color: "#9ca3af",
+  color: "var(--rl-text-muted)",
   marginRight: "8px",
 };
 
@@ -68,23 +68,23 @@ const valueStyle: React.CSSProperties = {
 };
 
 const codeStyle: React.CSSProperties = {
-  backgroundColor: "#374151",
+  backgroundColor: "var(--rl-border-strong)",
   padding: "2px 6px",
   borderRadius: "3px",
   color: "#f87171",
 };
 
 const fixHintStyle: React.CSSProperties = {
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "4px",
   padding: "12px",
   marginBottom: "12px",
-  borderLeft: "3px solid #f59e0b",
+  borderLeft: "3px solid var(--rl-warning)",
 };
 
 const fixHintTitleStyle: React.CSSProperties = {
-  color: "#f59e0b",
-  fontSize: "12px",
+  color: "var(--rl-warning)",
+  fontSize: "var(--rl-fs-sm)",
   fontWeight: 600,
   marginBottom: "8px",
 };
@@ -92,8 +92,8 @@ const fixHintTitleStyle: React.CSSProperties = {
 const suggestionListStyle: React.CSSProperties = {
   margin: 0,
   paddingLeft: "16px",
-  color: "#9ca3af",
-  fontSize: "13px",
+  color: "var(--rl-text-muted)",
+  fontSize: "var(--rl-fs-base)",
 };
 
 const suggestionItemStyle: React.CSSProperties = {
@@ -108,7 +108,7 @@ const buttonContainerStyle: React.CSSProperties = {
 
 const buttonStyle: React.CSSProperties = {
   padding: "6px 12px",
-  fontSize: "12px",
+  fontSize: "var(--rl-fs-sm)",
   fontWeight: 500,
   border: "none",
   borderRadius: "4px",
@@ -117,34 +117,34 @@ const buttonStyle: React.CSSProperties = {
 
 const primaryButtonStyle: React.CSSProperties = {
   ...buttonStyle,
-  backgroundColor: "#3b82f6",
+  backgroundColor: "var(--rl-primary)",
   color: "white",
 };
 
 const secondaryButtonStyle: React.CSSProperties = {
   ...buttonStyle,
-  backgroundColor: "#4b5563",
-  color: "#eaeaea",
+  backgroundColor: "var(--rl-border-strong)",
+  color: "var(--rl-text)",
 };
 
 const copyButtonStyle: React.CSSProperties = {
   ...buttonStyle,
-  backgroundColor: "#374151",
-  color: "#9ca3af",
+  backgroundColor: "var(--rl-border-strong)",
+  color: "var(--rl-text-muted)",
 };
 
 const dismissButtonStyle: React.CSSProperties = {
   background: "none",
   border: "none",
-  color: "#9ca3af",
+  color: "var(--rl-text-muted)",
   cursor: "pointer",
-  fontSize: "18px",
+  fontSize: "var(--rl-fs-lg)",
   padding: "4px",
 };
 
 const causeStyle: React.CSSProperties = {
   color: "#fca5a5",
-  fontSize: "13px",
+  fontSize: "var(--rl-fs-base)",
   marginBottom: "8px",
 };
 
@@ -153,22 +153,22 @@ const CATEGORY_CONFIG: Record<
   ErrorCategory,
   { icon: string; label: string; color: string }
 > = {
-  network: { icon: "⚡", label: "Network Error", color: "#f59e0b" },
-  auth: { icon: "🔒", label: "Authentication Error", color: "#ef4444" },
+  network: { icon: "⚡", label: "Network Error", color: "var(--rl-warning)" },
+  auth: { icon: "🔒", label: "Authentication Error", color: "var(--rl-error)" },
   not_found: { icon: "🔍", label: "Endpoint Not Found", color: "#6366f1" },
   backend_mismatch: {
     icon: "🔀",
     label: "Backend Mismatch",
-    color: "#f59e0b",
+    color: "var(--rl-warning)",
   },
-  gate_blocked: { icon: "🚧", label: "Gate Blocked", color: "#f59e0b" },
+  gate_blocked: { icon: "🚧", label: "Gate Blocked", color: "var(--rl-warning)" },
   service_unavailable: {
     icon: "⏳",
     label: "Service Unavailable",
-    color: "#f59e0b",
+    color: "var(--rl-warning)",
   },
-  server: { icon: "🔧", label: "Server Error", color: "#ef4444" },
-  unknown: { icon: "⚠️", label: "Request Failed", color: "#9ca3af" },
+  server: { icon: "🔧", label: "Server Error", color: "var(--rl-error)" },
+  unknown: { icon: "⚠️", label: "Request Failed", color: "var(--rl-text-muted)" },
 };
 
 export function ApiErrorPanel({
@@ -253,7 +253,7 @@ ${error.raw ? `\nRaw Error:\n${JSON.stringify(error.raw, null, 2)}` : ""}
         <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
           {compact && (
             <button
-              style={{ ...dismissButtonStyle, fontSize: "12px" }}
+              style={{ ...dismissButtonStyle, fontSize: "var(--rl-fs-sm)" }}
               onClick={() => setShowDetails(!showDetails)}
             >
               {showDetails ? "▼" : "▶"} Details
@@ -298,7 +298,7 @@ ${error.raw ? `\nRaw Error:\n${JSON.stringify(error.raw, null, 2)}` : ""}
                 <div
                   style={{
                     marginTop: "4px",
-                    color: "#9ca3af",
+                    color: "var(--rl-text-muted)",
                     whiteSpace: "pre-wrap",
                     wordBreak: "break-word",
                     maxHeight: "100px",
@@ -316,15 +316,15 @@ ${error.raw ? `\nRaw Error:\n${JSON.stringify(error.raw, null, 2)}` : ""}
                 style={{
                   marginTop: "12px",
                   paddingTop: "8px",
-                  borderTop: "1px solid #374151",
+                  borderTop: "1px solid var(--rl-border-strong)",
                 }}
               >
                 <span style={labelStyle}>Contract:</span>
                 <div
                   style={{
                     marginTop: "4px",
-                    color: "#9ca3af",
-                    fontSize: "11px",
+                    color: "var(--rl-text-muted)",
+                    fontSize: "var(--rl-fs-xs)",
                   }}
                 >
                   <div>
@@ -354,7 +354,7 @@ ${error.raw ? `\nRaw Error:\n${JSON.stringify(error.raw, null, 2)}` : ""}
                 {suggestions.length === 1 ? "Suggested Fix" : "Try These Steps"}
               </div>
               {suggestions.length === 1 ? (
-                <div style={{ color: "#9ca3af", fontSize: "13px" }}>
+                <div style={{ color: "var(--rl-text-muted)", fontSize: "var(--rl-fs-base)" }}>
                   {suggestions[0]}
                 </div>
               ) : (

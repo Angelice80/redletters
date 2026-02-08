@@ -29,13 +29,13 @@ const overlayStyle: React.CSSProperties = {
 };
 
 const modalStyle: React.CSSProperties = {
-  backgroundColor: "#2d2d44",
+  backgroundColor: "var(--rl-bg-card)",
   borderRadius: "12px",
   padding: "32px",
   maxWidth: "520px",
   width: "90%",
   boxShadow: "0 20px 60px rgba(0, 0, 0, 0.5)",
-  border: "1px solid #f59e0b",
+  border: "1px solid var(--rl-warning)",
 };
 
 const iconStyle: React.CSSProperties = {
@@ -45,7 +45,7 @@ const iconStyle: React.CSSProperties = {
 };
 
 const headerStyle: React.CSSProperties = {
-  fontSize: "20px",
+  fontSize: "var(--rl-fs-lg)",
   fontWeight: 600,
   color: "#fbbf24",
   textAlign: "center",
@@ -53,15 +53,15 @@ const headerStyle: React.CSSProperties = {
 };
 
 const subHeaderStyle: React.CSSProperties = {
-  fontSize: "14px",
-  color: "#9ca3af",
+  fontSize: "var(--rl-fs-base)",
+  color: "var(--rl-text-muted)",
   textAlign: "center",
   marginBottom: "24px",
   lineHeight: 1.5,
 };
 
 const detailsCardStyle: React.CSSProperties = {
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "8px",
   padding: "16px",
   marginBottom: "20px",
@@ -71,16 +71,16 @@ const detailRowStyle: React.CSSProperties = {
   display: "flex",
   justifyContent: "space-between",
   marginBottom: "8px",
-  fontSize: "13px",
+  fontSize: "var(--rl-fs-base)",
 };
 
 const labelStyle: React.CSSProperties = {
-  color: "#9ca3af",
+  color: "var(--rl-text-muted)",
 };
 
 const valueStyle: React.CSSProperties = {
-  color: "#eaeaea",
-  fontFamily: "monospace",
+  color: "var(--rl-text)",
+  fontFamily: "var(--rl-font-mono)",
 };
 
 const errorValueStyle: React.CSSProperties = {
@@ -98,12 +98,12 @@ const commandBoxStyle: React.CSSProperties = {
   borderRadius: "8px",
   padding: "16px",
   marginBottom: "20px",
-  border: "2px solid #22c55e",
+  border: "2px solid var(--rl-success)",
 };
 
 const commandLabelStyle: React.CSSProperties = {
-  color: "#22c55e",
-  fontSize: "12px",
+  color: "var(--rl-success)",
+  fontSize: "var(--rl-fs-sm)",
   fontWeight: 600,
   marginBottom: "8px",
   textTransform: "uppercase",
@@ -111,8 +111,8 @@ const commandLabelStyle: React.CSSProperties = {
 };
 
 const commandStyle: React.CSSProperties = {
-  fontFamily: "monospace",
-  fontSize: "14px",
+  fontFamily: "var(--rl-font-mono)",
+  fontSize: "var(--rl-fs-base)",
   color: "#f0fdf4",
   backgroundColor: "#052e16",
   padding: "12px",
@@ -125,33 +125,33 @@ const commandStyle: React.CSSProperties = {
 
 const copyButtonStyle: React.CSSProperties = {
   backgroundColor: "transparent",
-  border: "1px solid #22c55e",
-  color: "#22c55e",
+  border: "1px solid var(--rl-success)",
+  color: "var(--rl-success)",
   padding: "4px 8px",
   borderRadius: "4px",
   cursor: "pointer",
-  fontSize: "11px",
+  fontSize: "var(--rl-fs-xs)",
   fontWeight: 500,
   whiteSpace: "nowrap",
 };
 
 const copiedButtonStyle: React.CSSProperties = {
   ...copyButtonStyle,
-  backgroundColor: "#22c55e",
+  backgroundColor: "var(--rl-success)",
   color: "#052e16",
 };
 
 const fixSectionStyle: React.CSSProperties = {
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "8px",
   padding: "16px",
   marginBottom: "20px",
-  borderLeft: "3px solid #3b82f6",
+  borderLeft: "3px solid var(--rl-primary)",
 };
 
 const fixTitleStyle: React.CSSProperties = {
-  color: "#3b82f6",
-  fontSize: "13px",
+  color: "var(--rl-primary)",
+  fontSize: "var(--rl-fs-base)",
   fontWeight: 600,
   marginBottom: "12px",
 };
@@ -159,8 +159,8 @@ const fixTitleStyle: React.CSSProperties = {
 const fixListStyle: React.CSSProperties = {
   margin: 0,
   paddingLeft: "16px",
-  color: "#9ca3af",
-  fontSize: "13px",
+  color: "var(--rl-text-muted)",
+  fontSize: "var(--rl-fs-base)",
 };
 
 const fixItemStyle: React.CSSProperties = {
@@ -176,7 +176,7 @@ const buttonContainerStyle: React.CSSProperties = {
 
 const buttonStyle: React.CSSProperties = {
   padding: "12px 24px",
-  fontSize: "14px",
+  fontSize: "var(--rl-fs-base)",
   fontWeight: 500,
   border: "none",
   borderRadius: "6px",
@@ -185,14 +185,14 @@ const buttonStyle: React.CSSProperties = {
 
 const primaryButtonStyle: React.CSSProperties = {
   ...buttonStyle,
-  backgroundColor: "#3b82f6",
+  backgroundColor: "var(--rl-primary)",
   color: "white",
 };
 
 const secondaryButtonStyle: React.CSSProperties = {
   ...buttonStyle,
-  backgroundColor: "#4b5563",
-  color: "#eaeaea",
+  backgroundColor: "var(--rl-border-strong)",
+  color: "var(--rl-text)",
 };
 
 export function BackendMismatchPanel({
@@ -312,7 +312,7 @@ Fix Steps:
           <button
             style={
               diagCopied
-                ? { ...secondaryButtonStyle, backgroundColor: "#22c55e" }
+                ? { ...secondaryButtonStyle, backgroundColor: "var(--rl-success)" }
                 : secondaryButtonStyle
             }
             onClick={handleCopyDiagnostics}

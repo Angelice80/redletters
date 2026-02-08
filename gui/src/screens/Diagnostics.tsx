@@ -35,10 +35,10 @@ export function Diagnostics({ client }: DiagnosticsProps) {
 
   const renderSummary = (summary: IntegritySummary) => {
     const items = [
-      { label: "OK", value: summary.ok, color: "#22c55e" },
-      { label: "Warnings", value: summary.warn, color: "#f59e0b" },
-      { label: "Failures", value: summary.fail, color: "#ef4444" },
-      { label: "Skipped", value: summary.skipped, color: "#6b7280" },
+      { label: "OK", value: summary.ok, color: "var(--rl-success)" },
+      { label: "Warnings", value: summary.warn, color: "var(--rl-warning)" },
+      { label: "Failures", value: summary.fail, color: "var(--rl-error)" },
+      { label: "Skipped", value: summary.skipped, color: "var(--rl-text-dim)" },
     ];
 
     return (
@@ -55,21 +55,21 @@ export function Diagnostics({ client }: DiagnosticsProps) {
             key={item.label}
             style={{
               padding: "12px",
-              backgroundColor: "#1a1a2e",
+              backgroundColor: "var(--rl-bg-app)",
               borderRadius: "4px",
               textAlign: "center",
             }}
           >
             <div
               style={{
-                fontSize: "24px",
+                fontSize: "var(--rl-fs-xl)",
                 fontWeight: 600,
                 color: item.color,
               }}
             >
               {item.value}
             </div>
-            <div style={{ fontSize: "12px", color: "#9ca3af" }}>
+            <div style={{ fontSize: "var(--rl-fs-sm)", color: "var(--rl-text-muted)" }}>
               {item.label}
             </div>
           </div>
@@ -80,7 +80,7 @@ export function Diagnostics({ client }: DiagnosticsProps) {
 
   return (
     <div style={{ padding: "24px" }}>
-      <h1 style={{ fontSize: "24px", fontWeight: 600, marginBottom: "24px" }}>
+      <h1 style={{ fontSize: "var(--rl-fs-xl)", fontWeight: 600, marginBottom: "24px" }}>
         Diagnostics
       </h1>
 
@@ -88,7 +88,7 @@ export function Diagnostics({ client }: DiagnosticsProps) {
       <div
         style={{
           padding: "16px",
-          backgroundColor: "#2d2d44",
+          backgroundColor: "var(--rl-bg-card)",
           borderRadius: "8px",
           marginBottom: "24px",
         }}
@@ -115,9 +115,9 @@ export function Diagnostics({ client }: DiagnosticsProps) {
               onChange={(e) => setFullIntegrity(e.target.checked)}
               style={{ width: "16px", height: "16px" }}
             />
-            <span style={{ fontSize: "14px" }}>Full integrity check</span>
+            <span style={{ fontSize: "var(--rl-fs-base)" }}>Full integrity check</span>
           </label>
-          <span style={{ fontSize: "12px", color: "#6b7280" }}>
+          <span style={{ fontSize: "var(--rl-fs-sm)", color: "var(--rl-text-dim)" }}>
             (includes large files, may take longer)
           </span>
         </div>
@@ -129,10 +129,10 @@ export function Diagnostics({ client }: DiagnosticsProps) {
             padding: "10px 20px",
             borderRadius: "4px",
             border: "none",
-            backgroundColor: "#3b82f6",
+            backgroundColor: "var(--rl-primary)",
             color: "white",
             cursor: exporting ? "wait" : "pointer",
-            fontSize: "14px",
+            fontSize: "var(--rl-fs-base)",
             fontWeight: 500,
             opacity: exporting || !client ? 0.6 : 1,
           }}
@@ -146,7 +146,7 @@ export function Diagnostics({ client }: DiagnosticsProps) {
         <div
           style={{
             padding: "12px 16px",
-            backgroundColor: "#ef4444",
+            backgroundColor: "var(--rl-error)",
             borderRadius: "4px",
             color: "white",
             marginBottom: "16px",
@@ -161,13 +161,13 @@ export function Diagnostics({ client }: DiagnosticsProps) {
         <div
           style={{
             padding: "16px",
-            backgroundColor: "#2d2d44",
+            backgroundColor: "var(--rl-bg-card)",
             borderRadius: "8px",
           }}
         >
           <h2
             style={{
-              fontSize: "16px",
+              fontSize: "var(--rl-fs-md)",
               fontWeight: 600,
               marginBottom: "16px",
             }}
@@ -179,15 +179,15 @@ export function Diagnostics({ client }: DiagnosticsProps) {
           <div
             style={{
               padding: "12px",
-              backgroundColor: "#1a1a2e",
+              backgroundColor: "var(--rl-bg-app)",
               borderRadius: "4px",
               marginBottom: "16px",
             }}
           >
             <div
               style={{
-                color: "#9ca3af",
-                fontSize: "12px",
+                color: "var(--rl-text-muted)",
+                fontSize: "var(--rl-fs-sm)",
                 marginBottom: "4px",
               }}
             >
@@ -195,8 +195,8 @@ export function Diagnostics({ client }: DiagnosticsProps) {
             </div>
             <div
               style={{
-                fontFamily: "monospace",
-                fontSize: "13px",
+                fontFamily: "var(--rl-font-mono)",
+                fontSize: "var(--rl-fs-base)",
                 wordBreak: "break-all",
               }}
             >
@@ -208,8 +208,8 @@ export function Diagnostics({ client }: DiagnosticsProps) {
           <div style={{ marginBottom: "16px" }}>
             <div
               style={{
-                color: "#9ca3af",
-                fontSize: "12px",
+                color: "var(--rl-text-muted)",
+                fontSize: "var(--rl-fs-sm)",
                 marginBottom: "8px",
                 textTransform: "uppercase",
                 fontWeight: 600,
@@ -225,8 +225,8 @@ export function Diagnostics({ client }: DiagnosticsProps) {
             <div>
               <div
                 style={{
-                  color: "#ef4444",
-                  fontSize: "12px",
+                  color: "var(--rl-error)",
+                  fontSize: "var(--rl-fs-sm)",
                   marginBottom: "8px",
                   textTransform: "uppercase",
                   fontWeight: 600,
@@ -238,7 +238,7 @@ export function Diagnostics({ client }: DiagnosticsProps) {
                 style={{
                   maxHeight: "200px",
                   overflowY: "auto",
-                  backgroundColor: "#1a1a2e",
+                  backgroundColor: "var(--rl-bg-app)",
                   borderRadius: "4px",
                 }}
               >
@@ -249,18 +249,18 @@ export function Diagnostics({ client }: DiagnosticsProps) {
                       padding: "8px 12px",
                       borderBottom:
                         index < result.report.failures.length - 1
-                          ? "1px solid #2d2d44"
+                          ? "1px solid var(--rl-bg-card)"
                           : "none",
                     }}
                   >
-                    <div style={{ fontSize: "12px", color: "#ef4444" }}>
+                    <div style={{ fontSize: "var(--rl-fs-sm)", color: "var(--rl-error)" }}>
                       [{failure.reason}] {failure.job_id}
                     </div>
                     <div
                       style={{
-                        fontSize: "11px",
-                        color: "#6b7280",
-                        fontFamily: "monospace",
+                        fontSize: "var(--rl-fs-xs)",
+                        color: "var(--rl-text-dim)",
+                        fontFamily: "var(--rl-font-mono)",
                       }}
                     >
                       {failure.path}
@@ -276,10 +276,10 @@ export function Diagnostics({ client }: DiagnosticsProps) {
             style={{
               marginTop: "16px",
               padding: "8px 12px",
-              backgroundColor: "#1a1a2e",
+              backgroundColor: "var(--rl-bg-app)",
               borderRadius: "4px",
-              fontSize: "11px",
-              color: "#6b7280",
+              fontSize: "var(--rl-fs-xs)",
+              color: "var(--rl-text-dim)",
             }}
           >
             <div>

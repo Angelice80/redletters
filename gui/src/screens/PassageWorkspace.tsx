@@ -23,6 +23,7 @@ import {
   RECENT_REFS_KEY,
   DEMO_NUDGE_DISMISSED_KEY,
   TOKEN_DENSITY_KEY,
+  STUDY_MODE_KEY,
 } from "../constants/storageKeys";
 
 const MAX_RECENT_REFS = 5;
@@ -96,18 +97,18 @@ const inputGroupStyle: React.CSSProperties = {
 };
 
 const labelStyle: React.CSSProperties = {
-  fontSize: "11px",
-  color: "#9ca3af",
+  fontSize: "var(--rl-fs-xs)",
+  color: "var(--rl-text-muted)",
   textTransform: "uppercase",
 };
 
 const inputStyle: React.CSSProperties = {
   padding: "8px 12px",
-  fontSize: "14px",
-  backgroundColor: "#2d2d44",
-  border: "1px solid #4b5563",
+  fontSize: "var(--rl-fs-base)",
+  backgroundColor: "var(--rl-bg-card)",
+  border: "1px solid var(--rl-border-strong)",
   borderRadius: "4px",
-  color: "#eaeaea",
+  color: "var(--rl-text)",
   width: "220px",
 };
 
@@ -119,32 +120,32 @@ const selectStyle: React.CSSProperties = {
 
 const buttonStyle: React.CSSProperties = {
   padding: "10px 24px",
-  fontSize: "14px",
+  fontSize: "var(--rl-fs-base)",
   fontWeight: 600,
-  backgroundColor: "#2563eb",
+  backgroundColor: "var(--rl-accent)",
   color: "white",
   border: "none",
-  borderRadius: "6px",
+  borderRadius: "var(--rl-radius-md)",
   cursor: "pointer",
-  boxShadow: "0 0 12px rgba(37, 99, 235, 0.3)",
+  boxShadow: "0 0 12px rgba(212, 81, 59, 0.3)",
   letterSpacing: "0.02em",
 };
 
 const toggleButtonStyle: React.CSSProperties = {
   padding: "6px 12px",
-  fontSize: "12px",
-  backgroundColor: "#374151",
-  color: "#9ca3af",
-  border: "1px solid #4b5563",
+  fontSize: "var(--rl-fs-sm)",
+  backgroundColor: "var(--rl-border-strong)",
+  color: "var(--rl-text-muted)",
+  border: "1px solid var(--rl-border-strong)",
   borderRadius: "4px",
   cursor: "pointer",
 };
 
 const toggleActiveStyle: React.CSSProperties = {
   ...toggleButtonStyle,
-  backgroundColor: "#3b82f6",
+  backgroundColor: "var(--rl-primary)",
   color: "white",
-  borderColor: "#3b82f6",
+  borderColor: "var(--rl-primary)",
 };
 
 // UX3.2: workspaceStyle is now computed inside the component for responsive layout.
@@ -153,7 +154,7 @@ const toggleActiveStyle: React.CSSProperties = {
 type LayoutMode = "mobile" | "tablet" | "desktop";
 
 const panelStyle: React.CSSProperties = {
-  backgroundColor: "#2d2d44",
+  backgroundColor: "var(--rl-bg-card)",
   borderRadius: "8px",
   overflow: "hidden",
   display: "flex",
@@ -162,10 +163,10 @@ const panelStyle: React.CSSProperties = {
 
 const panelHeaderStyle: React.CSSProperties = {
   padding: "12px 16px",
-  borderBottom: "1px solid #4b5563",
-  fontSize: "12px",
+  borderBottom: "1px solid var(--rl-border-strong)",
+  fontSize: "var(--rl-fs-sm)",
   fontWeight: 600,
-  color: "#9ca3af",
+  color: "var(--rl-text-muted)",
   textTransform: "uppercase",
 };
 
@@ -176,7 +177,7 @@ const panelContentStyle: React.CSSProperties = {
 };
 
 const renderingCardStyle: React.CSSProperties = {
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "6px",
   padding: "16px",
   marginBottom: "12px",
@@ -186,25 +187,25 @@ const styleChipStyle: React.CSSProperties = {
   display: "inline-block",
   padding: "2px 8px",
   borderRadius: "3px",
-  fontSize: "10px",
+  fontSize: "var(--rl-fs-xs)",
   fontWeight: 600,
-  backgroundColor: "#374151",
-  color: "#9ca3af",
+  backgroundColor: "var(--rl-border-strong)",
+  color: "var(--rl-text-muted)",
   marginRight: "8px",
 };
 
 const tabBarStyle: React.CSSProperties = {
   display: "flex",
-  borderBottom: "1px solid #4b5563",
+  borderBottom: "1px solid var(--rl-border-strong)",
   overflowX: "auto",
   scrollbarWidth: "none",
 };
 
 const tabStyle: React.CSSProperties = {
   padding: "10px 10px",
-  fontSize: "12px",
+  fontSize: "var(--rl-fs-sm)",
   fontWeight: 500,
-  color: "#9ca3af",
+  color: "var(--rl-text-muted)",
   cursor: "pointer",
   borderBottom: "2px solid transparent",
   marginBottom: "-1px",
@@ -213,18 +214,18 @@ const tabStyle: React.CSSProperties = {
 
 const tabActiveStyle: React.CSSProperties = {
   ...tabStyle,
-  color: "#60a5fa",
-  borderBottom: "2px solid #60a5fa",
+  color: "var(--rl-primary)",
+  borderBottom: "2px solid var(--rl-primary)",
 };
 
 const legendStyle: React.CSSProperties = {
   display: "flex",
   gap: "16px",
   padding: "8px 16px",
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "4px",
-  fontSize: "11px",
-  color: "#9ca3af",
+  fontSize: "var(--rl-fs-xs)",
+  color: "var(--rl-text-muted)",
 };
 
 const legendItemStyle: React.CSSProperties = {
@@ -239,9 +240,11 @@ const emptyStateStyle: React.CSSProperties = {
   alignItems: "center",
   justifyContent: "center",
   height: "100%",
-  color: "#6b7280",
+  color: "var(--rl-text-dim)",
   textAlign: "center",
-  padding: "24px",
+  padding: "32px 24px",
+  maxWidth: "480px",
+  margin: "0 auto",
 };
 
 // Sprint 17: Additional styles for usability improvements
@@ -249,18 +252,21 @@ const exampleChipsStyle: React.CSSProperties = {
   display: "flex",
   gap: "8px",
   flexWrap: "wrap",
-  marginTop: "16px",
+  justifyContent: "center",
+  marginTop: "8px",
 };
 
 const chipStyle: React.CSSProperties = {
-  padding: "6px 12px",
-  backgroundColor: "#374151",
-  color: "#9ca3af",
-  borderRadius: "16px",
-  fontSize: "12px",
+  padding: "8px 16px",
+  backgroundColor: "var(--rl-bg-card)",
+  color: "var(--rl-text-muted)",
+  borderRadius: "var(--rl-radius-md)",
+  fontSize: "var(--rl-fs-sm)",
   cursor: "pointer",
-  border: "1px solid #4b5563",
-  transition: "all 0.15s",
+  border: "1px solid var(--rl-border)",
+  transition:
+    "background-color var(--rl-transition-fast), border-color var(--rl-transition-fast)",
+  boxShadow: "var(--rl-shadow-sm)",
 };
 
 const recentDropdownStyle: React.CSSProperties = {
@@ -268,8 +274,8 @@ const recentDropdownStyle: React.CSSProperties = {
   top: "100%",
   left: 0,
   right: 0,
-  backgroundColor: "#2d2d44",
-  border: "1px solid #4b5563",
+  backgroundColor: "var(--rl-bg-card)",
+  border: "1px solid var(--rl-border-strong)",
   borderRadius: "4px",
   marginTop: "4px",
   zIndex: 10,
@@ -279,18 +285,18 @@ const recentDropdownStyle: React.CSSProperties = {
 
 const recentItemStyle: React.CSSProperties = {
   padding: "8px 12px",
-  fontSize: "13px",
-  color: "#eaeaea",
+  fontSize: "var(--rl-fs-base)",
+  color: "var(--rl-text)",
   cursor: "pointer",
-  borderBottom: "1px solid #374151",
+  borderBottom: "1px solid var(--rl-border-strong)",
 };
 
 const disabledToggleStyle: React.CSSProperties = {
   padding: "6px 12px",
-  fontSize: "12px",
-  backgroundColor: "#2d2d44",
-  color: "#4b5563",
-  border: "1px solid #374151",
+  fontSize: "var(--rl-fs-sm)",
+  backgroundColor: "var(--rl-bg-card)",
+  color: "var(--rl-border-strong)",
+  border: "1px solid var(--rl-border-strong)",
   borderRadius: "4px",
   cursor: "not-allowed",
   opacity: 0.5,
@@ -298,6 +304,38 @@ const disabledToggleStyle: React.CSSProperties = {
 
 // UX2.1: Token density type
 type TokenDensity = "compact" | "comfortable";
+
+// UX4.5: Study mode presets
+type StudyMode = "reader" | "translator" | "text-critic" | "";
+
+const STUDY_MODE_PRESETS: Record<
+  Exclude<StudyMode, "">,
+  {
+    viewMode: "readable" | "traceable";
+    density: TokenDensity;
+    evidenceTab: "confidence" | "receipts" | "variants";
+    label: string;
+  }
+> = {
+  reader: {
+    viewMode: "readable",
+    density: "comfortable",
+    evidenceTab: "confidence",
+    label: "Reader",
+  },
+  translator: {
+    viewMode: "traceable",
+    density: "comfortable",
+    evidenceTab: "receipts",
+    label: "Translator",
+  },
+  "text-critic": {
+    viewMode: "traceable",
+    density: "compact",
+    evidenceTab: "variants",
+    label: "Text Critic",
+  },
+};
 
 // Interactive token component
 interface InteractiveTokenProps {
@@ -396,12 +434,12 @@ function ConfidenceSummary({ tokens }: { tokens: TokenLedger[] }) {
 
   const riskColor =
     avgRisk < 0.2
-      ? "#22c55e"
+      ? "var(--rl-success)"
       : avgRisk < 0.4
         ? "#fde68a"
         : avgRisk < 0.6
-          ? "#f59e0b"
-          : "#ef4444";
+          ? "var(--rl-warning)"
+          : "var(--rl-error)";
 
   return (
     <div
@@ -410,8 +448,8 @@ function ConfidenceSummary({ tokens }: { tokens: TokenLedger[] }) {
         alignItems: "center",
         gap: "8px",
         marginTop: "8px",
-        fontSize: "11px",
-        color: "#9ca3af",
+        fontSize: "var(--rl-fs-xs)",
+        color: "var(--rl-text-muted)",
       }}
     >
       <span>Avg Risk:</span>
@@ -494,6 +532,42 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
     }
   }, []);
 
+  // UX4.5: Study mode preset state
+  const [studyMode, setStudyMode] = useState<StudyMode>(() => {
+    try {
+      const stored = localStorage.getItem(STUDY_MODE_KEY);
+      if (
+        stored === "reader" ||
+        stored === "translator" ||
+        stored === "text-critic"
+      )
+        return stored;
+    } catch {
+      // Ignore
+    }
+    return "";
+  });
+
+  const handleStudyModeChange = useCallback((mode: StudyMode) => {
+    setStudyMode(mode);
+    try {
+      localStorage.setItem(STUDY_MODE_KEY, mode);
+    } catch {
+      // Ignore storage errors
+    }
+    if (mode && mode in STUDY_MODE_PRESETS) {
+      const preset = STUDY_MODE_PRESETS[mode as Exclude<StudyMode, "">];
+      setViewMode(preset.viewMode);
+      setTokenDensity(preset.density);
+      try {
+        localStorage.setItem(TOKEN_DENSITY_KEY, preset.density);
+      } catch {
+        // Ignore
+      }
+      setActiveTab(preset.evidenceTab);
+    }
+  }, []);
+
   // UX3.2: Responsive layout breakpoints
   const isMobile = useMediaQuery("(max-width: 640px)");
   const isTablet = useMediaQuery("(max-width: 900px)");
@@ -536,6 +610,9 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
   // Sprint 17: Recent references
   const [recentRefs, setRecentRefs] = useState<string[]>([]);
   const [showRecentDropdown, setShowRecentDropdown] = useState(false);
+  // UX4.1: Orientation strip recent refs dropdown (separate from input dropdown)
+  const [showStripRecent, setShowStripRecent] = useState(false);
+  const stripRecentRef = useRef<HTMLDivElement>(null);
 
   // Sync state to URL search params (without page reload)
   const updateUrlParams = useCallback(
@@ -584,6 +661,21 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
       // Ignore parse errors
     }
   }, []);
+
+  // UX4.1: Close strip recent dropdown on outside click
+  useEffect(() => {
+    if (!showStripRecent) return;
+    const handler = (e: MouseEvent) => {
+      if (
+        stripRecentRef.current &&
+        !stripRecentRef.current.contains(e.target as Node)
+      ) {
+        setShowStripRecent(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showStripRecent]);
 
   // UX2.5: Ref for the input element (keyboard focus target)
   const refInputRef = useRef<HTMLInputElement>(null);
@@ -695,10 +787,10 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
     setNudgeAccepted(true);
   }, [handleDismissNudge]);
 
-  // Inspector state
-  const [activeTab, setActiveTab] = useState<"receipts" | "variants">(
-    "receipts",
-  );
+  // UX4.3: Evidence panel state (unified: confidence + receipts + variants)
+  const [activeTab, setActiveTab] = useState<
+    "confidence" | "receipts" | "variants"
+  >("confidence");
 
   // Popover state
   const [selectedToken, setSelectedToken] = useState<TokenLedger | null>(null);
@@ -829,6 +921,66 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
     return () => document.removeEventListener("keydown", handler);
   }, [showCompareModal, selectedToken, handleClosePopover]);
 
+  // UX4.4: Compute next-action guidance for each evidence tab
+  const getNextAction = useCallback(
+    (tab: "confidence" | "receipts" | "variants") => {
+      if (!result) return null;
+
+      if (tab === "confidence") {
+        if (!result.confidence) {
+          return {
+            text: "Confidence data requires a successful translation.",
+            action: null,
+          };
+        }
+        return null; // Confidence has data — no action needed
+      }
+
+      if (tab === "receipts") {
+        if (
+          result.mode === "readable" &&
+          (!result.ledger || result.ledger.length === 0)
+        ) {
+          return {
+            text: "Re-translate in Traceable mode for per-token receipts.",
+            action: () => {
+              setMode("traceable");
+              setTimeout(() => handleTranslate(), 50);
+            },
+            label: "Re-translate in Traceable",
+          };
+        }
+        if (
+          viewMode === "readable" &&
+          result.ledger &&
+          result.ledger.length > 0
+        ) {
+          return {
+            text: "Switch to Traceable view to see receipts.",
+            action: () => setViewMode("traceable"),
+            label: "Switch to Traceable",
+          };
+        }
+        return null;
+      }
+
+      if (tab === "variants") {
+        if (result.variants.length === 0) {
+          return {
+            text: "No variants at this reference. Check installed source packs.",
+            action: null,
+            link: "/sources",
+            label: "Go to Sources",
+          };
+        }
+        return null;
+      }
+
+      return null;
+    },
+    [result, viewMode, handleTranslate],
+  );
+
   // Render interactive translation text
   const renderInteractiveTranslation = (tokens: TokenLedger[]) => {
     if (tokens.length === 0) {
@@ -864,21 +1016,25 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
           <label style={labelStyle}>Reference</label>
           <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
             <Tooltip
-              content={
-                isAtChapterStart(reference) === true
-                  ? "At verse 1. Chapter boundary navigation not yet supported."
-                  : "Previous verse. Disabled at verse 1."
-              }
+              content={(() => {
+                const prev = prevRef(reference);
+                if (!prev) {
+                  return isAtChapterStart(reference) === true
+                    ? "At verse 1. Chapter boundary navigation not yet supported."
+                    : "No previous verse available.";
+                }
+                return `Previous: ${prev}`;
+              })()}
               position="bottom"
               wrapFocus={!prevRef(reference)}
             >
               <button
                 data-testid="prev-btn"
-                aria-label="Previous verse"
+                aria-label={`Previous verse${prevRef(reference) ? `: ${prevRef(reference)}` : ""}`}
                 style={{
                   ...toggleButtonStyle,
                   padding: "8px 10px",
-                  fontSize: "14px",
+                  fontSize: "var(--rl-fs-base)",
                   opacity: prevRef(reference) ? 1 : 0.3,
                 }}
                 onClick={() => {
@@ -902,8 +1058,8 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                   ...inputStyle,
                   borderColor:
                     reference.trim() && validateRef(reference)
-                      ? "#ef4444"
-                      : "#4b5563",
+                      ? "var(--rl-error)"
+                      : "var(--rl-border-strong)",
                 }}
                 placeholder="e.g., John 1:1 (press Enter)"
                 aria-label="Scripture reference"
@@ -923,11 +1079,15 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
               />
             </Tooltip>
             <Tooltip
-              content={
-                isAtChapterEnd(reference) === true
-                  ? "At last verse of chapter. Chapter boundary navigation not yet supported."
-                  : "Next verse. Disabled at chapter end."
-              }
+              content={(() => {
+                const next = nextRef(reference);
+                if (!next) {
+                  return isAtChapterEnd(reference) === true
+                    ? "At last verse of chapter. Chapter boundary navigation not yet supported."
+                    : "No next verse available.";
+                }
+                return `Next: ${next}`;
+              })()}
               position="bottom"
               wrapFocus={!nextRef(reference)}
             >
@@ -935,7 +1095,7 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                 style={{
                   ...toggleButtonStyle,
                   padding: "8px 10px",
-                  fontSize: "14px",
+                  fontSize: "var(--rl-fs-base)",
                   opacity: nextRef(reference) ? 1 : 0.3,
                 }}
                 onClick={() => {
@@ -943,7 +1103,7 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                   if (next) setReference(next);
                 }}
                 data-testid="next-btn"
-                aria-label="Next verse"
+                aria-label={`Next verse${nextRef(reference) ? `: ${nextRef(reference)}` : ""}`}
                 disabled={!nextRef(reference)}
               >
                 &#8594;
@@ -954,8 +1114,8 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
           {reference.trim() && validateRef(reference) && (
             <div
               style={{
-                fontSize: "11px",
-                color: "#ef4444",
+                fontSize: "var(--rl-fs-xs)",
+                color: "var(--rl-error)",
                 marginTop: "2px",
               }}
             >
@@ -968,10 +1128,10 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
               <div
                 style={{
                   padding: "6px 12px",
-                  fontSize: "10px",
-                  color: "#6b7280",
+                  fontSize: "var(--rl-fs-xs)",
+                  color: "var(--rl-text-dim)",
                   textTransform: "uppercase",
-                  borderBottom: "1px solid #374151",
+                  borderBottom: "1px solid var(--rl-border-strong)",
                 }}
               >
                 Recent
@@ -1053,7 +1213,7 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                 alignSelf: "flex-end",
                 ...(loading || !reference.trim()
                   ? {
-                      backgroundColor: "#4b5563",
+                      backgroundColor: "var(--rl-border-strong)",
                       cursor: "not-allowed",
                       boxShadow: "none",
                     }
@@ -1067,6 +1227,36 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
           </Tooltip>
         </div>
         {/* end toolbar-controls-group */}
+
+        {/* UX4.5: Study Mode Presets */}
+        <div style={inputGroupStyle}>
+          <label style={labelStyle}>Study Mode</label>
+          <Tooltip
+            content="Preset configurations for different study workflows. Reader for reading, Translator for token work, Text Critic for variant analysis."
+            position="bottom"
+          >
+            <select
+              data-testid="study-mode-select"
+              style={{ ...selectStyle, width: "130px" }}
+              value={studyMode}
+              onChange={(e) =>
+                handleStudyModeChange(e.target.value as StudyMode)
+              }
+              aria-label="Study mode preset"
+            >
+              <option value="">Manual</option>
+              <option value="reader" data-testid="study-mode-reader">
+                Reader
+              </option>
+              <option value="translator" data-testid="study-mode-translator">
+                Translator
+              </option>
+              <option value="text-critic" data-testid="study-mode-text-critic">
+                Text Critic
+              </option>
+            </select>
+          </Tooltip>
+        </div>
 
         <div style={{ marginLeft: "auto", display: "flex", gap: "8px" }}>
           <Tooltip
@@ -1133,6 +1323,126 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
         />
       )}
 
+      {/* UX4.1: Orientation Strip — always-visible ref + mode context */}
+      {result && (
+        <div
+          data-testid="orientation-strip"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            padding: "8px 16px",
+            marginBottom: "8px",
+            backgroundColor: "var(--rl-bg-card)",
+            borderRadius: "6px",
+            fontSize: "var(--rl-fs-base)",
+            flexWrap: "wrap",
+          }}
+        >
+          <span
+            data-testid="orientation-ref"
+            style={{
+              color: "var(--rl-text)",
+              fontWeight: 600,
+              fontSize: "15px",
+              letterSpacing: "0.01em",
+            }}
+          >
+            {result.reference}
+          </span>
+          <span
+            data-testid="orientation-mode"
+            style={{
+              ...styleChipStyle,
+              backgroundColor:
+                result.mode === "traceable"
+                  ? "var(--rl-success)"
+                  : "var(--rl-primary)",
+            }}
+          >
+            {result.mode}
+          </span>
+          <span style={styleChipStyle}>{result.translator_type}</span>
+          {/* Spacer */}
+          <div style={{ flex: 1 }} />
+          {/* Recent refs button */}
+          {recentRefs.length > 0 && (
+            <div ref={stripRecentRef} style={{ position: "relative" }}>
+              <button
+                data-testid="recent-refs-btn"
+                aria-label="Recent references"
+                aria-expanded={showStripRecent}
+                style={{
+                  ...toggleButtonStyle,
+                  padding: "4px 10px",
+                  fontSize: "var(--rl-fs-xs)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                }}
+                onClick={() => setShowStripRecent(!showStripRecent)}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") setShowStripRecent(false);
+                }}
+              >
+                Recent
+                <span style={{ fontSize: "9px" }}>
+                  {showStripRecent ? "\u25B2" : "\u25BC"}
+                </span>
+              </button>
+              {showStripRecent && (
+                <div
+                  data-testid="recent-refs-menu"
+                  role="menu"
+                  style={{
+                    position: "absolute",
+                    top: "100%",
+                    right: 0,
+                    backgroundColor: "var(--rl-bg-card)",
+                    border: "1px solid var(--rl-border-strong)",
+                    borderRadius: "4px",
+                    marginTop: "4px",
+                    zIndex: 20,
+                    minWidth: "180px",
+                    maxHeight: "200px",
+                    overflow: "auto",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+                  }}
+                >
+                  {recentRefs.map((ref, i) => (
+                    <div
+                      key={ref}
+                      data-testid={`recent-refs-item-${i}`}
+                      role="menuitem"
+                      tabIndex={0}
+                      style={{
+                        ...recentItemStyle,
+                        backgroundColor:
+                          ref === result.reference
+                            ? "rgba(96, 165, 250, 0.15)"
+                            : "transparent",
+                      }}
+                      onClick={() => {
+                        setReference(ref);
+                        setShowStripRecent(false);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          setReference(ref);
+                          setShowStripRecent(false);
+                        }
+                      }}
+                    >
+                      {ref}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Legends */}
       {(compareMode || heatmapMode) && result && (
         <div style={{ marginBottom: "12px", display: "flex", gap: "16px" }}>
@@ -1191,7 +1501,10 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                             : item.risk < 0.6
                               ? "#fb923c"
                               : "#f87171",
-                      border: item.risk < 0.2 ? "1px solid #4b5563" : "none",
+                      border:
+                        item.risk < 0.2
+                          ? "1px solid var(--rl-border-strong)"
+                          : "none",
                     }}
                   />
                   <span>{item.label}</span>
@@ -1263,20 +1576,22 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                           aria-pressed={tokenDensity === "compact"}
                           style={{
                             padding: "3px 8px",
-                            fontSize: "10px",
-                            border: "1px solid #4b5563",
+                            fontSize: "var(--rl-fs-xs)",
+                            border: "1px solid var(--rl-border-strong)",
                             borderRadius: "3px 0 0 3px",
                             cursor: "pointer",
                             backgroundColor:
                               tokenDensity === "compact"
-                                ? "#3b82f6"
-                                : "#374151",
+                                ? "var(--rl-primary)"
+                                : "var(--rl-border-strong)",
                             color:
-                              tokenDensity === "compact" ? "white" : "#9ca3af",
+                              tokenDensity === "compact"
+                                ? "white"
+                                : "var(--rl-text-muted)",
                             borderColor:
                               tokenDensity === "compact"
-                                ? "#3b82f6"
-                                : "#4b5563",
+                                ? "var(--rl-primary)"
+                                : "var(--rl-border-strong)",
                           }}
                           onClick={() => handleDensityChange("compact")}
                         >
@@ -1293,22 +1608,22 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                           aria-pressed={tokenDensity === "comfortable"}
                           style={{
                             padding: "3px 8px",
-                            fontSize: "10px",
-                            border: "1px solid #4b5563",
+                            fontSize: "var(--rl-fs-xs)",
+                            border: "1px solid var(--rl-border-strong)",
                             borderRadius: "0 3px 3px 0",
                             cursor: "pointer",
                             backgroundColor:
                               tokenDensity === "comfortable"
-                                ? "#3b82f6"
-                                : "#374151",
+                                ? "var(--rl-primary)"
+                                : "var(--rl-border-strong)",
                             color:
                               tokenDensity === "comfortable"
                                 ? "white"
-                                : "#9ca3af",
+                                : "var(--rl-text-muted)",
                             borderColor:
                               tokenDensity === "comfortable"
-                                ? "#3b82f6"
-                                : "#4b5563",
+                                ? "var(--rl-primary)"
+                                : "var(--rl-border-strong)",
                           }}
                           onClick={() => handleDensityChange("comfortable")}
                         >
@@ -1325,15 +1640,22 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                       <button
                         style={{
                           padding: "3px 10px",
-                          fontSize: "11px",
-                          border: "1px solid #4b5563",
+                          fontSize: "var(--rl-fs-xs)",
+                          border: "1px solid var(--rl-border-strong)",
                           borderRadius: "3px 0 0 3px",
                           cursor: "pointer",
                           backgroundColor:
-                            viewMode === "readable" ? "#3b82f6" : "#374151",
-                          color: viewMode === "readable" ? "white" : "#9ca3af",
+                            viewMode === "readable"
+                              ? "var(--rl-primary)"
+                              : "var(--rl-border-strong)",
+                          color:
+                            viewMode === "readable"
+                              ? "white"
+                              : "var(--rl-text-muted)",
                           borderColor:
-                            viewMode === "readable" ? "#3b82f6" : "#4b5563",
+                            viewMode === "readable"
+                              ? "var(--rl-primary)"
+                              : "var(--rl-border-strong)",
                         }}
                         data-testid="view-readable-btn"
                         aria-label="Readable view"
@@ -1345,15 +1667,22 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                       <button
                         style={{
                           padding: "3px 10px",
-                          fontSize: "11px",
-                          border: "1px solid #4b5563",
+                          fontSize: "var(--rl-fs-xs)",
+                          border: "1px solid var(--rl-border-strong)",
                           borderRadius: "0 3px 3px 0",
                           cursor: "pointer",
                           backgroundColor:
-                            viewMode === "traceable" ? "#3b82f6" : "#374151",
-                          color: viewMode === "traceable" ? "white" : "#9ca3af",
+                            viewMode === "traceable"
+                              ? "var(--rl-primary)"
+                              : "var(--rl-border-strong)",
+                          color:
+                            viewMode === "traceable"
+                              ? "white"
+                              : "var(--rl-text-muted)",
                           borderColor:
-                            viewMode === "traceable" ? "#3b82f6" : "#4b5563",
+                            viewMode === "traceable"
+                              ? "var(--rl-primary)"
+                              : "var(--rl-border-strong)",
                         }}
                         data-testid="view-traceable-btn"
                         aria-label="Traceable view"
@@ -1387,8 +1716,8 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                         <span
                           style={{
                             ...styleChipStyle,
-                            backgroundColor: "#f59e0b",
-                            color: "#1a1a2e",
+                            backgroundColor: "var(--rl-warning)",
+                            color: "var(--rl-bg-app)",
                           }}
                         >
                           viewing as: {viewMode}
@@ -1398,7 +1727,7 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                       <span
                         style={{
                           ...styleChipStyle,
-                          backgroundColor: "#22c55e",
+                          backgroundColor: "var(--rl-success)",
                         }}
                       >
                         {result.mode}
@@ -1411,8 +1740,8 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                     (!result.ledger || result.ledger.length === 0) && (
                       <div
                         style={{
-                          fontSize: "11px",
-                          color: "#f59e0b",
+                          fontSize: "var(--rl-fs-xs)",
+                          color: "var(--rl-warning)",
                           marginBottom: "8px",
                           padding: "6px 10px",
                           backgroundColor: "rgba(245, 158, 11, 0.1)",
@@ -1424,7 +1753,7 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                         Readable mode.{" "}
                         <span
                           style={{
-                            color: "#60a5fa",
+                            color: "var(--rl-primary)",
                             cursor: "pointer",
                             textDecoration: "underline",
                           }}
@@ -1440,8 +1769,8 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
 
                   <div
                     style={{
-                      fontSize: "16px",
-                      color: "#eaeaea",
+                      fontSize: "var(--rl-fs-md)",
+                      color: "var(--rl-text)",
                       lineHeight: 1.8,
                     }}
                   >
@@ -1474,14 +1803,14 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                       <div
                         style={{
                           marginTop: "12px",
-                          fontSize: "11px",
-                          color: "#6b7280",
+                          fontSize: "var(--rl-fs-xs)",
+                          color: "var(--rl-text-dim)",
                         }}
                       >
                         Token-level evidence available.{" "}
                         <span
                           style={{
-                            color: "#60a5fa",
+                            color: "var(--rl-primary)",
                             cursor: "pointer",
                             textDecoration: "underline",
                           }}
@@ -1494,132 +1823,281 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                     )}
                 </div>
 
-                {/* Confidence summary with layer breakdown */}
+                {/* UX4.3: Compact confidence indicator — full details in Evidence panel */}
                 {result.confidence && (
                   <div
                     style={{
                       ...renderingCardStyle,
-                      backgroundColor: "#1a1a2e",
-                      padding: "12px",
+                      backgroundColor: "var(--rl-bg-app)",
+                      padding: "8px 12px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      cursor: "pointer",
+                    }}
+                    onClick={() => setActiveTab("confidence")}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setActiveTab("confidence");
+                      }
                     }}
                   >
-                    {/* Sprint 26 (UX4): Composite confidence with progress bar */}
-                    <Tooltip
-                      content="Overall confidence based on available evidence. Higher = more certain."
-                      position="bottom"
+                    <span
+                      style={{
+                        color: "var(--rl-text-muted)",
+                        fontSize: "var(--rl-fs-xs)",
+                        fontWeight: 500,
+                      }}
+                    >
+                      Confidence
+                    </span>
+                    <div
+                      style={{
+                        flex: 1,
+                        height: "4px",
+                        backgroundColor: "var(--rl-border-strong)",
+                        borderRadius: "2px",
+                        overflow: "hidden",
+                        maxWidth: "120px",
+                      }}
                     >
                       <div
-                        data-testid="confidence-composite"
                         style={{
-                          marginBottom: "10px",
-                          cursor: "default",
+                          width: `${(result.confidence.composite * 100).toFixed(0)}%`,
+                          height: "100%",
+                          backgroundColor:
+                            result.confidence.composite >= 0.8
+                              ? "var(--rl-success)"
+                              : result.confidence.composite >= 0.6
+                                ? "var(--rl-warning)"
+                                : "var(--rl-error)",
+                          borderRadius: "2px",
+                        }}
+                      />
+                    </div>
+                    <span
+                      style={{
+                        color: "var(--rl-text)",
+                        fontWeight: 600,
+                        fontSize: "var(--rl-fs-base)",
+                      }}
+                    >
+                      {(result.confidence.composite * 100).toFixed(0)}%
+                    </span>
+                    <span
+                      style={{
+                        color: "var(--rl-primary)",
+                        fontSize: "var(--rl-fs-xs)",
+                        marginLeft: "auto",
+                      }}
+                    >
+                      Details &rarr;
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+            {/* UX3.1: Token Inspector Dock */}
+            {viewMode === "traceable" && (
+              <TokenInspectorDock
+                token={selectedToken}
+                onClear={handleClosePopover}
+              />
+            )}
+          </div>
+
+          {/* Right: Evidence Panel (UX4.3: unified Confidence + Receipts + Variants) */}
+          <div
+            style={panelStyle}
+            role="region"
+            aria-label="Evidence"
+            data-testid="evidence-panel"
+          >
+            <div style={tabBarStyle}>
+              <Tooltip
+                content="Overall translation confidence with layer breakdown."
+                position="bottom"
+              >
+                <div
+                  data-testid="evidence-tab-confidence"
+                  style={activeTab === "confidence" ? tabActiveStyle : tabStyle}
+                  onClick={() => setActiveTab("confidence")}
+                  role="tab"
+                  tabIndex={0}
+                  onKeyDown={(e) =>
+                    e.key === "Enter" && setActiveTab("confidence")
+                  }
+                >
+                  Confidence
+                </div>
+              </Tooltip>
+              <Tooltip
+                content="Evidence for how the rendering was produced: sources, rules, and token decisions."
+                position="bottom"
+              >
+                <div
+                  data-testid="evidence-tab-receipts"
+                  style={activeTab === "receipts" ? tabActiveStyle : tabStyle}
+                  onClick={() => setActiveTab("receipts")}
+                  role="tab"
+                  tabIndex={0}
+                  onKeyDown={(e) =>
+                    e.key === "Enter" && setActiveTab("receipts")
+                  }
+                >
+                  Receipts
+                </div>
+              </Tooltip>
+              <Tooltip
+                content="Textual variants from selected witnesses (when available)."
+                position="bottom"
+              >
+                <div
+                  data-testid="evidence-tab-variants"
+                  style={activeTab === "variants" ? tabActiveStyle : tabStyle}
+                  onClick={() => setActiveTab("variants")}
+                  role="tab"
+                  tabIndex={0}
+                  onKeyDown={(e) =>
+                    e.key === "Enter" && setActiveTab("variants")
+                  }
+                >
+                  Variants ({result.variants.length})
+                </div>
+              </Tooltip>
+            </div>
+            <div style={{ ...panelContentStyle, padding: 0 }}>
+              {/* Confidence tab */}
+              {activeTab === "confidence" && (
+                <div style={{ padding: "16px" }}>
+                  {(() => {
+                    const na = getNextAction("confidence");
+                    if (!na) return null;
+                    return (
+                      <div
+                        data-testid="evidence-next-action"
+                        style={{
+                          padding: "8px 12px",
+                          marginBottom: "12px",
+                          backgroundColor: "rgba(96, 165, 250, 0.08)",
+                          border: "1px solid rgba(96, 165, 250, 0.2)",
+                          borderRadius: "4px",
+                          fontSize: "var(--rl-fs-sm)",
+                          color: "var(--rl-text-muted)",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          flexWrap: "wrap",
                         }}
                       >
+                        <span>{na.text}</span>
+                      </div>
+                    );
+                  })()}
+                  {result.confidence ? (
+                    <div>
+                      {/* Composite confidence with progress bar */}
+                      <Tooltip
+                        content="Overall confidence based on available evidence. Higher = more certain."
+                        position="bottom"
+                      >
                         <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            marginBottom: "6px",
-                          }}
-                        >
-                          <span
-                            style={{
-                              color: "#9ca3af",
-                              fontSize: "12px",
-                              fontWeight: 500,
-                            }}
-                          >
-                            Composite Confidence
-                          </span>
-                          <span
-                            style={{
-                              color: "#eaeaea",
-                              fontWeight: 600,
-                              fontSize: "15px",
-                            }}
-                          >
-                            {(result.confidence.composite * 100).toFixed(0)}%
-                          </span>
-                        </div>
-                        <div
-                          data-testid="confidence-composite-bar"
-                          style={{
-                            height: "6px",
-                            backgroundColor: "#374151",
-                            borderRadius: "3px",
-                            overflow: "hidden",
-                          }}
+                          data-testid="confidence-composite"
+                          style={{ marginBottom: "10px", cursor: "default" }}
                         >
                           <div
                             style={{
-                              width: `${(result.confidence.composite * 100).toFixed(0)}%`,
-                              height: "100%",
-                              backgroundColor:
-                                result.confidence.composite >= 0.8
-                                  ? "#22c55e"
-                                  : result.confidence.composite >= 0.6
-                                    ? "#f59e0b"
-                                    : "#ef4444",
-                              transition: "width 0.3s",
-                              borderRadius: "3px",
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              marginBottom: "6px",
                             }}
-                          />
-                        </div>
-                      </div>
-                    </Tooltip>
-
-                    {/* S1.2: Layer breakdown - only show real scores */}
-                    {result.confidence.layers &&
-                    Object.values(result.confidence.layers).some(
-                      (s) => s && typeof s.score === "number",
-                    ) ? (
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "4px",
-                        }}
-                      >
-                        {(
-                          [
-                            "textual",
-                            "grammatical",
-                            "lexical",
-                            "interpretive",
-                          ] as const
-                        ).map((layer) => {
-                          const score = result.confidence!.layers[layer];
-                          if (!score || typeof score.score !== "number")
-                            return null;
-                          const pct = (score.score * 100).toFixed(0);
-                          const isWeakest =
-                            result.confidence!.weakest_layer === layer;
-                          const barColor =
-                            score.score >= 0.8
-                              ? "#22c55e"
-                              : score.score >= 0.6
-                                ? "#f59e0b"
-                                : "#ef4444";
-
-                          const layerTooltips: Record<string, string> = {
-                            textual:
-                              "Click to inspect weak tokens for this layer (when available). Manuscript certainty.",
-                            grammatical:
-                              "Click to inspect weak tokens for this layer (when available). Morphology/syntax certainty.",
-                            lexical:
-                              "Click to inspect weak tokens for this layer (when available). Word-sense certainty.",
-                            interpretive:
-                              "Click to inspect weak tokens for this layer (when available). Ambiguity/resolution certainty.",
-                          };
-
-                          return (
-                            <Tooltip
-                              key={layer}
-                              content={layerTooltips[layer]}
-                              position="bottom"
+                          >
+                            <span
+                              style={{
+                                color: "var(--rl-text-muted)",
+                                fontSize: "var(--rl-fs-sm)",
+                                fontWeight: 500,
+                              }}
                             >
+                              Composite Confidence
+                            </span>
+                            <span
+                              style={{
+                                color: "var(--rl-text)",
+                                fontWeight: 600,
+                                fontSize: "15px",
+                              }}
+                            >
+                              {(result.confidence.composite * 100).toFixed(0)}%
+                            </span>
+                          </div>
+                          <div
+                            data-testid="confidence-composite-bar"
+                            style={{
+                              height: "6px",
+                              backgroundColor: "var(--rl-border-strong)",
+                              borderRadius: "3px",
+                              overflow: "hidden",
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: `${(result.confidence.composite * 100).toFixed(0)}%`,
+                                height: "100%",
+                                backgroundColor:
+                                  result.confidence.composite >= 0.8
+                                    ? "var(--rl-success)"
+                                    : result.confidence.composite >= 0.6
+                                      ? "var(--rl-warning)"
+                                      : "var(--rl-error)",
+                                transition: "width 0.3s",
+                                borderRadius: "3px",
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </Tooltip>
+
+                      {/* Layer breakdown */}
+                      {result.confidence.layers &&
+                      Object.values(result.confidence.layers).some(
+                        (s) => s && typeof s.score === "number",
+                      ) ? (
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "4px",
+                          }}
+                        >
+                          {(
+                            [
+                              "textual",
+                              "grammatical",
+                              "lexical",
+                              "interpretive",
+                            ] as const
+                          ).map((layer) => {
+                            const score = result.confidence!.layers[layer];
+                            if (!score || typeof score.score !== "number")
+                              return null;
+                            const pct = (score.score * 100).toFixed(0);
+                            const isWeakest =
+                              result.confidence!.weakest_layer === layer;
+                            const barColor =
+                              score.score >= 0.8
+                                ? "var(--rl-success)"
+                                : score.score >= 0.6
+                                  ? "var(--rl-warning)"
+                                  : "var(--rl-error)";
+
+                            return (
                               <div
+                                key={layer}
                                 data-testid={`confidence-layer-${layer}`}
                                 style={{
                                   display: "flex",
@@ -1655,8 +2133,10 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                               >
                                 <span
                                   style={{
-                                    fontSize: "11px",
-                                    color: isWeakest ? "#f59e0b" : "#6b7280",
+                                    fontSize: "var(--rl-fs-xs)",
+                                    color: isWeakest
+                                      ? "var(--rl-warning)"
+                                      : "var(--rl-text-dim)",
                                     width: "80px",
                                     textTransform: "capitalize",
                                     fontWeight: isWeakest ? 600 : 400,
@@ -1669,7 +2149,7 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                                   style={{
                                     flex: 1,
                                     height: "4px",
-                                    backgroundColor: "#374151",
+                                    backgroundColor: "var(--rl-border-strong)",
                                     borderRadius: "2px",
                                     overflow: "hidden",
                                   }}
@@ -1685,8 +2165,10 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                                 </div>
                                 <span
                                   style={{
-                                    fontSize: "11px",
-                                    color: isWeakest ? "#f59e0b" : "#9ca3af",
+                                    fontSize: "var(--rl-fs-xs)",
+                                    color: isWeakest
+                                      ? "var(--rl-warning)"
+                                      : "var(--rl-text-muted)",
                                     width: "32px",
                                     textAlign: "right",
                                     fontWeight: isWeakest ? 600 : 400,
@@ -1695,138 +2177,143 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                                   {pct}%
                                 </span>
                               </div>
-                            </Tooltip>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div
-                        style={{
-                          fontSize: "11px",
-                          color: "#6b7280",
-                          fontStyle: "italic",
-                          marginTop: "4px",
-                        }}
-                      >
-                        Layer scores not provided by backend.
-                      </div>
-                    )}
-
-                    {result.confidence.weakest_layer && (
-                      <div
-                        style={{
-                          fontSize: "11px",
-                          color: "#f59e0b",
-                          marginTop: "6px",
-                        }}
-                      >
-                        Weakest: {result.confidence.weakest_layer}
-                      </div>
-                    )}
-
-                    {/* S6: Confidence detail panel */}
-                    {confidenceDetailLayer &&
-                      result.ledger &&
-                      result.ledger.length > 0 && (
-                        <ConfidenceDetailPanel
-                          layer={confidenceDetailLayer}
-                          ledger={result.ledger}
-                          onTokenSelect={(pos) => {
-                            setSelectedTokenPosition(pos);
-                            // Find the token to show popover
-                            for (const v of result.ledger!) {
-                              const t = v.tokens.find(
-                                (tk) => tk.position === pos,
-                              );
-                              if (t) {
-                                setSelectedToken(t);
-                                break;
-                              }
-                            }
-                          }}
-                          onClose={() => setConfidenceDetailLayer(null)}
-                        />
-                      )}
-                    {confidenceDetailLayer &&
-                      (!result.ledger || result.ledger.length === 0) && (
+                            );
+                          })}
+                        </div>
+                      ) : (
                         <div
-                          data-testid="confidence-detail-panel"
                           style={{
-                            fontSize: "12px",
-                            color: "#6b7280",
+                            fontSize: "var(--rl-fs-xs)",
+                            color: "var(--rl-text-dim)",
                             fontStyle: "italic",
-                            padding: "12px 8px",
-                            textAlign: "center",
-                            marginTop: "8px",
-                            backgroundColor: "#1a1a2e",
-                            borderRadius: "6px",
+                            marginTop: "4px",
                           }}
                         >
-                          Token data requires Traceable mode. Re-translate in
-                          Traceable to see per-token confidence.
+                          Layer scores not provided by backend.
                         </div>
                       )}
-                  </div>
-                )}
-              </div>
-            </div>
-            {/* UX3.1: Token Inspector Dock */}
-            {viewMode === "traceable" && (
-              <TokenInspectorDock
-                token={selectedToken}
-                onClear={handleClosePopover}
-              />
-            )}
-          </div>
 
-          {/* Right: Inspector */}
-          <div style={panelStyle} role="region" aria-label="Inspector">
-            <div style={tabBarStyle}>
-              <Tooltip
-                content="Evidence for how the rendering was produced: sources, rules, and token decisions."
-                position="bottom"
-              >
-                <div
-                  data-testid="receipts-tab"
-                  style={activeTab === "receipts" ? tabActiveStyle : tabStyle}
-                  onClick={() => setActiveTab("receipts")}
-                  role="tab"
-                  tabIndex={0}
-                  onKeyDown={(e) =>
-                    e.key === "Enter" && setActiveTab("receipts")
-                  }
-                >
-                  Receipts
+                      {result.confidence.weakest_layer && (
+                        <div
+                          style={{
+                            fontSize: "var(--rl-fs-xs)",
+                            color: "var(--rl-warning)",
+                            marginTop: "6px",
+                          }}
+                        >
+                          Weakest: {result.confidence.weakest_layer}
+                        </div>
+                      )}
+
+                      {/* Confidence detail panel */}
+                      {confidenceDetailLayer &&
+                        result.ledger &&
+                        result.ledger.length > 0 && (
+                          <ConfidenceDetailPanel
+                            layer={confidenceDetailLayer}
+                            ledger={result.ledger}
+                            onTokenSelect={(pos) => {
+                              setSelectedTokenPosition(pos);
+                              for (const v of result.ledger!) {
+                                const t = v.tokens.find(
+                                  (tk) => tk.position === pos,
+                                );
+                                if (t) {
+                                  setSelectedToken(t);
+                                  break;
+                                }
+                              }
+                            }}
+                            onClose={() => setConfidenceDetailLayer(null)}
+                          />
+                        )}
+                      {confidenceDetailLayer &&
+                        (!result.ledger || result.ledger.length === 0) && (
+                          <div
+                            data-testid="confidence-detail-panel"
+                            style={{
+                              fontSize: "var(--rl-fs-sm)",
+                              color: "var(--rl-text-dim)",
+                              fontStyle: "italic",
+                              padding: "12px 8px",
+                              textAlign: "center",
+                              marginTop: "8px",
+                              backgroundColor: "var(--rl-bg-app)",
+                              borderRadius: "6px",
+                            }}
+                          >
+                            Token data requires Traceable mode. Re-translate in
+                            Traceable to see per-token confidence.
+                          </div>
+                        )}
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        color: "var(--rl-text-dim)",
+                        fontSize: "var(--rl-fs-base)",
+                        textAlign: "center",
+                        padding: "24px",
+                      }}
+                    >
+                      No confidence data available for this translation.
+                    </div>
+                  )}
                 </div>
-              </Tooltip>
-              <Tooltip
-                content="Textual variants from selected witnesses (when available)."
-                position="bottom"
-              >
-                <div
-                  data-testid="variants-tab"
-                  style={activeTab === "variants" ? tabActiveStyle : tabStyle}
-                  onClick={() => setActiveTab("variants")}
-                  role="tab"
-                  tabIndex={0}
-                  onKeyDown={(e) =>
-                    e.key === "Enter" && setActiveTab("variants")
-                  }
-                >
-                  Variants ({result.variants.length})
-                </div>
-              </Tooltip>
-            </div>
-            <div style={{ ...panelContentStyle, padding: 0 }}>
+              )}
+
+              {/* Receipts tab */}
               {activeTab === "receipts" && (
                 <div style={{ padding: "16px" }}>
+                  {(() => {
+                    const na = getNextAction("receipts");
+                    if (!na) return null;
+                    return (
+                      <div
+                        data-testid="evidence-next-action"
+                        style={{
+                          padding: "8px 12px",
+                          marginBottom: "12px",
+                          backgroundColor: "rgba(96, 165, 250, 0.08)",
+                          border: "1px solid rgba(96, 165, 250, 0.2)",
+                          borderRadius: "4px",
+                          fontSize: "var(--rl-fs-sm)",
+                          color: "var(--rl-text-muted)",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <span>{na.text}</span>
+                        {na.action && (
+                          <button
+                            data-testid="evidence-next-action-btn"
+                            style={{
+                              padding: "3px 10px",
+                              fontSize: "var(--rl-fs-xs)",
+                              backgroundColor: "transparent",
+                              color: "var(--rl-primary)",
+                              border: "1px solid var(--rl-primary)",
+                              borderRadius: "3px",
+                              cursor: "pointer",
+                              whiteSpace: "nowrap",
+                            }}
+                            onClick={na.action}
+                          >
+                            {na.label}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })()}
                   {viewMode === "readable" &&
                   result.ledger &&
                   result.ledger.length > 0 ? (
                     <div
                       style={{
-                        color: "#6b7280",
-                        fontSize: "13px",
+                        color: "var(--rl-text-dim)",
+                        fontSize: "var(--rl-fs-base)",
                         padding: "16px",
                       }}
                     >
@@ -1835,10 +2322,10 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                       </div>
                       <span
                         style={{
-                          color: "#60a5fa",
+                          color: "var(--rl-primary)",
                           cursor: "pointer",
                           textDecoration: "underline",
-                          fontSize: "12px",
+                          fontSize: "var(--rl-fs-sm)",
                         }}
                         onClick={() => {
                           setViewMode("traceable");
@@ -1852,8 +2339,8 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                   ) : result.mode === "readable" ? (
                     <div
                       style={{
-                        color: "#6b7280",
-                        fontSize: "13px",
+                        color: "var(--rl-text-dim)",
+                        fontSize: "var(--rl-fs-base)",
                         padding: "16px",
                       }}
                     >
@@ -1862,8 +2349,8 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                       </div>
                       <div
                         style={{
-                          fontSize: "12px",
-                          color: "#4b5563",
+                          fontSize: "var(--rl-fs-sm)",
+                          color: "var(--rl-border-strong)",
                           marginBottom: "12px",
                         }}
                       >
@@ -1874,10 +2361,10 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                         data-testid="receipts-cta-btn"
                         style={{
                           padding: "6px 14px",
-                          fontSize: "12px",
+                          fontSize: "var(--rl-fs-sm)",
                           backgroundColor: "transparent",
-                          color: "#60a5fa",
-                          border: "1px solid #60a5fa",
+                          color: "var(--rl-primary)",
+                          border: "1px solid var(--rl-primary)",
                           borderRadius: "4px",
                           cursor: "pointer",
                         }}
@@ -1892,8 +2379,8 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                   ) : (
                     <div
                       style={{
-                        color: "#6b7280",
-                        fontSize: "13px",
+                        color: "var(--rl-text-dim)",
+                        fontSize: "var(--rl-fs-base)",
                         padding: "16px",
                       }}
                     >
@@ -1902,8 +2389,8 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                       </div>
                       <div
                         style={{
-                          fontSize: "12px",
-                          color: "#4b5563",
+                          fontSize: "var(--rl-fs-sm)",
+                          color: "var(--rl-border-strong)",
                           marginBottom: "12px",
                         }}
                       >
@@ -1915,10 +2402,10 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                         data-testid="receipts-cta-btn"
                         style={{
                           padding: "6px 14px",
-                          fontSize: "12px",
+                          fontSize: "var(--rl-fs-sm)",
                           backgroundColor: "transparent",
-                          color: "#60a5fa",
-                          border: "1px solid #60a5fa",
+                          color: "var(--rl-primary)",
+                          border: "1px solid var(--rl-primary)",
                           borderRadius: "4px",
                           cursor: "pointer",
                         }}
@@ -1934,16 +2421,59 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                   )}
                 </div>
               )}
+
+              {/* Variants tab */}
               {activeTab === "variants" && (
                 <div style={{ padding: "16px" }}>
-                  {/* S7: Better empty state for variants */}
+                  {(() => {
+                    const na = getNextAction("variants");
+                    if (!na) return null;
+                    return (
+                      <div
+                        data-testid="evidence-next-action"
+                        style={{
+                          padding: "8px 12px",
+                          marginBottom: "12px",
+                          backgroundColor: "rgba(96, 165, 250, 0.08)",
+                          border: "1px solid rgba(96, 165, 250, 0.2)",
+                          borderRadius: "4px",
+                          fontSize: "var(--rl-fs-sm)",
+                          color: "var(--rl-text-muted)",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <span>{na.text}</span>
+                        {na.link && (
+                          <Link
+                            to={na.link}
+                            data-testid="evidence-next-action-btn"
+                            style={{
+                              padding: "3px 10px",
+                              fontSize: "var(--rl-fs-xs)",
+                              backgroundColor: "transparent",
+                              color: "var(--rl-primary)",
+                              border: "1px solid var(--rl-primary)",
+                              borderRadius: "3px",
+                              textDecoration: "none",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {na.label}
+                          </Link>
+                        )}
+                      </div>
+                    );
+                  })()}
                   {result.variants.length === 0 && (
                     <div
                       style={{
-                        color: "#6b7280",
-                        fontSize: "13px",
+                        color: "var(--rl-text-dim)",
+                        fontSize: "var(--rl-fs-base)",
                         padding: "12px",
-                        backgroundColor: "#1a1a2e",
+                        backgroundColor: "var(--rl-bg-app)",
                         borderRadius: "6px",
                         marginBottom: "12px",
                       }}
@@ -1952,12 +2482,17 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                         style={{
                           marginBottom: "6px",
                           fontWeight: 500,
-                          color: "#9ca3af",
+                          color: "var(--rl-text-muted)",
                         }}
                       >
                         No textual variants at this reference
                       </div>
-                      <div style={{ fontSize: "12px", marginBottom: "12px" }}>
+                      <div
+                        style={{
+                          fontSize: "var(--rl-fs-sm)",
+                          marginBottom: "12px",
+                        }}
+                      >
                         This passage has no variant readings in the installed
                         source packs. The SBLGNT spine text is the only attested
                         reading
@@ -1971,10 +2506,10 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                         style={{
                           display: "inline-block",
                           padding: "6px 14px",
-                          fontSize: "12px",
+                          fontSize: "var(--rl-fs-sm)",
                           backgroundColor: "transparent",
-                          color: "#60a5fa",
-                          border: "1px solid #60a5fa",
+                          color: "var(--rl-primary)",
+                          border: "1px solid var(--rl-primary)",
                           borderRadius: "4px",
                           textDecoration: "none",
                           cursor: "pointer",
@@ -2014,20 +2549,24 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
               <div style={emptyStateStyle}>
                 <div
                   style={{
-                    fontSize: "24px",
+                    fontSize: "var(--rl-fs-xl)",
                     marginBottom: "16px",
                     animation: "pulse 1.5s ease-in-out infinite",
                   }}
                 >
                   Translating...
                 </div>
-                <div style={{ color: "#60a5fa", fontSize: "14px" }}>
+                <div
+                  style={{ color: "var(--rl-primary)", fontSize: "var(--rl-fs-base)" }}
+                >
                   {reference}
                 </div>
               </div>
             ) : !client ? (
               <div style={emptyStateStyle}>
-                <div style={{ fontSize: "18px", marginBottom: "12px" }}>
+                <div
+                  style={{ fontSize: "var(--rl-fs-lg)", marginBottom: "12px" }}
+                >
                   Not Connected
                 </div>
                 <div style={{ marginBottom: "16px" }}>
@@ -2046,10 +2585,34 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
               </div>
             ) : (
               <div style={emptyStateStyle}>
-                <div style={{ fontSize: "18px", marginBottom: "8px" }}>
+                <div
+                  style={{
+                    fontSize: "32px",
+                    marginBottom: "12px",
+                    opacity: 0.5,
+                  }}
+                >
+                  {/* Greek alpha-omega glyph */}
+                  &#x0391;&#x03A9;
+                </div>
+                <div
+                  style={{
+                    fontSize: "var(--rl-fs-lg)",
+                    fontWeight: 600,
+                    color: "var(--rl-text)",
+                    marginBottom: "8px",
+                  }}
+                >
                   Explore Greek New Testament
                 </div>
-                <div style={{ marginBottom: "16px" }}>
+                <div
+                  style={{
+                    color: "var(--rl-text-muted)",
+                    fontSize: "var(--rl-fs-base)",
+                    marginBottom: "20px",
+                    lineHeight: 1.5,
+                  }}
+                >
                   Enter a scripture reference above and press Enter to
                   translate.
                 </div>
@@ -2063,8 +2626,7 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                     data-testid="demo-btn"
                     style={{
                       ...buttonStyle,
-                      marginBottom: "20px",
-                      backgroundColor: "#22c55e",
+                      marginBottom: "24px",
                     }}
                     onClick={handleDemo}
                   >
@@ -2076,8 +2638,8 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                 <div style={{ marginBottom: "16px" }}>
                   <div
                     style={{
-                      fontSize: "11px",
-                      color: "#6b7280",
+                      fontSize: "var(--rl-fs-xs)",
+                      color: "var(--rl-text-dim)",
                       marginBottom: "8px",
                       textTransform: "uppercase",
                     }}
@@ -2095,12 +2657,14 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                           setTimeout(() => handleTranslate(), 100);
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = "#4b5563";
-                          e.currentTarget.style.color = "#eaeaea";
+                          e.currentTarget.style.backgroundColor =
+                            "var(--rl-border-strong)";
+                          e.currentTarget.style.color = "var(--rl-text)";
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = "#374151";
-                          e.currentTarget.style.color = "#9ca3af";
+                          e.currentTarget.style.backgroundColor =
+                            "var(--rl-border-strong)";
+                          e.currentTarget.style.color = "var(--rl-text-muted)";
                         }}
                       >
                         {ref}
@@ -2114,8 +2678,8 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                   <div>
                     <div
                       style={{
-                        fontSize: "11px",
-                        color: "#6b7280",
+                        fontSize: "var(--rl-fs-xs)",
+                        color: "var(--rl-text-dim)",
                         marginBottom: "8px",
                         textTransform: "uppercase",
                       }}
@@ -2126,18 +2690,21 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                       {recentRefs.slice(0, 3).map((ref) => (
                         <button
                           key={ref}
-                          style={{ ...chipStyle, borderColor: "#60a5fa" }}
+                          style={{ ...chipStyle, borderColor: "var(--rl-primary)" }}
                           onClick={() => {
                             setReference(ref);
                             setTimeout(() => handleTranslate(), 100);
                           }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = "#3b82f6";
+                            e.currentTarget.style.backgroundColor =
+                              "var(--rl-primary)";
                             e.currentTarget.style.color = "white";
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = "#374151";
-                            e.currentTarget.style.color = "#9ca3af";
+                            e.currentTarget.style.backgroundColor =
+                              "var(--rl-border-strong)";
+                            e.currentTarget.style.color =
+                              "var(--rl-text-muted)";
                           }}
                         >
                           {ref}
@@ -2175,8 +2742,8 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
               position: "fixed",
               bottom: "24px",
               right: "24px",
-              backgroundColor: "#2d2d44",
-              border: "1px solid #3b82f6",
+              backgroundColor: "var(--rl-bg-card)",
+              border: "1px solid var(--rl-primary)",
               borderRadius: "8px",
               padding: "16px 20px",
               boxShadow: "0 4px 20px rgba(0, 0, 0, 0.4)",
@@ -2186,8 +2753,8 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
           >
             <div
               style={{
-                fontSize: "13px",
-                color: "#eaeaea",
+                fontSize: "var(--rl-fs-base)",
+                color: "var(--rl-text)",
                 marginBottom: "12px",
               }}
             >
@@ -2203,8 +2770,8 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                   data-testid="demo-nudge-accept"
                   style={{
                     padding: "6px 14px",
-                    fontSize: "12px",
-                    backgroundColor: "#3b82f6",
+                    fontSize: "var(--rl-fs-sm)",
+                    backgroundColor: "var(--rl-primary)",
                     color: "white",
                     border: "none",
                     borderRadius: "4px",
@@ -2219,10 +2786,10 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                 data-testid="demo-nudge-dismiss"
                 style={{
                   padding: "6px 14px",
-                  fontSize: "12px",
+                  fontSize: "var(--rl-fs-sm)",
                   backgroundColor: "transparent",
-                  color: "#9ca3af",
-                  border: "1px solid #4b5563",
+                  color: "var(--rl-text-muted)",
+                  border: "1px solid var(--rl-border-strong)",
                   borderRadius: "4px",
                   cursor: "pointer",
                 }}

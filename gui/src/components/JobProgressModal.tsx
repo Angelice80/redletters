@@ -80,7 +80,7 @@ const overlayStyle: React.CSSProperties = {
 };
 
 const modalStyle: React.CSSProperties = {
-  backgroundColor: "#2d2d44",
+  backgroundColor: "var(--rl-bg-card)",
   borderRadius: "12px",
   padding: "24px",
   width: "480px",
@@ -98,17 +98,17 @@ const headerStyle: React.CSSProperties = {
 };
 
 const titleStyle: React.CSSProperties = {
-  fontSize: "18px",
+  fontSize: "var(--rl-fs-lg)",
   fontWeight: 600,
-  color: "#eaeaea",
+  color: "var(--rl-text)",
 };
 
 const closeButtonStyle: React.CSSProperties = {
   background: "none",
   border: "none",
-  color: "#6b7280",
+  color: "var(--rl-text-dim)",
   cursor: "pointer",
-  fontSize: "24px",
+  fontSize: "var(--rl-fs-xl)",
   padding: 0,
   lineHeight: 1,
 };
@@ -119,22 +119,22 @@ const progressBarContainerStyle: React.CSSProperties = {
 
 const progressBarStyle: React.CSSProperties = {
   height: "8px",
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "4px",
   overflow: "hidden",
 };
 
 const progressFillStyle: React.CSSProperties = {
   height: "100%",
-  backgroundColor: "#3b82f6",
+  backgroundColor: "var(--rl-primary)",
   transition: "width 0.3s ease",
 };
 
 const percentLabelStyle: React.CSSProperties = {
   display: "flex",
   justifyContent: "space-between",
-  fontSize: "12px",
-  color: "#9ca3af",
+  fontSize: "var(--rl-fs-sm)",
+  color: "var(--rl-text-muted)",
   marginTop: "4px",
 };
 
@@ -147,8 +147,8 @@ const stageItemStyle: React.CSSProperties = {
   alignItems: "center",
   gap: "10px",
   padding: "8px 0",
-  borderBottom: "1px solid #374151",
-  fontSize: "13px",
+  borderBottom: "1px solid var(--rl-border-strong)",
+  fontSize: "var(--rl-fs-base)",
 };
 
 const stageDotStyle: React.CSSProperties = {
@@ -160,11 +160,11 @@ const stageDotStyle: React.CSSProperties = {
 
 const messageBoxStyle: React.CSSProperties = {
   padding: "12px",
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "6px",
   marginBottom: "20px",
-  fontSize: "13px",
-  color: "#9ca3af",
+  fontSize: "var(--rl-fs-base)",
+  color: "var(--rl-text-muted)",
 };
 
 const buttonRowStyle: React.CSSProperties = {
@@ -178,32 +178,32 @@ const buttonStyle: React.CSSProperties = {
   borderRadius: "6px",
   border: "none",
   cursor: "pointer",
-  fontSize: "13px",
+  fontSize: "var(--rl-fs-base)",
   fontWeight: 500,
 };
 
 const cancelButtonStyle: React.CSSProperties = {
   ...buttonStyle,
-  backgroundColor: "#ef4444",
+  backgroundColor: "var(--rl-error)",
   color: "white",
 };
 
 const cancelRequestedStyle: React.CSSProperties = {
   ...buttonStyle,
-  backgroundColor: "#f59e0b",
+  backgroundColor: "var(--rl-warning)",
   color: "white",
   cursor: "wait",
 };
 
 const primaryButtonStyle: React.CSSProperties = {
   ...buttonStyle,
-  backgroundColor: "#3b82f6",
+  backgroundColor: "var(--rl-primary)",
   color: "white",
 };
 
 const secondaryButtonStyle: React.CSSProperties = {
   ...buttonStyle,
-  backgroundColor: "#4b5563",
+  backgroundColor: "var(--rl-border-strong)",
   color: "white",
 };
 
@@ -229,11 +229,11 @@ const errorBoxStyle: React.CSSProperties = {
 };
 
 const codeStyle: React.CSSProperties = {
-  fontFamily: "monospace",
-  backgroundColor: "#374151",
+  fontFamily: "var(--rl-font-mono)",
+  backgroundColor: "var(--rl-border-strong)",
   padding: "2px 6px",
   borderRadius: "3px",
-  fontSize: "11px",
+  fontSize: "var(--rl-fs-xs)",
 };
 
 function StageList({
@@ -255,19 +255,19 @@ function StageList({
               style={{
                 ...stageDotStyle,
                 backgroundColor: isComplete
-                  ? "#22c55e"
+                  ? "var(--rl-success)"
                   : isCurrent
-                    ? "#3b82f6"
-                    : "#4b5563",
+                    ? "var(--rl-primary)"
+                    : "var(--rl-border-strong)",
               }}
             />
             <span
               style={{
                 color: isComplete
-                  ? "#22c55e"
+                  ? "var(--rl-success)"
                   : isCurrent
-                    ? "#eaeaea"
-                    : "#6b7280",
+                    ? "var(--rl-text)"
+                    : "var(--rl-text-dim)",
                 fontWeight: isCurrent ? 500 : 400,
               }}
             >
@@ -277,8 +277,8 @@ function StageList({
               <span
                 style={{
                   marginLeft: "auto",
-                  color: "#3b82f6",
-                  fontSize: "11px",
+                  color: "var(--rl-primary)",
+                  fontSize: "var(--rl-fs-xs)",
                 }}
               >
                 {percent}%
@@ -288,8 +288,8 @@ function StageList({
               <span
                 style={{
                   marginLeft: "auto",
-                  color: "#22c55e",
-                  fontSize: "11px",
+                  color: "var(--rl-success)",
+                  fontSize: "var(--rl-fs-xs)",
                 }}
               >
                 Done
@@ -321,18 +321,18 @@ function SuccessResult({
         </div>
         {result.output_dir && (
           <div
-            style={{ color: "#d1fae5", fontSize: "13px", marginBottom: "4px" }}
+            style={{ color: "#d1fae5", fontSize: "var(--rl-fs-base)", marginBottom: "4px" }}
           >
             Output: <code style={codeStyle}>{result.output_dir}</code>
           </div>
         )}
         {result.bundle_path && (
-          <div style={{ color: "#d1fae5", fontSize: "13px" }}>
+          <div style={{ color: "#d1fae5", fontSize: "var(--rl-fs-base)" }}>
             Bundle: <code style={codeStyle}>{result.bundle_path}</code>
           </div>
         )}
         {result.run_log_summary && (
-          <div style={{ color: "#9ca3af", fontSize: "12px", marginTop: "8px" }}>
+          <div style={{ color: "var(--rl-text-muted)", fontSize: "var(--rl-fs-sm)", marginTop: "8px" }}>
             {result.run_log_summary.verse_count} verses,{" "}
             {result.run_log_summary.file_count} files
           </div>
@@ -373,7 +373,7 @@ function GateBlockedResult({
           Gates Pending
         </div>
         <div
-          style={{ color: "#fef3c7", fontSize: "13px", marginBottom: "12px" }}
+          style={{ color: "#fef3c7", fontSize: "var(--rl-fs-base)", marginBottom: "12px" }}
         >
           {pendingGates.length} variant(s) require acknowledgement before export
           can proceed.
@@ -384,7 +384,7 @@ function GateBlockedResult({
               key={gate}
               style={{
                 color: "#fde68a",
-                fontSize: "12px",
+                fontSize: "var(--rl-fs-sm)",
                 padding: "4px 8px",
                 backgroundColor: "#451a03",
                 borderRadius: "4px",
@@ -423,7 +423,7 @@ function FailedResult({
         <div style={{ color: "#fca5a5", fontWeight: 600, marginBottom: "8px" }}>
           Export Failed
         </div>
-        <div style={{ color: "#fecaca", fontSize: "13px" }}>
+        <div style={{ color: "#fecaca", fontSize: "var(--rl-fs-base)" }}>
           {errors.length > 0 ? (
             <ul style={{ margin: 0, paddingLeft: "20px" }}>
               {errors.map((err, i) => (
@@ -533,8 +533,8 @@ export function JobProgressModal({
                     width: `${percent}%`,
                     backgroundColor:
                       state.status === "cancel_requested"
-                        ? "#f59e0b"
-                        : "#3b82f6",
+                        ? "var(--rl-warning)"
+                        : "var(--rl-primary)",
                   }}
                 />
               </div>

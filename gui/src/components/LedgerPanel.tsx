@@ -18,7 +18,7 @@ import type {
 // Styles
 const panelStyle: React.CSSProperties = {
   marginTop: "16px",
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "8px",
   overflow: "hidden",
 };
@@ -28,20 +28,20 @@ const headerStyle: React.CSSProperties = {
   alignItems: "center",
   justifyContent: "space-between",
   padding: "12px 16px",
-  backgroundColor: "#2d2d44",
+  backgroundColor: "var(--rl-bg-card)",
   cursor: "pointer",
   userSelect: "none",
 };
 
 const headerTextStyle: React.CSSProperties = {
-  fontSize: "14px",
+  fontSize: "var(--rl-fs-base)",
   fontWeight: 500,
   color: "#60a5fa",
 };
 
 const toggleStyle: React.CSSProperties = {
-  fontSize: "16px",
-  color: "#6b7280",
+  fontSize: "var(--rl-fs-md)",
+  color: "var(--rl-text-dim)",
 };
 
 const contentStyle: React.CSSProperties = {
@@ -55,23 +55,23 @@ const tableContainerStyle: React.CSSProperties = {
 const tableStyle: React.CSSProperties = {
   width: "100%",
   borderCollapse: "collapse",
-  fontSize: "13px",
+  fontSize: "var(--rl-fs-base)",
 };
 
 const thStyle: React.CSSProperties = {
   textAlign: "left",
   padding: "8px 12px",
-  borderBottom: "1px solid #4b5563",
-  color: "#9ca3af",
+  borderBottom: "1px solid var(--rl-border-strong)",
+  color: "var(--rl-text-muted)",
   fontWeight: 500,
-  fontSize: "11px",
+  fontSize: "var(--rl-fs-xs)",
   textTransform: "uppercase",
 };
 
 const tdStyle: React.CSSProperties = {
   padding: "8px 12px",
-  borderBottom: "1px solid #2d2d44",
-  color: "#eaeaea",
+  borderBottom: "1px solid var(--rl-bg-card)",
+  color: "var(--rl-text)",
   verticalAlign: "top",
 };
 
@@ -84,20 +84,20 @@ const greekCellStyle: React.CSSProperties = {
 
 const morphCellStyle: React.CSSProperties = {
   ...tdStyle,
-  fontFamily: "monospace",
-  fontSize: "11px",
-  color: "#9ca3af",
+  fontFamily: "var(--rl-font-mono)",
+  fontSize: "var(--rl-fs-xs)",
+  color: "var(--rl-text-muted)",
 };
 
 const glossSourceStyle: React.CSSProperties = {
-  fontSize: "10px",
-  color: "#6b7280",
+  fontSize: "var(--rl-fs-xs)",
+  color: "var(--rl-text-dim)",
   marginTop: "2px",
 };
 
 const noteStyle: React.CSSProperties = {
-  fontSize: "10px",
-  color: "#9ca3af",
+  fontSize: "var(--rl-fs-xs)",
+  color: "var(--rl-text-muted)",
   fontStyle: "italic",
 };
 
@@ -110,7 +110,7 @@ const confidenceContainerStyle: React.CSSProperties = {
 const confidenceBarStyle: React.CSSProperties = {
   width: "30px",
   height: "6px",
-  backgroundColor: "#374151",
+  backgroundColor: "var(--rl-border-strong)",
   borderRadius: "3px",
   overflow: "hidden",
 };
@@ -118,7 +118,7 @@ const confidenceBarStyle: React.CSSProperties = {
 const provenanceStyle: React.CSSProperties = {
   marginTop: "16px",
   padding: "12px",
-  backgroundColor: "#2d2d44",
+  backgroundColor: "var(--rl-bg-card)",
   borderRadius: "4px",
 };
 
@@ -126,7 +126,7 @@ const badgeStyle: React.CSSProperties = {
   display: "inline-block",
   padding: "2px 8px",
   borderRadius: "3px",
-  fontSize: "11px",
+  fontSize: "var(--rl-fs-xs)",
   fontWeight: 500,
   marginRight: "6px",
   marginBottom: "4px",
@@ -134,27 +134,27 @@ const badgeStyle: React.CSSProperties = {
 
 const spineBadgeStyle: React.CSSProperties = {
   ...badgeStyle,
-  backgroundColor: "#22c55e",
-  color: "#1a1a2e",
+  backgroundColor: "var(--rl-success)",
+  color: "var(--rl-bg-app)",
 };
 
 const comparativeBadgeStyle: React.CSSProperties = {
   ...badgeStyle,
-  backgroundColor: "#3b82f6",
+  backgroundColor: "var(--rl-primary)",
   color: "white",
 };
 
 const evidenceBadgeStyle: React.CSSProperties = {
   ...badgeStyle,
-  backgroundColor: "#6b7280",
+  backgroundColor: "var(--rl-text-dim)",
   color: "white",
 };
 
 // Helper to get confidence bar color
 function getConfidenceColor(score: number): string {
-  if (score >= 0.8) return "#22c55e";
-  if (score >= 0.6) return "#f59e0b";
-  return "#ef4444";
+  if (score >= 0.8) return "var(--rl-success)";
+  if (score >= 0.6) return "var(--rl-warning)";
+  return "var(--rl-error)";
 }
 
 // Mini confidence bars component
@@ -173,7 +173,9 @@ function MiniConfidenceBars({ confidence }: { confidence: TokenConfidence }) {
           key={key}
           style={{ display: "flex", alignItems: "center", gap: "2px" }}
         >
-          <span style={{ fontSize: "9px", color: "#6b7280" }}>{key}</span>
+          <span style={{ fontSize: "9px", color: "var(--rl-text-dim)" }}>
+            {key}
+          </span>
           <div style={confidenceBarStyle}>
             <div
               style={{
@@ -200,7 +202,13 @@ function ProvenanceBadges({ provenance }: { provenance: LedgerProvenance }) {
 
   return (
     <div style={provenanceStyle}>
-      <div style={{ fontSize: "11px", color: "#9ca3af", marginBottom: "8px" }}>
+      <div
+        style={{
+          fontSize: "var(--rl-fs-xs)",
+          color: "var(--rl-text-muted)",
+          marginBottom: "8px",
+        }}
+      >
         PROVENANCE
       </div>
       <div>
@@ -213,7 +221,11 @@ function ProvenanceBadges({ provenance }: { provenance: LedgerProvenance }) {
       </div>
       <div style={{ marginTop: "8px" }}>
         <span
-          style={{ fontSize: "11px", color: "#9ca3af", marginRight: "8px" }}
+          style={{
+            fontSize: "var(--rl-fs-xs)",
+            color: "var(--rl-text-muted)",
+            marginRight: "8px",
+          }}
         >
           Evidence:
         </span>
@@ -230,7 +242,7 @@ function ProvenanceBadges({ provenance }: { provenance: LedgerProvenance }) {
           <span style={evidenceBadgeStyle}>{ecs.other_count} Other</span>
         )}
         {total === 0 && (
-          <span style={{ color: "#6b7280", fontSize: "11px" }}>
+          <span style={{ color: "var(--rl-text-dim)", fontSize: "var(--rl-fs-xs)" }}>
             No recorded support
           </span>
         )}
@@ -257,7 +269,13 @@ function TokenTable({ tokens }: { tokens: TokenLedger[] }) {
         <tbody>
           {tokens.map((token, idx) => (
             <tr key={idx}>
-              <td style={{ ...tdStyle, color: "#6b7280", width: "40px" }}>
+              <td
+                style={{
+                  ...tdStyle,
+                  color: "var(--rl-text-dim)",
+                  width: "40px",
+                }}
+              >
                 {token.position + 1}
               </td>
               <td style={greekCellStyle}>
@@ -321,7 +339,13 @@ interface LedgerListProps {
 export function LedgerList({ ledgers }: LedgerListProps) {
   if (ledgers.length === 0) {
     return (
-      <div style={{ color: "#6b7280", fontSize: "13px", padding: "16px" }}>
+      <div
+        style={{
+          color: "var(--rl-text-dim)",
+          fontSize: "var(--rl-fs-base)",
+          padding: "16px",
+        }}
+      >
         No ledger data available for this translation.
       </div>
     );

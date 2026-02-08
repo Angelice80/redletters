@@ -18,8 +18,8 @@ interface TokenReceiptPopoverProps {
 // Styles
 const popoverStyle: React.CSSProperties = {
   position: "absolute",
-  backgroundColor: "#2d2d44",
-  border: "1px solid #4b5563",
+  backgroundColor: "var(--rl-bg-card)",
+  border: "1px solid var(--rl-border-strong)",
   borderRadius: "8px",
   padding: "16px",
   minWidth: "280px",
@@ -33,12 +33,12 @@ const headerStyle: React.CSSProperties = {
   justifyContent: "space-between",
   alignItems: "flex-start",
   marginBottom: "12px",
-  borderBottom: "1px solid #4b5563",
+  borderBottom: "1px solid var(--rl-border-strong)",
   paddingBottom: "12px",
 };
 
 const surfaceStyle: React.CSSProperties = {
-  fontSize: "20px",
+  fontSize: "var(--rl-fs-lg)",
   fontFamily: "'SBL Greek', 'Cardo', 'Gentium Plus', serif",
   color: "#60a5fa",
   fontWeight: 500,
@@ -47,9 +47,9 @@ const surfaceStyle: React.CSSProperties = {
 const closeButtonStyle: React.CSSProperties = {
   background: "none",
   border: "none",
-  color: "#6b7280",
+  color: "var(--rl-text-dim)",
   cursor: "pointer",
-  fontSize: "18px",
+  fontSize: "var(--rl-fs-lg)",
   padding: "0",
   lineHeight: 1,
 };
@@ -62,27 +62,27 @@ const rowStyle: React.CSSProperties = {
 };
 
 const labelStyle: React.CSSProperties = {
-  fontSize: "11px",
-  color: "#9ca3af",
+  fontSize: "var(--rl-fs-xs)",
+  color: "var(--rl-text-muted)",
   textTransform: "uppercase",
 };
 
 const valueStyle: React.CSSProperties = {
-  fontSize: "13px",
-  color: "#eaeaea",
+  fontSize: "var(--rl-fs-base)",
+  color: "var(--rl-text)",
 };
 
 const glossStyle: React.CSSProperties = {
   ...valueStyle,
   fontWeight: 500,
-  color: "#22c55e",
+  color: "var(--rl-success)",
 };
 
 const morphStyle: React.CSSProperties = {
-  fontFamily: "monospace",
-  fontSize: "12px",
-  color: "#9ca3af",
-  backgroundColor: "#1a1a2e",
+  fontFamily: "var(--rl-font-mono)",
+  fontSize: "var(--rl-fs-sm)",
+  color: "var(--rl-text-muted)",
+  backgroundColor: "var(--rl-bg-app)",
   padding: "2px 6px",
   borderRadius: "3px",
 };
@@ -93,7 +93,7 @@ const confidenceGridStyle: React.CSSProperties = {
   gap: "8px",
   marginTop: "12px",
   padding: "12px",
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "4px",
 };
 
@@ -106,14 +106,14 @@ const confidenceItemStyle: React.CSSProperties = {
 const confidenceBarStyle: React.CSSProperties = {
   flex: 1,
   height: "6px",
-  backgroundColor: "#374151",
+  backgroundColor: "var(--rl-border-strong)",
   borderRadius: "3px",
   overflow: "hidden",
 };
 
 const sourceStyle: React.CSSProperties = {
-  fontSize: "11px",
-  color: "#6b7280",
+  fontSize: "var(--rl-fs-xs)",
+  color: "var(--rl-text-dim)",
   marginTop: "8px",
 };
 
@@ -121,36 +121,36 @@ const linkStyle: React.CSSProperties = {
   display: "block",
   marginTop: "12px",
   padding: "8px",
-  backgroundColor: "#3b82f6",
+  backgroundColor: "var(--rl-primary)",
   color: "white",
   textAlign: "center",
   borderRadius: "4px",
   cursor: "pointer",
-  fontSize: "12px",
+  fontSize: "var(--rl-fs-sm)",
   border: "none",
   width: "100%",
 };
 
 const notesStyle: React.CSSProperties = {
-  fontSize: "11px",
-  color: "#9ca3af",
+  fontSize: "var(--rl-fs-xs)",
+  color: "var(--rl-text-muted)",
   fontStyle: "italic",
   marginTop: "8px",
   padding: "8px",
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "4px",
 };
 
 function getConfidenceColor(score: number): string {
-  if (score >= 0.8) return "#22c55e";
-  if (score >= 0.6) return "#f59e0b";
-  return "#ef4444";
+  if (score >= 0.8) return "var(--rl-success)";
+  if (score >= 0.6) return "var(--rl-warning)";
+  return "var(--rl-error)";
 }
 
 function ConfidenceBar({ label, score }: { label: string; score: number }) {
   return (
     <div style={confidenceItemStyle}>
-      <span style={{ fontSize: "10px", color: "#9ca3af", width: "12px" }}>
+      <span style={{ fontSize: "var(--rl-fs-xs)", color: "var(--rl-text-muted)", width: "12px" }}>
         {label}
       </span>
       <div style={confidenceBarStyle}>
@@ -162,7 +162,7 @@ function ConfidenceBar({ label, score }: { label: string; score: number }) {
           }}
         />
       </div>
-      <span style={{ fontSize: "10px", color: "#9ca3af", width: "28px" }}>
+      <span style={{ fontSize: "var(--rl-fs-xs)", color: "var(--rl-text-muted)", width: "28px" }}>
         {(score * 100).toFixed(0)}%
       </span>
     </div>
@@ -211,7 +211,7 @@ export function TokenReceiptPopover({
             <div style={surfaceStyle}>{token.surface}</div>
             {token.lemma && (
               <div
-                style={{ fontSize: "12px", color: "#9ca3af", marginTop: "4px" }}
+                style={{ fontSize: "var(--rl-fs-sm)", color: "var(--rl-text-muted)", marginTop: "4px" }}
               >
                 Lemma: <span style={{ color: "#60a5fa" }}>{token.lemma}</span>
               </div>
@@ -251,15 +251,15 @@ export function TokenReceiptPopover({
         <div
           style={{
             marginTop: "8px",
-            fontSize: "11px",
+            fontSize: "var(--rl-fs-xs)",
             color:
               riskLevel === "critical"
-                ? "#ef4444"
+                ? "var(--rl-error)"
                 : riskLevel === "high"
-                  ? "#f59e0b"
+                  ? "var(--rl-warning)"
                   : riskLevel === "medium"
                     ? "#fde68a"
-                    : "#22c55e",
+                    : "var(--rl-success)",
           }}
         >
           Risk: {(risk * 100).toFixed(0)}% ({riskLevel})

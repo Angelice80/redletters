@@ -26,7 +26,7 @@ const containerStyle: React.CSSProperties = {
   margin: "16px",
   backgroundColor: "#1f2937", // Dark gray instead of dark red
   borderRadius: "8px",
-  border: "1px solid #f59e0b", // Amber border instead of red
+  border: "1px solid var(--rl-warning)", // Amber border instead of red
 };
 
 const headerStyle: React.CSSProperties = {
@@ -40,23 +40,23 @@ const iconStyle: React.CSSProperties = {
   width: "40px",
   height: "40px",
   borderRadius: "50%",
-  backgroundColor: "#f59e0b", // Amber instead of red
+  backgroundColor: "var(--rl-warning)", // Amber instead of red
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  fontSize: "20px",
+  fontSize: "var(--rl-fs-lg)",
   color: "#1f2937",
 };
 
 const titleStyle: React.CSSProperties = {
-  fontSize: "18px",
+  fontSize: "var(--rl-fs-lg)",
   fontWeight: 600,
   color: "#fcd34d", // Amber text instead of red
 };
 
 const subtitleStyle: React.CSSProperties = {
-  fontSize: "14px",
-  color: "#9ca3af", // Neutral gray instead of red tint
+  fontSize: "var(--rl-fs-base)",
+  color: "var(--rl-text-muted)", // Neutral gray instead of red tint
   marginTop: "4px",
 };
 
@@ -65,8 +65,8 @@ const sectionStyle: React.CSSProperties = {
 };
 
 const labelStyle: React.CSSProperties = {
-  fontSize: "12px",
-  color: "#9ca3af", // Neutral gray
+  fontSize: "var(--rl-fs-sm)",
+  color: "var(--rl-text-muted)", // Neutral gray
   textTransform: "uppercase",
   marginBottom: "8px",
 };
@@ -79,19 +79,19 @@ const inputRowStyle: React.CSSProperties = {
 
 const inputStyle: React.CSSProperties = {
   padding: "10px 14px",
-  fontSize: "14px",
-  backgroundColor: "#1a1a2e",
-  border: "1px solid #4b5563",
+  fontSize: "var(--rl-fs-base)",
+  backgroundColor: "var(--rl-bg-app)",
+  border: "1px solid var(--rl-border-strong)",
   borderRadius: "4px",
-  color: "#eaeaea",
+  color: "var(--rl-text)",
   width: "120px",
 };
 
 const buttonStyle: React.CSSProperties = {
   padding: "10px 20px",
-  fontSize: "14px",
+  fontSize: "var(--rl-fs-base)",
   fontWeight: 500,
-  backgroundColor: "#3b82f6",
+  backgroundColor: "var(--rl-primary)",
   color: "white",
   border: "none",
   borderRadius: "4px",
@@ -100,41 +100,41 @@ const buttonStyle: React.CSSProperties = {
 
 const secondaryButtonStyle: React.CSSProperties = {
   ...buttonStyle,
-  backgroundColor: "#4b5563",
+  backgroundColor: "var(--rl-border-strong)",
 };
 
 const hintsStyle: React.CSSProperties = {
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "6px",
   padding: "16px",
   marginTop: "16px",
 };
 
 const hintTitleStyle: React.CSSProperties = {
-  fontSize: "13px",
+  fontSize: "var(--rl-fs-base)",
   fontWeight: 600,
-  color: "#9ca3af",
+  color: "var(--rl-text-muted)",
   marginBottom: "12px",
 };
 
 const hintItemStyle: React.CSSProperties = {
-  fontSize: "13px",
-  color: "#9ca3af",
+  fontSize: "var(--rl-fs-base)",
+  color: "var(--rl-text-muted)",
   marginBottom: "8px",
   paddingLeft: "16px",
   position: "relative" as const,
 };
 
 const codeStyle: React.CSSProperties = {
-  fontFamily: "monospace",
-  backgroundColor: "#374151",
+  fontFamily: "var(--rl-font-mono)",
+  backgroundColor: "var(--rl-border-strong)",
   padding: "2px 6px",
   borderRadius: "3px",
-  fontSize: "12px",
+  fontSize: "var(--rl-fs-sm)",
 };
 
 const statusStyle: React.CSSProperties = {
-  fontSize: "12px",
+  fontSize: "var(--rl-fs-sm)",
   marginTop: "8px",
 };
 
@@ -288,7 +288,7 @@ export function ConnectionPanel({
             style={{
               ...statusStyle,
               color: checkResult.startsWith("Connected")
-                ? "#22c55e"
+                ? "var(--rl-success)"
                 : checkResult === "auth_required"
                   ? "#fcd34d"
                   : "#fca5a5",
@@ -305,7 +305,7 @@ export function ConnectionPanel({
                     style={{
                       ...buttonStyle,
                       padding: "6px 12px",
-                      fontSize: "12px",
+                      fontSize: "var(--rl-fs-sm)",
                     }}
                   >
                     Configure Token
@@ -325,7 +325,7 @@ export function ConnectionPanel({
               padding: "12px",
               backgroundColor: "#1e3a5f",
               borderRadius: "6px",
-              border: "1px solid #3b82f6",
+              border: "1px solid var(--rl-primary)",
             }}
           >
             <div
@@ -346,8 +346,8 @@ export function ConnectionPanel({
                 style={{
                   ...buttonStyle,
                   padding: "6px 12px",
-                  fontSize: "12px",
-                  backgroundColor: "#22c55e",
+                  fontSize: "var(--rl-fs-sm)",
+                  backgroundColor: "var(--rl-success)",
                 }}
               >
                 {detectedBackend.requiresAuth
@@ -385,7 +385,7 @@ export function ConnectionPanel({
               ...buttonStyle,
               marginTop: "16px",
               width: "100%",
-              backgroundColor: "#3b82f6",
+              backgroundColor: "var(--rl-primary)",
             }}
           >
             Configure Connection Settings

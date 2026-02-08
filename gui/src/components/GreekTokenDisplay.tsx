@@ -31,7 +31,7 @@ interface GreekTokenDisplayProps {
 }
 
 const greekTextStyle: React.CSSProperties = {
-  fontSize: "18px",
+  fontSize: "var(--rl-fs-lg)",
   fontFamily: "'SBL Greek', 'Cardo', 'Gentium Plus', serif",
   color: "#60a5fa",
   lineHeight: 1.8,
@@ -55,12 +55,12 @@ const highlightedStyle: React.CSSProperties = {
 };
 
 const noDataStyle: React.CSSProperties = {
-  fontSize: "12px",
-  color: "#6b7280",
+  fontSize: "var(--rl-fs-sm)",
+  color: "var(--rl-text-dim)",
   fontStyle: "italic",
   marginTop: "12px",
   padding: "8px",
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "4px",
 };
 

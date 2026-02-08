@@ -15,13 +15,13 @@ interface JobDetailProps {
 }
 
 const STATE_COLORS: Record<JobState, string> = {
-  queued: "#6b7280",
-  running: "#3b82f6",
-  cancelling: "#f59e0b",
-  cancelled: "#9ca3af",
-  completed: "#22c55e",
-  failed: "#ef4444",
-  archived: "#6b7280",
+  queued: "var(--rl-text-dim)",
+  running: "var(--rl-primary)",
+  cancelling: "var(--rl-warning)",
+  cancelled: "var(--rl-text-muted)",
+  completed: "var(--rl-success)",
+  failed: "var(--rl-error)",
+  archived: "var(--rl-text-dim)",
 };
 
 export function JobDetail({ client }: JobDetailProps) {
@@ -102,7 +102,7 @@ export function JobDetail({ client }: JobDetailProps) {
         <div
           style={{
             padding: "16px",
-            backgroundColor: "#ef4444",
+            backgroundColor: "var(--rl-error)",
             borderRadius: "4px",
             color: "white",
             marginBottom: "16px",
@@ -116,7 +116,7 @@ export function JobDetail({ client }: JobDetailProps) {
             padding: "8px 16px",
             borderRadius: "4px",
             border: "none",
-            backgroundColor: "#3b82f6",
+            backgroundColor: "var(--rl-primary)",
             color: "white",
             cursor: "pointer",
           }}
@@ -138,7 +138,7 @@ export function JobDetail({ client }: JobDetailProps) {
             padding: "8px 16px",
             borderRadius: "4px",
             border: "none",
-            backgroundColor: "#3b82f6",
+            backgroundColor: "var(--rl-primary)",
             color: "white",
             cursor: "pointer",
           }}
@@ -177,9 +177,9 @@ export function JobDetail({ client }: JobDetailProps) {
               borderRadius: "4px",
               border: "1px solid #4a4a6a",
               backgroundColor: "transparent",
-              color: "#9ca3af",
+              color: "var(--rl-text-muted)",
               cursor: "pointer",
-              fontSize: "12px",
+              fontSize: "var(--rl-fs-sm)",
               marginBottom: "8px",
             }}
           >
@@ -187,10 +187,10 @@ export function JobDetail({ client }: JobDetailProps) {
           </button>
           <h1
             style={{
-              fontSize: "20px",
+              fontSize: "var(--rl-fs-lg)",
               fontWeight: 600,
               margin: 0,
-              fontFamily: "monospace",
+              fontFamily: "var(--rl-font-mono)",
             }}
           >
             {job.job_id}
@@ -204,7 +204,7 @@ export function JobDetail({ client }: JobDetailProps) {
               borderRadius: "4px",
               backgroundColor: STATE_COLORS[job.state],
               color: "white",
-              fontSize: "12px",
+              fontSize: "var(--rl-fs-sm)",
               fontWeight: 600,
               textTransform: "uppercase",
             }}
@@ -218,11 +218,11 @@ export function JobDetail({ client }: JobDetailProps) {
               style={{
                 padding: "4px 12px",
                 borderRadius: "4px",
-                border: "1px solid #ef4444",
+                border: "1px solid var(--rl-error)",
                 backgroundColor: "transparent",
-                color: "#ef4444",
+                color: "var(--rl-error)",
                 cursor: "pointer",
-                fontSize: "12px",
+                fontSize: "var(--rl-fs-sm)",
               }}
             >
               Cancel Job
@@ -239,8 +239,8 @@ export function JobDetail({ client }: JobDetailProps) {
               display: "flex",
               justifyContent: "space-between",
               marginBottom: "4px",
-              fontSize: "12px",
-              color: "#9ca3af",
+              fontSize: "var(--rl-fs-sm)",
+              color: "var(--rl-text-muted)",
             }}
           >
             <span>{job.progress_phase ?? "Processing"}</span>
@@ -249,7 +249,7 @@ export function JobDetail({ client }: JobDetailProps) {
           <div
             style={{
               height: "8px",
-              backgroundColor: "#2d2d44",
+              backgroundColor: "var(--rl-bg-card)",
               borderRadius: "4px",
               overflow: "hidden",
             }}
@@ -258,7 +258,7 @@ export function JobDetail({ client }: JobDetailProps) {
               style={{
                 height: "100%",
                 width: `${job.progress_percent ?? 0}%`,
-                backgroundColor: "#3b82f6",
+                backgroundColor: "var(--rl-primary)",
                 transition: "width 0.3s",
               }}
             />
@@ -270,7 +270,7 @@ export function JobDetail({ client }: JobDetailProps) {
       <div
         style={{
           padding: "16px",
-          backgroundColor: "#2d2d44",
+          backgroundColor: "var(--rl-bg-card)",
           borderRadius: "8px",
           marginBottom: "24px",
         }}
@@ -280,19 +280,19 @@ export function JobDetail({ client }: JobDetailProps) {
             display: "grid",
             gridTemplateColumns: "auto 1fr auto 1fr",
             gap: "8px 16px",
-            fontSize: "13px",
+            fontSize: "var(--rl-fs-base)",
           }}
         >
-          <span style={{ color: "#9ca3af" }}>Created:</span>
+          <span style={{ color: "var(--rl-text-muted)" }}>Created:</span>
           <span>{formatDate(job.created_at)}</span>
 
-          <span style={{ color: "#9ca3af" }}>Started:</span>
+          <span style={{ color: "var(--rl-text-muted)" }}>Started:</span>
           <span>{formatDate(job.started_at)}</span>
 
-          <span style={{ color: "#9ca3af" }}>Completed:</span>
+          <span style={{ color: "var(--rl-text-muted)" }}>Completed:</span>
           <span>{formatDate(job.completed_at)}</span>
 
-          <span style={{ color: "#9ca3af" }}>Style:</span>
+          <span style={{ color: "var(--rl-text-muted)" }}>Style:</span>
           <span>{job.config.style}</span>
         </div>
 
@@ -301,18 +301,18 @@ export function JobDetail({ client }: JobDetailProps) {
             style={{
               marginTop: "12px",
               padding: "8px 12px",
-              backgroundColor: "#1a1a2e",
+              backgroundColor: "var(--rl-bg-app)",
               borderRadius: "4px",
-              borderLeft: "3px solid #ef4444",
+              borderLeft: "3px solid var(--rl-error)",
             }}
           >
             <div
-              style={{ color: "#ef4444", fontSize: "12px", fontWeight: 600 }}
+              style={{ color: "var(--rl-error)", fontSize: "var(--rl-fs-sm)", fontWeight: 600 }}
             >
               {job.error_code}
             </div>
             <div
-              style={{ color: "#eaeaea", fontSize: "13px", marginTop: "4px" }}
+              style={{ color: "var(--rl-text)", fontSize: "var(--rl-fs-base)", marginTop: "4px" }}
             >
               {job.error_message}
             </div>
@@ -324,7 +324,7 @@ export function JobDetail({ client }: JobDetailProps) {
       <div style={{ marginBottom: "24px" }}>
         <h2
           style={{
-            fontSize: "16px",
+            fontSize: "var(--rl-fs-md)",
             fontWeight: 600,
             marginBottom: "12px",
           }}
@@ -338,7 +338,7 @@ export function JobDetail({ client }: JobDetailProps) {
       <div>
         <h2
           style={{
-            fontSize: "16px",
+            fontSize: "var(--rl-fs-md)",
             fontWeight: 600,
             marginBottom: "12px",
           }}

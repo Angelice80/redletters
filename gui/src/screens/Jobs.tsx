@@ -37,13 +37,13 @@ interface JobsProps {
 }
 
 const STATE_COLORS: Record<JobState, string> = {
-  queued: "#6b7280",
-  running: "#3b82f6",
-  cancelling: "#f59e0b",
-  cancelled: "#9ca3af",
-  completed: "#22c55e",
-  failed: "#ef4444",
-  archived: "#6b7280",
+  queued: "var(--rl-text-dim)",
+  running: "var(--rl-primary)",
+  cancelling: "var(--rl-warning)",
+  cancelled: "var(--rl-text-muted)",
+  completed: "var(--rl-success)",
+  failed: "var(--rl-error)",
+  archived: "var(--rl-text-dim)",
 };
 
 // Sprint 17: Filter types
@@ -57,19 +57,19 @@ const filterStyle: React.CSSProperties = {
 
 const filterButtonStyle: React.CSSProperties = {
   padding: "6px 12px",
-  fontSize: "12px",
-  backgroundColor: "#374151",
-  color: "#9ca3af",
-  border: "1px solid #4b5563",
+  fontSize: "var(--rl-fs-sm)",
+  backgroundColor: "var(--rl-border-strong)",
+  color: "var(--rl-text-muted)",
+  border: "1px solid var(--rl-border-strong)",
   borderRadius: "4px",
   cursor: "pointer",
 };
 
 const filterActiveStyle: React.CSSProperties = {
   ...filterButtonStyle,
-  backgroundColor: "#3b82f6",
+  backgroundColor: "var(--rl-primary)",
   color: "white",
-  borderColor: "#3b82f6",
+  borderColor: "var(--rl-primary)",
 };
 
 const errorSummaryStyle: React.CSSProperties = {
@@ -77,17 +77,17 @@ const errorSummaryStyle: React.CSSProperties = {
   borderRadius: "4px",
   padding: "12px",
   marginTop: "12px",
-  fontSize: "13px",
+  fontSize: "var(--rl-fs-base)",
 };
 
 const errorDetailsStyle: React.CSSProperties = {
   marginTop: "8px",
   padding: "8px",
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "4px",
-  fontSize: "11px",
-  fontFamily: "monospace",
-  color: "#9ca3af",
+  fontSize: "var(--rl-fs-xs)",
+  fontFamily: "var(--rl-font-mono)",
+  color: "var(--rl-text-muted)",
   maxHeight: "150px",
   overflow: "auto",
   whiteSpace: "pre-wrap",
@@ -96,9 +96,9 @@ const errorDetailsStyle: React.CSSProperties = {
 
 const copyButtonStyle: React.CSSProperties = {
   padding: "4px 8px",
-  fontSize: "10px",
-  backgroundColor: "#374151",
-  color: "#9ca3af",
+  fontSize: "var(--rl-fs-xs)",
+  backgroundColor: "var(--rl-border-strong)",
+  color: "var(--rl-text-muted)",
   border: "none",
   borderRadius: "3px",
   cursor: "pointer",
@@ -119,7 +119,7 @@ const drawerStyle: React.CSSProperties = {
   right: 0,
   width: "480px",
   height: "100vh",
-  backgroundColor: "#2d2d44",
+  backgroundColor: "var(--rl-bg-card)",
   boxShadow: "-4px 0 20px rgba(0, 0, 0, 0.3)",
   zIndex: 1001,
   display: "flex",
@@ -129,7 +129,7 @@ const drawerStyle: React.CSSProperties = {
 
 const drawerHeaderStyle: React.CSSProperties = {
   padding: "20px",
-  borderBottom: "1px solid #4b5563",
+  borderBottom: "1px solid var(--rl-border-strong)",
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
@@ -146,24 +146,24 @@ const drawerSectionStyle: React.CSSProperties = {
 };
 
 const drawerLabelStyle: React.CSSProperties = {
-  fontSize: "11px",
-  color: "#6b7280",
+  fontSize: "var(--rl-fs-xs)",
+  color: "var(--rl-text-dim)",
   textTransform: "uppercase",
   marginBottom: "4px",
 };
 
 const drawerValueStyle: React.CSSProperties = {
-  fontSize: "14px",
-  color: "#eaeaea",
+  fontSize: "var(--rl-fs-base)",
+  color: "var(--rl-text)",
 };
 
 const codeStyle: React.CSSProperties = {
-  fontFamily: "monospace",
-  backgroundColor: "#1a1a2e",
+  fontFamily: "var(--rl-font-mono)",
+  backgroundColor: "var(--rl-bg-app)",
   padding: "4px 8px",
   borderRadius: "4px",
-  fontSize: "12px",
-  color: "#9ca3af",
+  fontSize: "var(--rl-fs-sm)",
+  color: "var(--rl-text-muted)",
   wordBreak: "break-all",
 };
 
@@ -185,7 +185,7 @@ const confirmDialogOverlay: React.CSSProperties = {
 };
 
 const confirmDialogStyle: React.CSSProperties = {
-  backgroundColor: "#2d2d44",
+  backgroundColor: "var(--rl-bg-card)",
   borderRadius: "8px",
   padding: "24px",
   width: "360px",
@@ -384,7 +384,7 @@ Message: ${job.error_message || "No message"}
           marginBottom: "24px",
         }}
       >
-        <h1 style={{ fontSize: "24px", fontWeight: 600, margin: 0 }}>Jobs</h1>
+        <h1 style={{ fontSize: "var(--rl-fs-xl)", fontWeight: 600, margin: 0 }}>Jobs</h1>
         <div style={{ display: "flex", gap: "8px" }}>
           <button
             onClick={onRefresh}
@@ -393,9 +393,9 @@ Message: ${job.error_message || "No message"}
               borderRadius: "4px",
               border: "1px solid #4a4a6a",
               backgroundColor: "transparent",
-              color: "#eaeaea",
+              color: "var(--rl-text)",
               cursor: "pointer",
-              fontSize: "14px",
+              fontSize: "var(--rl-fs-base)",
             }}
           >
             Refresh
@@ -407,10 +407,10 @@ Message: ${job.error_message || "No message"}
               padding: "8px 16px",
               borderRadius: "4px",
               border: "none",
-              backgroundColor: "#3b82f6",
+              backgroundColor: "var(--rl-primary)",
               color: "white",
               cursor: creating ? "wait" : "pointer",
-              fontSize: "14px",
+              fontSize: "var(--rl-fs-base)",
               fontWeight: 500,
               opacity: creating || !client ? 0.6 : 1,
             }}
@@ -494,7 +494,7 @@ Message: ${job.error_message || "No message"}
                   backgroundColor: theme.colors.primary,
                   color: "white",
                   cursor: creating ? "wait" : "pointer",
-                  fontSize: "14px",
+                  fontSize: "var(--rl-fs-base)",
                   fontWeight: 500,
                 }}
               >
@@ -517,22 +517,22 @@ Message: ${job.error_message || "No message"}
                 onClick={() => setSelectedJob(job)}
                 style={{
                   padding: "16px",
-                  backgroundColor: "#2d2d44",
+                  backgroundColor: "var(--rl-bg-card)",
                   borderRadius: "8px",
                   cursor: "pointer",
                   transition: "background-color 0.15s",
                   borderLeft:
                     job.state === "failed"
-                      ? "3px solid #ef4444"
+                      ? "3px solid var(--rl-error)"
                       : gateBlocked
-                        ? "3px solid #f59e0b"
+                        ? "3px solid var(--rl-warning)"
                         : "none",
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = "#3d3d54";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#2d2d44";
+                  e.currentTarget.style.backgroundColor = "var(--rl-bg-card)";
                 }}
               >
                 <div
@@ -545,15 +545,15 @@ Message: ${job.error_message || "No message"}
                   <div>
                     <div
                       style={{
-                        fontFamily: "monospace",
-                        fontSize: "14px",
+                        fontFamily: "var(--rl-font-mono)",
+                        fontSize: "var(--rl-fs-base)",
                         fontWeight: 500,
                         marginBottom: "4px",
                       }}
                     >
                       {job.job_id}
                     </div>
-                    <div style={{ color: "#9ca3af", fontSize: "12px" }}>
+                    <div style={{ color: "var(--rl-text-muted)", fontSize: "var(--rl-fs-sm)" }}>
                       Created: {formatDate(job.created_at)}
                     </div>
                     {/* Sprint 19: Show reference for scholarly jobs */}
@@ -561,7 +561,7 @@ Message: ${job.error_message || "No message"}
                       <div
                         style={{
                           color: "#60a5fa",
-                          fontSize: "12px",
+                          fontSize: "var(--rl-fs-sm)",
                           marginTop: "2px",
                         }}
                       >
@@ -579,7 +579,7 @@ Message: ${job.error_message || "No message"}
                     {/* Progress */}
                     {job.state === "running" &&
                       job.progress_percent != null && (
-                        <span style={{ fontSize: "12px", color: "#9ca3af" }}>
+                        <span style={{ fontSize: "var(--rl-fs-sm)", color: "var(--rl-text-muted)" }}>
                           {job.progress_percent}%
                         </span>
                       )}
@@ -590,10 +590,10 @@ Message: ${job.error_message || "No message"}
                         padding: "4px 8px",
                         borderRadius: "4px",
                         backgroundColor: gateBlocked
-                          ? "#f59e0b"
+                          ? "var(--rl-warning)"
                           : STATE_COLORS[job.state],
                         color: "white",
-                        fontSize: "11px",
+                        fontSize: "var(--rl-fs-xs)",
                         fontWeight: 600,
                         textTransform: "uppercase",
                       }}
@@ -608,11 +608,11 @@ Message: ${job.error_message || "No message"}
                         style={{
                           padding: "4px 8px",
                           borderRadius: "4px",
-                          border: "1px solid #ef4444",
+                          border: "1px solid var(--rl-error)",
                           backgroundColor: "transparent",
-                          color: "#ef4444",
+                          color: "var(--rl-error)",
                           cursor: "pointer",
-                          fontSize: "11px",
+                          fontSize: "var(--rl-fs-xs)",
                         }}
                       >
                         Cancel
@@ -627,7 +627,7 @@ Message: ${job.error_message || "No message"}
                     <div
                       style={{
                         height: "4px",
-                        backgroundColor: "#1a1a2e",
+                        backgroundColor: "var(--rl-bg-app)",
                         borderRadius: "2px",
                         overflow: "hidden",
                       }}
@@ -636,7 +636,7 @@ Message: ${job.error_message || "No message"}
                         style={{
                           height: "100%",
                           width: `${job.progress_percent ?? 0}%`,
-                          backgroundColor: "#3b82f6",
+                          backgroundColor: "var(--rl-primary)",
                           transition: "width 0.3s",
                         }}
                       />
@@ -645,8 +645,8 @@ Message: ${job.error_message || "No message"}
                       <div
                         style={{
                           marginTop: "4px",
-                          fontSize: "11px",
-                          color: "#6b7280",
+                          fontSize: "var(--rl-fs-xs)",
+                          color: "var(--rl-text-dim)",
                         }}
                       >
                         {job.progress_phase}
@@ -663,7 +663,7 @@ Message: ${job.error_message || "No message"}
                       padding: "8px 12px",
                       backgroundColor: "#451a03",
                       borderRadius: "4px",
-                      fontSize: "12px",
+                      fontSize: "var(--rl-fs-sm)",
                       color: "#fcd34d",
                     }}
                   >
@@ -686,7 +686,7 @@ Message: ${job.error_message || "No message"}
                         <div style={{ color: "#fca5a5", marginBottom: "4px" }}>
                           {job.error_code || "Error"}
                         </div>
-                        <div style={{ color: "#9ca3af" }}>
+                        <div style={{ color: "var(--rl-text-muted)" }}>
                           {getErrorSummary(job)}
                         </div>
                       </div>
@@ -730,18 +730,18 @@ Message: ${job.error_message || "No message"}
               <div>
                 <div
                   style={{
-                    fontSize: "18px",
+                    fontSize: "var(--rl-fs-lg)",
                     fontWeight: 600,
-                    color: "#eaeaea",
+                    color: "var(--rl-text)",
                   }}
                 >
                   Job Details
                 </div>
                 <div
                   style={{
-                    fontSize: "12px",
-                    fontFamily: "monospace",
-                    color: "#6b7280",
+                    fontSize: "var(--rl-fs-sm)",
+                    fontFamily: "var(--rl-font-mono)",
+                    color: "var(--rl-text-dim)",
                     marginTop: "4px",
                   }}
                 >
@@ -753,9 +753,9 @@ Message: ${job.error_message || "No message"}
                 style={{
                   background: "none",
                   border: "none",
-                  color: "#6b7280",
+                  color: "var(--rl-text-dim)",
                   cursor: "pointer",
-                  fontSize: "24px",
+                  fontSize: "var(--rl-fs-xl)",
                   padding: 0,
                   lineHeight: 1,
                 }}
@@ -773,10 +773,10 @@ Message: ${job.error_message || "No message"}
                     padding: "4px 12px",
                     borderRadius: "4px",
                     backgroundColor: isGateBlocked(selectedJob)
-                      ? "#f59e0b"
+                      ? "var(--rl-warning)"
                       : STATE_COLORS[selectedJob.state],
                     color: "white",
-                    fontSize: "12px",
+                    fontSize: "var(--rl-fs-sm)",
                     fontWeight: 600,
                   }}
                 >
@@ -836,7 +836,7 @@ Message: ${job.error_message || "No message"}
                     <div
                       style={{
                         height: "8px",
-                        backgroundColor: "#1a1a2e",
+                        backgroundColor: "var(--rl-bg-app)",
                         borderRadius: "4px",
                         overflow: "hidden",
                       }}
@@ -845,7 +845,7 @@ Message: ${job.error_message || "No message"}
                         style={{
                           height: "100%",
                           width: `${selectedJob.progress_percent ?? 0}%`,
-                          backgroundColor: "#3b82f6",
+                          backgroundColor: "var(--rl-primary)",
                         }}
                       />
                     </div>
@@ -853,8 +853,8 @@ Message: ${job.error_message || "No message"}
                       style={{
                         display: "flex",
                         justifyContent: "space-between",
-                        fontSize: "11px",
-                        color: "#6b7280",
+                        fontSize: "var(--rl-fs-xs)",
+                        color: "var(--rl-text-dim)",
                         marginTop: "4px",
                       }}
                     >
@@ -880,7 +880,7 @@ Message: ${job.error_message || "No message"}
                   <div
                     style={{
                       color: "#fef3c7",
-                      fontSize: "13px",
+                      fontSize: "var(--rl-fs-base)",
                       marginBottom: "12px",
                     }}
                   >
@@ -892,7 +892,7 @@ Message: ${job.error_message || "No message"}
                         key={gate}
                         style={{
                           color: "#fde68a",
-                          fontSize: "12px",
+                          fontSize: "var(--rl-fs-sm)",
                           padding: "4px 8px",
                           backgroundColor: "#451a03",
                           borderRadius: "4px",
@@ -915,8 +915,8 @@ Message: ${job.error_message || "No message"}
                       <div style={{ marginTop: "8px" }}>
                         <div
                           style={{
-                            fontSize: "11px",
-                            color: "#6b7280",
+                            fontSize: "var(--rl-fs-xs)",
+                            color: "var(--rl-text-dim)",
                             marginBottom: "4px",
                           }}
                         >
@@ -931,8 +931,8 @@ Message: ${job.error_message || "No message"}
                       <div style={{ marginTop: "12px" }}>
                         <div
                           style={{
-                            fontSize: "11px",
-                            color: "#6b7280",
+                            fontSize: "var(--rl-fs-xs)",
+                            color: "var(--rl-text-dim)",
                             marginBottom: "4px",
                           }}
                         >
@@ -947,14 +947,14 @@ Message: ${job.error_message || "No message"}
                       <div style={{ marginTop: "12px" }}>
                         <div
                           style={{
-                            fontSize: "11px",
-                            color: "#6b7280",
+                            fontSize: "var(--rl-fs-xs)",
+                            color: "var(--rl-text-dim)",
                             marginBottom: "4px",
                           }}
                         >
                           Summary
                         </div>
-                        <div style={{ color: "#9ca3af", fontSize: "12px" }}>
+                        <div style={{ color: "var(--rl-text-muted)", fontSize: "var(--rl-fs-sm)" }}>
                           {getJobResult(selectedJob)?.run_log_summary
                             ?.verse_count ?? 0}{" "}
                           verses,{" "}
@@ -990,9 +990,9 @@ Message: ${job.error_message || "No message"}
                     </div>
                     <div
                       style={{
-                        color: "#9ca3af",
-                        fontSize: "12px",
-                        fontFamily: "monospace",
+                        color: "var(--rl-text-muted)",
+                        fontSize: "var(--rl-fs-sm)",
+                        fontFamily: "var(--rl-font-mono)",
                         whiteSpace: "pre-wrap",
                         maxHeight: "200px",
                         overflow: "auto",
@@ -1024,10 +1024,10 @@ Message: ${job.error_message || "No message"}
                     padding: "10px 20px",
                     borderRadius: "6px",
                     border: "none",
-                    backgroundColor: "#3b82f6",
+                    backgroundColor: "var(--rl-primary)",
                     color: "white",
                     cursor: "pointer",
-                    fontSize: "13px",
+                    fontSize: "var(--rl-fs-base)",
                     fontWeight: 500,
                   }}
                 >
@@ -1043,11 +1043,11 @@ Message: ${job.error_message || "No message"}
                     style={{
                       padding: "10px 20px",
                       borderRadius: "6px",
-                      border: "1px solid #ef4444",
+                      border: "1px solid var(--rl-error)",
                       backgroundColor: "transparent",
-                      color: "#ef4444",
+                      color: "var(--rl-error)",
                       cursor: "pointer",
-                      fontSize: "13px",
+                      fontSize: "var(--rl-fs-base)",
                       fontWeight: 500,
                     }}
                   >
@@ -1066,9 +1066,9 @@ Message: ${job.error_message || "No message"}
           <div style={confirmDialogStyle} onClick={(e) => e.stopPropagation()}>
             <div
               style={{
-                fontSize: "16px",
+                fontSize: "var(--rl-fs-md)",
                 fontWeight: 600,
-                color: "#eaeaea",
+                color: "var(--rl-text)",
                 marginBottom: "12px",
               }}
             >
@@ -1076,8 +1076,8 @@ Message: ${job.error_message || "No message"}
             </div>
             <div
               style={{
-                color: "#9ca3af",
-                fontSize: "14px",
+                color: "var(--rl-text-muted)",
+                fontSize: "var(--rl-fs-base)",
                 marginBottom: "20px",
               }}
             >
@@ -1086,10 +1086,10 @@ Message: ${job.error_message || "No message"}
             </div>
             <div
               style={{
-                fontFamily: "monospace",
-                fontSize: "12px",
-                color: "#6b7280",
-                backgroundColor: "#1a1a2e",
+                fontFamily: "var(--rl-font-mono)",
+                fontSize: "var(--rl-fs-sm)",
+                color: "var(--rl-text-dim)",
+                backgroundColor: "var(--rl-bg-app)",
                 padding: "8px",
                 borderRadius: "4px",
                 marginBottom: "20px",
@@ -1109,11 +1109,11 @@ Message: ${job.error_message || "No message"}
                 style={{
                   padding: "8px 16px",
                   borderRadius: "4px",
-                  border: "1px solid #4b5563",
+                  border: "1px solid var(--rl-border-strong)",
                   backgroundColor: "transparent",
-                  color: "#9ca3af",
+                  color: "var(--rl-text-muted)",
                   cursor: "pointer",
-                  fontSize: "13px",
+                  fontSize: "var(--rl-fs-base)",
                 }}
               >
                 Keep Running
@@ -1125,10 +1125,10 @@ Message: ${job.error_message || "No message"}
                   padding: "8px 16px",
                   borderRadius: "4px",
                   border: "none",
-                  backgroundColor: "#ef4444",
+                  backgroundColor: "var(--rl-error)",
                   color: "white",
                   cursor: cancelling ? "wait" : "pointer",
-                  fontSize: "13px",
+                  fontSize: "var(--rl-fs-base)",
                   fontWeight: 500,
                   opacity: cancelling ? 0.7 : 1,
                 }}

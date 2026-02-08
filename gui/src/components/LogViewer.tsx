@@ -11,11 +11,11 @@ interface LogViewerProps {
 }
 
 const LEVEL_COLORS: Record<string, string> = {
-  trace: "#6b7280",
-  debug: "#9ca3af",
-  info: "#3b82f6",
-  warn: "#f59e0b",
-  error: "#ef4444",
+  trace: "var(--rl-text-dim)",
+  debug: "var(--rl-text-muted)",
+  info: "var(--rl-primary)",
+  warn: "var(--rl-warning)",
+  error: "var(--rl-error)",
 };
 
 export function LogViewer({ logs, maxHeight = "400px" }: LogViewerProps) {
@@ -76,7 +76,7 @@ export function LogViewer({ logs, maxHeight = "400px" }: LogViewerProps) {
           gap: "12px",
           alignItems: "center",
           padding: "8px",
-          backgroundColor: "#2d2d44",
+          backgroundColor: "var(--rl-bg-card)",
           borderRadius: "4px",
         }}
       >
@@ -91,10 +91,12 @@ export function LogViewer({ logs, maxHeight = "400px" }: LogViewerProps) {
             padding: "4px 12px",
             borderRadius: "4px",
             border: "none",
-            backgroundColor: paused ? "#22c55e" : "#6b7280",
+            backgroundColor: paused
+              ? "var(--rl-success)"
+              : "var(--rl-text-dim)",
             color: "white",
             cursor: "pointer",
-            fontSize: "12px",
+            fontSize: "var(--rl-fs-sm)",
             fontWeight: 500,
           }}
         >
@@ -111,13 +113,13 @@ export function LogViewer({ logs, maxHeight = "400px" }: LogViewerProps) {
             padding: "4px 8px",
             borderRadius: "4px",
             border: "1px solid #4a4a6a",
-            backgroundColor: "#1a1a2e",
-            color: "#eaeaea",
-            fontSize: "12px",
+            backgroundColor: "var(--rl-bg-app)",
+            color: "var(--rl-text)",
+            fontSize: "var(--rl-fs-sm)",
           }}
         />
 
-        <span style={{ fontSize: "12px", color: "#9ca3af" }}>
+        <span style={{ fontSize: "var(--rl-fs-sm)", color: "var(--rl-text-muted)" }}>
           {filteredLogs.length} / {logs.length} logs
         </span>
       </div>
@@ -129,15 +131,19 @@ export function LogViewer({ logs, maxHeight = "400px" }: LogViewerProps) {
         style={{
           maxHeight,
           overflowY: "auto",
-          backgroundColor: "#1a1a2e",
+          backgroundColor: "var(--rl-bg-app)",
           borderRadius: "4px",
-          fontFamily: "monospace",
-          fontSize: "12px",
+          fontFamily: "var(--rl-font-mono)",
+          fontSize: "var(--rl-fs-sm)",
         }}
       >
         {filteredLogs.length === 0 ? (
           <div
-            style={{ padding: "16px", color: "#6b7280", textAlign: "center" }}
+            style={{
+              padding: "16px",
+              color: "var(--rl-text-dim)",
+              textAlign: "center",
+            }}
           >
             {logs.length === 0 ? "No logs yet" : "No matching logs"}
           </div>
@@ -148,16 +154,16 @@ export function LogViewer({ logs, maxHeight = "400px" }: LogViewerProps) {
               style={{
                 display: "flex",
                 padding: "4px 8px",
-                borderBottom: "1px solid #2d2d44",
+                borderBottom: "1px solid var(--rl-bg-card)",
                 gap: "8px",
               }}
             >
-              <span style={{ color: "#6b7280", minWidth: "85px" }}>
+              <span style={{ color: "var(--rl-text-dim)", minWidth: "85px" }}>
                 {formatTimestamp(log.timestamp)}
               </span>
               <span
                 style={{
-                  color: LEVEL_COLORS[log.level] ?? "#9ca3af",
+                  color: LEVEL_COLORS[log.level] ?? "var(--rl-text-muted)",
                   minWidth: "50px",
                   textTransform: "uppercase",
                   fontWeight: 600,
@@ -168,7 +174,9 @@ export function LogViewer({ logs, maxHeight = "400px" }: LogViewerProps) {
               <span style={{ color: "#8b5cf6", minWidth: "100px" }}>
                 [{log.subsystem}]
               </span>
-              <span style={{ color: "#eaeaea", flex: 1 }}>{log.message}</span>
+              <span style={{ color: "var(--rl-text)", flex: 1 }}>
+                {log.message}
+              </span>
             </div>
           ))
         )}
@@ -180,10 +188,10 @@ export function LogViewer({ logs, maxHeight = "400px" }: LogViewerProps) {
           style={{
             textAlign: "center",
             padding: "4px",
-            backgroundColor: "#f59e0b",
-            color: "#1a1a2e",
+            backgroundColor: "var(--rl-warning)",
+            color: "var(--rl-bg-app)",
             borderRadius: "4px",
-            fontSize: "12px",
+            fontSize: "var(--rl-fs-sm)",
             fontWeight: 500,
           }}
         >

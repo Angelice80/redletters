@@ -40,7 +40,7 @@ const overlayStyle: React.CSSProperties = {
 };
 
 const modalStyle: React.CSSProperties = {
-  backgroundColor: "#2d2d44",
+  backgroundColor: "var(--rl-bg-card)",
   borderRadius: "12px",
   padding: "32px",
   maxWidth: "600px",
@@ -51,15 +51,15 @@ const modalStyle: React.CSSProperties = {
 };
 
 const headerStyle: React.CSSProperties = {
-  fontSize: "24px",
+  fontSize: "var(--rl-fs-xl)",
   fontWeight: 600,
-  color: "#eaeaea",
+  color: "var(--rl-text)",
   marginBottom: "8px",
 };
 
 const subHeaderStyle: React.CSSProperties = {
-  fontSize: "14px",
-  color: "#9ca3af",
+  fontSize: "var(--rl-fs-base)",
+  color: "var(--rl-text-muted)",
   marginBottom: "24px",
 };
 
@@ -74,18 +74,18 @@ const stepDotStyle: React.CSSProperties = {
   width: "10px",
   height: "10px",
   borderRadius: "50%",
-  backgroundColor: "#4b5563",
+  backgroundColor: "var(--rl-border-strong)",
   transition: "background-color 0.2s",
 };
 
 const stepDotActiveStyle: React.CSSProperties = {
   ...stepDotStyle,
-  backgroundColor: "#3b82f6",
+  backgroundColor: "var(--rl-primary)",
 };
 
 const stepDotCompleteStyle: React.CSSProperties = {
   ...stepDotStyle,
-  backgroundColor: "#22c55e",
+  backgroundColor: "var(--rl-success)",
 };
 
 const contentStyle: React.CSSProperties = {
@@ -93,7 +93,7 @@ const contentStyle: React.CSSProperties = {
 };
 
 const statusCardStyle: React.CSSProperties = {
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "8px",
   padding: "16px",
   marginBottom: "16px",
@@ -112,7 +112,7 @@ const statusIconStyle: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  fontSize: "14px",
+  fontSize: "var(--rl-fs-base)",
 };
 
 const buttonContainerStyle: React.CSSProperties = {
@@ -123,7 +123,7 @@ const buttonContainerStyle: React.CSSProperties = {
 
 const buttonStyle: React.CSSProperties = {
   padding: "12px 24px",
-  fontSize: "14px",
+  fontSize: "var(--rl-fs-base)",
   fontWeight: 500,
   border: "none",
   borderRadius: "6px",
@@ -133,26 +133,26 @@ const buttonStyle: React.CSSProperties = {
 
 const primaryButtonStyle: React.CSSProperties = {
   ...buttonStyle,
-  backgroundColor: "#3b82f6",
+  backgroundColor: "var(--rl-primary)",
   color: "white",
 };
 
 const secondaryButtonStyle: React.CSSProperties = {
   ...buttonStyle,
-  backgroundColor: "#4b5563",
-  color: "#eaeaea",
+  backgroundColor: "var(--rl-border-strong)",
+  color: "var(--rl-text)",
 };
 
 const successButtonStyle: React.CSSProperties = {
   ...buttonStyle,
-  backgroundColor: "#22c55e",
+  backgroundColor: "var(--rl-success)",
   color: "white",
 };
 
 const disabledButtonStyle: React.CSSProperties = {
   ...buttonStyle,
-  backgroundColor: "#374151",
-  color: "#6b7280",
+  backgroundColor: "var(--rl-border-strong)",
+  color: "var(--rl-text-dim)",
   cursor: "not-allowed",
 };
 
@@ -303,7 +303,7 @@ export function BootstrapWizard({
                 style={{
                   fontSize: "48px",
                   marginBottom: "16px",
-                  color: "#ef4444",
+                  color: "var(--rl-error)",
                 }}
               >
                 +
@@ -316,12 +316,12 @@ export function BootstrapWizard({
             </div>
 
             <div style={statusCardStyle}>
-              <div style={{ color: "#9ca3af", fontSize: "14px" }}>
+              <div style={{ color: "var(--rl-text-muted)", fontSize: "var(--rl-fs-base)" }}>
                 This wizard will help you:
               </div>
               <ul
                 style={{
-                  color: "#eaeaea",
+                  color: "var(--rl-text)",
                   marginTop: "12px",
                   paddingLeft: "20px",
                 }}
@@ -348,8 +348,12 @@ export function BootstrapWizard({
                   {backendConnected ? "✅" : loading ? "⏳" : "❌"}
                 </div>
                 <div>
-                  <div style={{ color: "#eaeaea" }}>Engine Connection</div>
-                  <div style={{ color: "#6b7280", fontSize: "12px" }}>
+                  <div style={{ color: "var(--rl-text)" }}>
+                    Engine Connection
+                  </div>
+                  <div
+                    style={{ color: "var(--rl-text-dim)", fontSize: "var(--rl-fs-sm)" }}
+                  >
                     {backendConnected
                       ? `Connected to v${capabilities?.version || "unknown"}`
                       : "Checking..."}
@@ -363,8 +367,12 @@ export function BootstrapWizard({
                     {capabilities.initialized ? "✅" : "⚠️"}
                   </div>
                   <div>
-                    <div style={{ color: "#eaeaea" }}>Engine Initialized</div>
-                    <div style={{ color: "#6b7280", fontSize: "12px" }}>
+                    <div style={{ color: "var(--rl-text)" }}>
+                      Engine Initialized
+                    </div>
+                    <div
+                      style={{ color: "var(--rl-text-dim)", fontSize: "var(--rl-fs-sm)" }}
+                    >
                       {capabilities.initialized
                         ? "Ready to process requests"
                         : "Engine starting up..."}
@@ -404,8 +412,12 @@ export function BootstrapWizard({
                   {spineInstalled ? "✅" : "📦"}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ color: "#eaeaea" }}>MorphGNT/SBLGNT Spine</div>
-                  <div style={{ color: "#6b7280", fontSize: "12px" }}>
+                  <div style={{ color: "var(--rl-text)" }}>
+                    MorphGNT/SBLGNT Spine
+                  </div>
+                  <div
+                    style={{ color: "var(--rl-text-dim)", fontSize: "var(--rl-fs-sm)" }}
+                  >
                     {spineInstalled
                       ? "Installed and ready"
                       : "Required for translation"}
@@ -462,14 +474,16 @@ export function BootstrapWizard({
             </p>
 
             <div style={statusCardStyle}>
-              <div style={{ color: "#9ca3af", marginBottom: "8px" }}>
+              <div
+                style={{ color: "var(--rl-text-muted)", marginBottom: "8px" }}
+              >
                 Test passage:
               </div>
               <div
                 style={{
                   fontFamily: "'SBL Greek', serif",
                   color: "#60a5fa",
-                  fontSize: "18px",
+                  fontSize: "var(--rl-fs-lg)",
                 }}
               >
                 John 1:1
@@ -526,12 +540,17 @@ export function BootstrapWizard({
               </p>
 
               <div style={statusCardStyle}>
-                <div style={{ color: "#9ca3af", marginBottom: "12px" }}>
+                <div
+                  style={{
+                    color: "var(--rl-text-muted)",
+                    marginBottom: "12px",
+                  }}
+                >
                   Quick start suggestions:
                 </div>
                 <ul
                   style={{
-                    color: "#eaeaea",
+                    color: "var(--rl-text)",
                     textAlign: "left",
                     paddingLeft: "20px",
                   }}

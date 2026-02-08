@@ -38,7 +38,7 @@ const overlayStyle: React.CSSProperties = {
 };
 
 const modalStyle: React.CSSProperties = {
-  backgroundColor: "#2d2d44",
+  backgroundColor: "var(--rl-bg-card)",
   borderRadius: "12px",
   padding: "24px",
   width: "90vw",
@@ -56,16 +56,16 @@ const headerStyle: React.CSSProperties = {
 };
 
 const titleStyle: React.CSSProperties = {
-  fontSize: "16px",
+  fontSize: "var(--rl-fs-md)",
   fontWeight: 600,
-  color: "#eaeaea",
+  color: "var(--rl-text)",
 };
 
 const closeBtn: React.CSSProperties = {
   background: "none",
   border: "none",
-  color: "#9ca3af",
-  fontSize: "20px",
+  color: "var(--rl-text-muted)",
+  fontSize: "var(--rl-fs-lg)",
   cursor: "pointer",
   padding: "4px 8px",
 };
@@ -80,13 +80,13 @@ const configRowStyle: React.CSSProperties = {
 const configColStyle: React.CSSProperties = {
   flex: 1,
   padding: "12px",
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "8px",
 };
 
 const labelStyle: React.CSSProperties = {
-  fontSize: "11px",
-  color: "#9ca3af",
+  fontSize: "var(--rl-fs-xs)",
+  color: "var(--rl-text-muted)",
   textTransform: "uppercase" as const,
   marginBottom: "6px",
   display: "block",
@@ -94,20 +94,20 @@ const labelStyle: React.CSSProperties = {
 
 const selectStyle: React.CSSProperties = {
   padding: "6px 10px",
-  fontSize: "13px",
-  backgroundColor: "#2d2d44",
-  border: "1px solid #4b5563",
+  fontSize: "var(--rl-fs-base)",
+  backgroundColor: "var(--rl-bg-card)",
+  border: "1px solid var(--rl-border-strong)",
   borderRadius: "4px",
-  color: "#eaeaea",
+  color: "var(--rl-text)",
   width: "100%",
   marginBottom: "8px",
 };
 
 const runBtnStyle: React.CSSProperties = {
   padding: "10px 24px",
-  fontSize: "14px",
+  fontSize: "var(--rl-fs-base)",
   fontWeight: 500,
-  backgroundColor: "#3b82f6",
+  backgroundColor: "var(--rl-primary)",
   color: "white",
   border: "none",
   borderRadius: "6px",
@@ -118,7 +118,7 @@ const runBtnStyle: React.CSSProperties = {
 
 const disabledBtnStyle: React.CSSProperties = {
   ...runBtnStyle,
-  backgroundColor: "#4b5563",
+  backgroundColor: "var(--rl-border-strong)",
   cursor: "not-allowed",
 };
 
@@ -130,26 +130,26 @@ const resultsPaneStyle: React.CSSProperties = {
 
 const resultCardStyle: React.CSSProperties = {
   padding: "16px",
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   borderRadius: "8px",
 };
 
 const resultLabelStyle: React.CSSProperties = {
-  fontSize: "11px",
+  fontSize: "var(--rl-fs-xs)",
   fontWeight: 600,
-  color: "#9ca3af",
+  color: "var(--rl-text-muted)",
   textTransform: "uppercase" as const,
   marginBottom: "8px",
   position: "sticky" as const,
   top: 0,
-  backgroundColor: "#1a1a2e",
+  backgroundColor: "var(--rl-bg-app)",
   padding: "4px 0",
   zIndex: 1,
 };
 
 const resultTextStyle: React.CSSProperties = {
-  fontSize: "14px",
-  color: "#eaeaea",
+  fontSize: "var(--rl-fs-base)",
+  color: "var(--rl-text)",
   lineHeight: 1.7,
 };
 
@@ -157,19 +157,19 @@ const chipStyle: React.CSSProperties = {
   display: "inline-block",
   padding: "2px 8px",
   borderRadius: "3px",
-  fontSize: "10px",
+  fontSize: "var(--rl-fs-xs)",
   fontWeight: 600,
-  backgroundColor: "#374151",
-  color: "#9ca3af",
+  backgroundColor: "var(--rl-border-strong)",
+  color: "var(--rl-text-muted)",
   marginRight: "6px",
 };
 
 const swapBtnStyle: React.CSSProperties = {
   padding: "6px 10px",
-  fontSize: "14px",
-  backgroundColor: "#374151",
-  color: "#9ca3af",
-  border: "1px solid #4b5563",
+  fontSize: "var(--rl-fs-base)",
+  backgroundColor: "var(--rl-border-strong)",
+  color: "var(--rl-text-muted)",
+  border: "1px solid var(--rl-border-strong)",
   borderRadius: "4px",
   cursor: "pointer",
   flexShrink: 0,
@@ -180,7 +180,7 @@ const errorStyle: React.CSSProperties = {
   backgroundColor: "#7f1d1d",
   color: "#fca5a5",
   borderRadius: "4px",
-  fontSize: "13px",
+  fontSize: "var(--rl-fs-base)",
   marginBottom: "16px",
 };
 
@@ -255,7 +255,7 @@ export function CompareModal({
           {/* A side (current result) */}
           <div style={configColStyle}>
             <span style={labelStyle}>A — Current</span>
-            <div style={{ fontSize: "13px", color: "#eaeaea" }}>
+            <div style={{ fontSize: "var(--rl-fs-base)", color: "var(--rl-text)" }}>
               <span style={chipStyle}>{resultA.translator_type}</span>
               <span style={chipStyle}>{resultA.mode}</span>
             </div>
@@ -334,8 +334,8 @@ export function CompareModal({
           <div
             style={{
               textAlign: "center",
-              color: "#6b7280",
-              fontSize: "13px",
+              color: "var(--rl-text-dim)",
+              fontSize: "var(--rl-fs-base)",
               padding: "24px",
             }}
           >
