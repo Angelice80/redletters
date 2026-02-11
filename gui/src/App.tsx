@@ -14,7 +14,9 @@ import {
   Route,
   NavLink,
   Navigate,
+  useLocation,
 } from "react-router-dom";
+import { PageBackground } from "./components/PageBackground";
 import { invoke } from "@tauri-apps/api/core";
 
 import { Dashboard } from "./screens/Dashboard";
@@ -45,28 +47,27 @@ import type {
   CapabilitiesValidation,
 } from "./api/types";
 
-// Nav link styles
+// Nav link styles — Forensic Ink: subtle bg + thin brand indicator
 const navLinkStyle: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
-  padding: "9px 12px",
+  padding: "8px 12px",
   color: "var(--rl-text-muted)",
   textDecoration: "none",
-  borderRadius: "var(--rl-radius-sm)",
+  borderRadius: "var(--rl-radius-md)",
   fontSize: "var(--rl-fs-sm)",
   fontWeight: 500,
   transition:
-    "background-color var(--rl-transition-fast), color var(--rl-transition-fast), box-shadow var(--rl-transition-fast)",
-  borderLeft: "3px solid transparent",
+    "background-color var(--rl-transition-fast), color var(--rl-transition-fast)",
+  borderLeft: "2px solid transparent",
 };
 
 const navLinkActiveStyle: React.CSSProperties = {
   ...navLinkStyle,
-  backgroundColor: "var(--rl-accent-subtle)",
+  backgroundColor: "var(--rl-bg-hover)",
   color: "var(--rl-text)",
   fontWeight: 600,
-  borderLeft: "3px solid var(--rl-accent)",
-  boxShadow: "inset 0 0 12px rgba(212, 81, 59, 0.08)",
+  borderLeft: "2px solid var(--rl-accent)",
 };
 
 // Sidebar section header style
@@ -78,6 +79,28 @@ const sidebarSectionStyle: React.CSSProperties = {
   letterSpacing: "0.08em",
   fontWeight: 600,
 };
+
+/**
+ * Route-to-background-image mapping.
+ * Ordered longest-prefix-first so /sources/new correctly matches /sources
+ * and no short prefix (like "/") can accidentally swallow everything.
+ * Uses pathname.startsWith — no switch statements, no regex.
+ */
+const ROUTE_BACKGROUNDS: Array<{ prefix: string; image: string }> = [
+  { prefix: "/explore", image: "/backgrounds/explore.webp" },
+  { prefix: "/export", image: "/backgrounds/export.webp" },
+  { prefix: "/sources", image: "/backgrounds/sources.webp" },
+  { prefix: "/jobs", image: "/backgrounds/jobs.webp" },
+].sort((a, b) => b.prefix.length - a.prefix.length);
+
+function RouteBackground() {
+  const { pathname } = useLocation();
+  const match = ROUTE_BACKGROUNDS.find(({ prefix }) =>
+    pathname.startsWith(prefix),
+  );
+  if (!match) return null;
+  return <PageBackground image={match.image} />;
+}
 
 export function App() {
   const settings = useAppStore(selectSettings);
@@ -425,7 +448,7 @@ export function App() {
               />
             )}
             <nav
-              data-testid="sidebar-nav"
+              data-testid="sidebar"
               style={{
                 width: "200px",
                 backgroundColor: "var(--rl-bg-panel)",
@@ -675,10 +698,9 @@ export function App() {
                 style={{
                   marginTop: "auto",
                   padding: "12px",
-                  backgroundColor: "rgba(18, 18, 31, 0.6)",
+                  backgroundColor: "var(--rl-bg-app)",
                   borderRadius: "var(--rl-radius-md)",
                   fontSize: "var(--rl-fs-xs)",
-                  borderTop: "1px solid var(--rl-border)",
                   border: "1px solid var(--rl-border)",
                 }}
               >
@@ -691,6 +713,7 @@ export function App() {
                   }}
                 >
                   <span
+                    data-testid="connected-indicator"
                     style={{
                       width: "8px",
                       height: "8px",
@@ -741,7 +764,7 @@ export function App() {
                   !compatibilityValidation.valid && (
                     <div
                       style={{
-                        color: "#fca5a5",
+                        color: "var(--rl-danger-text)",
                         marginTop: "4px",
                         fontSize: "var(--rl-fs-xs)",
                       }}
@@ -778,124 +801,144 @@ export function App() {
             <ConnectionBadge health={sseHealth} onReconnect={handleReconnect} />
           </header>
 
-          {/* Content area */}
-          <div style={{ flex: 1, overflow: "auto" }}>
-            {/* Token required banner */}
-            {tokenError && !token && (
-              <div
-                style={{
-                  padding: "16px 20px",
-                  backgroundColor: "#7f1d1d",
-                  color: "#fecaca",
-                  fontSize: "var(--rl-fs-base)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  borderBottom: "1px solid var(--rl-error)",
-                }}
-              >
-                <div
-                  style={{ display: "flex", alignItems: "center", gap: "12px" }}
-                >
-                  <span style={{ fontSize: "var(--rl-fs-lg)" }}>&#9888;</span>
-                  <span>
-                    <strong>Authentication required.</strong> Configure your
-                    connection to start using Red Letters.
-                  </span>
-                </div>
-                <button
-                  onClick={handleOpenSettings}
-                  style={{
-                    padding: "8px 16px",
-                    backgroundColor: "transparent",
-                    color: "var(--rl-accent)",
-                    border: "1px solid var(--rl-accent)",
-                    borderRadius: "var(--rl-radius-sm)",
-                    cursor: "pointer",
-                    fontWeight: 500,
-                    fontSize: "var(--rl-fs-base)",
-                  }}
-                >
-                  Configure Connection
-                </button>
-              </div>
-            )}
-
-            {/* Capability warnings banner - shown when connected but with warnings */}
-            {displayConnectionState === "connected" &&
-              compatibilityValidation?.valid &&
-              compatibilityValidation.warnings &&
-              compatibilityValidation.warnings.length > 0 && (
+          {/* Content area — stacking context for page backgrounds */}
+          <div
+            style={{
+              flex: 1,
+              overflow: "auto",
+              position: "relative",
+              isolation: "isolate",
+            }}
+          >
+            <RouteBackground />
+            {/* Page content sits above background */}
+            <div style={{ position: "relative", zIndex: 1 }}>
+              {/* Token required banner */}
+              {tokenError && !token && (
                 <div
                   style={{
-                    padding: "12px 20px",
-                    backgroundColor: "#78350f",
-                    color: "#fcd34d",
+                    padding: "16px 20px",
+                    backgroundColor: "var(--rl-danger-bg)",
+                    color: "var(--rl-danger-text)",
                     fontSize: "var(--rl-fs-base)",
                     display: "flex",
                     alignItems: "center",
-                    gap: "12px",
-                    borderBottom: "1px solid var(--rl-warning)",
+                    justifyContent: "space-between",
+                    borderBottom: "1px solid var(--rl-error)",
                   }}
                 >
-                  <span style={{ fontSize: "var(--rl-fs-md)" }}>&#9888;</span>
-                  <span>{compatibilityValidation.warnings[0]}</span>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                    }}
+                  >
+                    <span style={{ fontSize: "var(--rl-fs-lg)" }}>&#9888;</span>
+                    <span>
+                      <strong>Authentication required.</strong> Configure your
+                      connection to start using Red Letters.
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleOpenSettings}
+                    style={{
+                      padding: "8px 16px",
+                      backgroundColor: "transparent",
+                      color: "var(--rl-accent)",
+                      border: "1px solid var(--rl-accent)",
+                      borderRadius: "var(--rl-radius-sm)",
+                      cursor: "pointer",
+                      fontWeight: 500,
+                      fontSize: "var(--rl-fs-base)",
+                    }}
+                  >
+                    Configure Connection
+                  </button>
                 </div>
               )}
 
-            {/* Connection Panel - shown when disconnected */}
-            {displayConnectionState === "disconnected" && (
-              <ConnectionPanel
-                port={settings.enginePort}
-                onReconnect={handleReconnect}
-                onPortChange={(port) =>
-                  useAppStore.getState().updateSettings({ enginePort: port })
-                }
-                onOpenSettings={handleOpenSettings}
-              />
-            )}
+              {/* Capability warnings banner - shown when connected but with warnings */}
+              {displayConnectionState === "connected" &&
+                compatibilityValidation?.valid &&
+                compatibilityValidation.warnings &&
+                compatibilityValidation.warnings.length > 0 && (
+                  <div
+                    style={{
+                      padding: "12px 20px",
+                      backgroundColor: "var(--rl-warning-bg)",
+                      color: "var(--rl-warning-text)",
+                      fontSize: "var(--rl-fs-base)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      borderBottom: "1px solid var(--rl-warning)",
+                    }}
+                  >
+                    <span style={{ fontSize: "var(--rl-fs-md)" }}>&#9888;</span>
+                    <span>{compatibilityValidation.warnings[0]}</span>
+                  </div>
+                )}
 
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              {/* Task-shaped routes (v0.15.0 - Passage Workspace) */}
-              <Route
-                path="/explore"
-                element={<PassageWorkspace client={client} />}
-              />
-              <Route path="/export" element={<ExportView client={client} />} />
-              {/* Legacy route redirect */}
-              <Route
-                path="/translate"
-                element={<Navigate to="/explore" replace />}
-              />
-              <Route path="/gate" element={<Gate client={client} />} />
-              <Route path="/sources" element={<Sources client={client} />} />
-              <Route
-                path="/jobs"
-                element={<Jobs client={client} onRefresh={refreshJobs} />}
-              />
-              <Route
-                path="/jobs/:jobId"
-                element={<JobDetail client={client} />}
-              />
-              <Route
-                path="/diagnostics"
-                element={<Diagnostics client={client} />}
-              />
-              <Route
-                path="/settings"
-                element={
-                  <Settings
-                    engineMode={status?.mode}
-                    onReconnect={handleReconnect}
-                    onTestReconnection={testReconnection}
-                    onOpenConnectionSettings={handleOpenSettings}
-                  />
-                }
-              />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
+              {/* Connection Panel - shown when disconnected */}
+              {displayConnectionState === "disconnected" && (
+                <ConnectionPanel
+                  port={settings.enginePort}
+                  onReconnect={handleReconnect}
+                  onPortChange={(port) =>
+                    useAppStore.getState().updateSettings({ enginePort: port })
+                  }
+                  onOpenSettings={handleOpenSettings}
+                />
+              )}
+
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                {/* Task-shaped routes (v0.15.0 - Passage Workspace) */}
+                <Route
+                  path="/explore"
+                  element={<PassageWorkspace client={client} />}
+                />
+                <Route
+                  path="/export"
+                  element={<ExportView client={client} />}
+                />
+                {/* Legacy route redirect */}
+                <Route
+                  path="/translate"
+                  element={<Navigate to="/explore" replace />}
+                />
+                <Route path="/gate" element={<Gate client={client} />} />
+                <Route path="/sources" element={<Sources client={client} />} />
+                <Route
+                  path="/jobs"
+                  element={<Jobs client={client} onRefresh={refreshJobs} />}
+                />
+                <Route
+                  path="/jobs/:jobId"
+                  element={<JobDetail client={client} />}
+                />
+                <Route
+                  path="/diagnostics"
+                  element={<Diagnostics client={client} />}
+                />
+                <Route
+                  path="/settings"
+                  element={
+                    <Settings
+                      engineMode={status?.mode}
+                      onReconnect={handleReconnect}
+                      onTestReconnection={testReconnection}
+                      onOpenConnectionSettings={handleOpenSettings}
+                    />
+                  }
+                />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </div>
+            {/* end content wrapper (z-index: 1) */}
           </div>
+          {/* end content area (stacking context) */}
         </main>
       </div>
 

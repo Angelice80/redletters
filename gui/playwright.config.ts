@@ -8,8 +8,12 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./e2e",
-  // Only run mocked tests (exclude real-backend-*.spec.ts)
-  testMatch: "gui-flow.spec.ts",
+  // Run mocked tests (exclude real-backend-*.spec.ts)
+  testMatch: [
+    "gui-flow.spec.ts",
+    "visual-regression.spec.ts",
+    "background-guard.spec.ts",
+  ],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
