@@ -23,3 +23,6 @@ export const TOKEN_DENSITY_KEY = "redletters_token_density";
 
 /** Study mode preset. Value: "reader" | "translator" | "text-critic". Default: none (manual). */
 export const STUDY_MODE_KEY = "redletters_study_mode";
+
+/** Whether the onboarding guide in the empty state has been dismissed. Value: "true" or absent. */
+export const ONBOARDING_DISMISSED_KEY = "redletters_onboarding_dismissed";

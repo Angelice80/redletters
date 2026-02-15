@@ -24,6 +24,7 @@ import {
   DEMO_NUDGE_DISMISSED_KEY,
   TOKEN_DENSITY_KEY,
   STUDY_MODE_KEY,
+  ONBOARDING_DISMISSED_KEY,
 } from "../constants/storageKeys";
 
 const MAX_RECENT_REFS = 5;
@@ -54,15 +55,11 @@ import {
   getChangeTypeColor,
   type ChangeType,
 } from "../utils/renderingDiff";
-import {
-  nextRef,
-  prevRef,
-  validateRef,
-  isAtChapterEnd,
-  isAtChapterStart,
-} from "../utils/referenceNav";
+import { validateRef, nextRef, prevRef } from "../utils/referenceNav";
 import { Tooltip } from "../components/Tooltip";
+import { ReferenceBar } from "../components/ReferenceBar";
 import { TokenInspectorDock } from "../components/TokenInspectorDock";
+
 import {
   getHeatmapStyles,
   HEATMAP_LEGEND,
@@ -106,8 +103,8 @@ const inputStyle: React.CSSProperties = {
   padding: "8px 12px",
   fontSize: "var(--rl-fs-base)",
   backgroundColor: "var(--rl-bg-card)",
-  border: "1px solid var(--rl-border-strong)",
-  borderRadius: "4px",
+  border: "1px solid var(--rl-border)",
+  borderRadius: "var(--rl-radius-md)",
   color: "var(--rl-text)",
   width: "220px",
 };
@@ -122,12 +119,11 @@ const buttonStyle: React.CSSProperties = {
   padding: "10px 24px",
   fontSize: "var(--rl-fs-base)",
   fontWeight: 600,
-  backgroundColor: "var(--rl-accent)",
+  backgroundColor: "var(--rl-primary)",
   color: "white",
   border: "none",
   borderRadius: "var(--rl-radius-md)",
   cursor: "pointer",
-  boxShadow: "0 0 12px rgba(212, 81, 59, 0.3)",
   letterSpacing: "0.02em",
 };
 
@@ -137,15 +133,15 @@ const toggleButtonStyle: React.CSSProperties = {
   backgroundColor: "var(--rl-border-strong)",
   color: "var(--rl-text-muted)",
   border: "1px solid var(--rl-border-strong)",
-  borderRadius: "4px",
+  borderRadius: "var(--rl-radius-md)",
   cursor: "pointer",
 };
 
 const toggleActiveStyle: React.CSSProperties = {
   ...toggleButtonStyle,
-  backgroundColor: "var(--rl-primary)",
-  color: "white",
-  borderColor: "var(--rl-primary)",
+  backgroundColor: "transparent",
+  color: "var(--rl-link)",
+  borderColor: "var(--rl-link)",
 };
 
 // UX3.2: workspaceStyle is now computed inside the component for responsive layout.
@@ -155,7 +151,8 @@ type LayoutMode = "mobile" | "tablet" | "desktop";
 
 const panelStyle: React.CSSProperties = {
   backgroundColor: "var(--rl-bg-card)",
-  borderRadius: "8px",
+  border: "1px solid var(--rl-border)",
+  borderRadius: "var(--rl-radius-lg)",
   overflow: "hidden",
   display: "flex",
   flexDirection: "column",
@@ -163,7 +160,7 @@ const panelStyle: React.CSSProperties = {
 
 const panelHeaderStyle: React.CSSProperties = {
   padding: "12px 16px",
-  borderBottom: "1px solid var(--rl-border-strong)",
+  borderBottom: "1px solid var(--rl-border)",
   fontSize: "var(--rl-fs-sm)",
   fontWeight: 600,
   color: "var(--rl-text-muted)",
@@ -178,7 +175,7 @@ const panelContentStyle: React.CSSProperties = {
 
 const renderingCardStyle: React.CSSProperties = {
   backgroundColor: "var(--rl-bg-app)",
-  borderRadius: "6px",
+  borderRadius: "var(--rl-radius-md)",
   padding: "16px",
   marginBottom: "12px",
 };
@@ -186,7 +183,7 @@ const renderingCardStyle: React.CSSProperties = {
 const styleChipStyle: React.CSSProperties = {
   display: "inline-block",
   padding: "2px 8px",
-  borderRadius: "3px",
+  borderRadius: "var(--rl-radius-sm)",
   fontSize: "var(--rl-fs-xs)",
   fontWeight: 600,
   backgroundColor: "var(--rl-border-strong)",
@@ -196,7 +193,7 @@ const styleChipStyle: React.CSSProperties = {
 
 const tabBarStyle: React.CSSProperties = {
   display: "flex",
-  borderBottom: "1px solid var(--rl-border-strong)",
+  borderBottom: "1px solid var(--rl-border)",
   overflowX: "auto",
   scrollbarWidth: "none",
 };
@@ -214,8 +211,8 @@ const tabStyle: React.CSSProperties = {
 
 const tabActiveStyle: React.CSSProperties = {
   ...tabStyle,
-  color: "var(--rl-primary)",
-  borderBottom: "2px solid var(--rl-primary)",
+  color: "var(--rl-link)",
+  borderBottom: "2px solid var(--rl-link)",
 };
 
 const legendStyle: React.CSSProperties = {
@@ -223,7 +220,7 @@ const legendStyle: React.CSSProperties = {
   gap: "16px",
   padding: "8px 16px",
   backgroundColor: "var(--rl-bg-app)",
-  borderRadius: "4px",
+  borderRadius: "var(--rl-radius-md)",
   fontSize: "var(--rl-fs-xs)",
   color: "var(--rl-text-muted)",
 };
@@ -269,26 +266,12 @@ const chipStyle: React.CSSProperties = {
   boxShadow: "var(--rl-shadow-sm)",
 };
 
-const recentDropdownStyle: React.CSSProperties = {
-  position: "absolute",
-  top: "100%",
-  left: 0,
-  right: 0,
-  backgroundColor: "var(--rl-bg-card)",
-  border: "1px solid var(--rl-border-strong)",
-  borderRadius: "4px",
-  marginTop: "4px",
-  zIndex: 10,
-  maxHeight: "200px",
-  overflow: "auto",
-};
-
 const recentItemStyle: React.CSSProperties = {
   padding: "8px 12px",
   fontSize: "var(--rl-fs-base)",
   color: "var(--rl-text)",
   cursor: "pointer",
-  borderBottom: "1px solid var(--rl-border-strong)",
+  borderBottom: "1px solid var(--rl-border)",
 };
 
 const disabledToggleStyle: React.CSSProperties = {
@@ -297,7 +280,7 @@ const disabledToggleStyle: React.CSSProperties = {
   backgroundColor: "var(--rl-bg-card)",
   color: "var(--rl-border-strong)",
   border: "1px solid var(--rl-border-strong)",
-  borderRadius: "4px",
+  borderRadius: "var(--rl-radius-md)",
   cursor: "not-allowed",
   opacity: 0.5,
 };
@@ -314,28 +297,66 @@ const STUDY_MODE_PRESETS: Record<
     viewMode: "readable" | "traceable";
     density: TokenDensity;
     evidenceTab: "confidence" | "receipts" | "variants";
+    mode: TranslationMode;
+    translator: TranslatorType;
     label: string;
+    description: string;
   }
 > = {
   reader: {
     viewMode: "readable",
     density: "comfortable",
     evidenceTab: "confidence",
+    mode: "readable",
+    translator: "literal",
     label: "Reader",
+    description: "Clean English for reading",
   },
   translator: {
     viewMode: "traceable",
     density: "comfortable",
     evidenceTab: "receipts",
+    mode: "traceable",
+    translator: "traceable",
     label: "Translator",
+    description: "Token-level mapping and receipts",
   },
   "text-critic": {
     viewMode: "traceable",
     density: "compact",
     evidenceTab: "variants",
+    mode: "traceable",
+    translator: "traceable",
     label: "Text Critic",
+    description: "Variant analysis and apparatus",
   },
 };
+
+// A.2: Panel microcopy keyed to study mode
+const PANEL_MICROCOPY: Record<StudyMode, { greek: string; rendering: string }> =
+  {
+    reader: {
+      greek: "The original Greek from the SBLGNT critical text.",
+      rendering:
+        "English translation for reading. Switch to Traceable for word-level detail.",
+    },
+    translator: {
+      greek:
+        "Source text with morphological data. Click tokens to see alignment.",
+      rendering:
+        "Token-mapped English. Click words for receipts and alignment evidence.",
+    },
+    "text-critic": {
+      greek:
+        "Base text (SBLGNT). Compare against manuscript variants in Evidence.",
+      rendering:
+        "Rendered translation. Use the Evidence panel for variant analysis.",
+    },
+    "": {
+      greek: "Greek text from the SBLGNT critical edition.",
+      rendering: "English rendering from the selected translator.",
+    },
+  };
 
 // Interactive token component
 interface InteractiveTokenProps {
@@ -368,7 +389,7 @@ function InteractiveToken({
   let style: React.CSSProperties = {
     cursor: "pointer",
     padding: isCompact ? "1px 2px" : "2px 6px",
-    borderRadius: "3px",
+    borderRadius: "var(--rl-radius-sm)",
     fontSize: isCompact ? "14px" : "16px",
     transition: "background-color 0.15s, outline 0.15s",
   };
@@ -436,7 +457,7 @@ function ConfidenceSummary({ tokens }: { tokens: TokenLedger[] }) {
     avgRisk < 0.2
       ? "var(--rl-success)"
       : avgRisk < 0.4
-        ? "#fde68a"
+        ? "var(--rl-warning-text)"
         : avgRisk < 0.6
           ? "var(--rl-warning)"
           : "var(--rl-error)";
@@ -548,17 +569,19 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
     return "";
   });
 
-  const handleStudyModeChange = useCallback((mode: StudyMode) => {
-    setStudyMode(mode);
+  const handleStudyModeChange = useCallback((sm: StudyMode) => {
+    setStudyMode(sm);
     try {
-      localStorage.setItem(STUDY_MODE_KEY, mode);
+      localStorage.setItem(STUDY_MODE_KEY, sm);
     } catch {
       // Ignore storage errors
     }
-    if (mode && mode in STUDY_MODE_PRESETS) {
-      const preset = STUDY_MODE_PRESETS[mode as Exclude<StudyMode, "">];
+    if (sm && sm in STUDY_MODE_PRESETS) {
+      const preset = STUDY_MODE_PRESETS[sm as Exclude<StudyMode, "">];
       setViewMode(preset.viewMode);
       setTokenDensity(preset.density);
+      setMode(preset.mode);
+      setTranslator(preset.translator);
       try {
         localStorage.setItem(TOKEN_DENSITY_KEY, preset.density);
       } catch {
@@ -567,6 +590,37 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
       setActiveTab(preset.evidenceTab);
     }
   }, []);
+
+  // A.1: When user manually changes mode or translator, switch to Custom
+  const handleManualModeChange = useCallback(
+    (newMode: TranslationMode) => {
+      setMode(newMode);
+      if (studyMode) {
+        setStudyMode("");
+        try {
+          localStorage.setItem(STUDY_MODE_KEY, "");
+        } catch {
+          /* */
+        }
+      }
+    },
+    [studyMode],
+  );
+
+  const handleManualTranslatorChange = useCallback(
+    (newTr: TranslatorType) => {
+      setTranslator(newTr);
+      if (studyMode) {
+        setStudyMode("");
+        try {
+          localStorage.setItem(STUDY_MODE_KEY, "");
+        } catch {
+          /* */
+        }
+      }
+    },
+    [studyMode],
+  );
 
   // UX3.2: Responsive layout breakpoints
   const isMobile = useMediaQuery("(max-width: 640px)");
@@ -607,10 +661,27 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
   });
   const [isDemoResult, setIsDemoResult] = useState(false);
 
+  // A.4: Onboarding dismissed state
+  const [onboardingDismissed, setOnboardingDismissed] = useState(() => {
+    try {
+      return localStorage.getItem(ONBOARDING_DISMISSED_KEY) === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  const handleDismissOnboarding = useCallback(() => {
+    setOnboardingDismissed(true);
+    try {
+      localStorage.setItem(ONBOARDING_DISMISSED_KEY, "true");
+    } catch {
+      // Ignore
+    }
+  }, []);
+
   // Sprint 17: Recent references
   const [recentRefs, setRecentRefs] = useState<string[]>([]);
-  const [showRecentDropdown, setShowRecentDropdown] = useState(false);
-  // UX4.1: Orientation strip recent refs dropdown (separate from input dropdown)
+  // UX4.1: Orientation strip recent refs dropdown
   const [showStripRecent, setShowStripRecent] = useState(false);
   const stripRecentRef = useRef<HTMLDivElement>(null);
 
@@ -677,8 +748,6 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
     return () => document.removeEventListener("mousedown", handler);
   }, [showStripRecent]);
 
-  // UX2.5: Ref for the input element (keyboard focus target)
-  const refInputRef = useRef<HTMLInputElement>(null);
   // UX3.5: Focus-return refs
   const compareBtnRef = useRef<HTMLButtonElement>(null);
 
@@ -713,6 +782,24 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
     }
     return positions;
   }, [selectedTokenPosition, result?.ledger]);
+
+  // A.3: Compute ambiguous tokens (lexical confidence < 0.70)
+  const ambiguousTokens = useMemo(() => {
+    if (!result?.ledger) return [];
+    const allTokens = result.ledger.flatMap((v) => v.tokens);
+    return allTokens
+      .filter((t) => t.confidence && t.confidence.lexical < 0.7)
+      .sort((a, b) => a.confidence.lexical - b.confidence.lexical)
+      .slice(0, 5);
+  }, [result?.ledger]);
+
+  // A.3: Click handler for ambiguity pill
+  const handleAmbiguityPillClick = useCallback((token: TokenLedger) => {
+    setSelectedTokenPosition(token.position);
+    setSelectedToken(token);
+    setPopoverAnchor(null);
+    setActiveTab("confidence");
+  }, []);
 
   // Sprint 24 (S5): Greek token click handler
   const handleGreekTokenClick = useCallback(
@@ -797,57 +884,60 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
   const [popoverAnchor, setPopoverAnchor] = useState<HTMLElement | null>(null);
 
   // Handle translation
-  const handleTranslate = useCallback(async () => {
-    if (!client || !reference.trim()) return;
+  const handleTranslate = useCallback(
+    async (refOverride?: string) => {
+      const ref = (refOverride || reference).trim();
+      if (!client || !ref) return;
 
-    setLoading(true);
-    setError(null);
-    setResult(null);
-    setShowRecentDropdown(false);
-    // S5/S6: Clear selection states on new translate
-    setSelectedTokenPosition(null);
-    setSelectedToken(null);
-    setPopoverAnchor(null);
-    setConfidenceDetailLayer(null);
-    setIsDemoResult(false);
+      setLoading(true);
+      setError(null);
+      setResult(null);
+      // S5/S6: Clear selection states on new translate
+      setSelectedTokenPosition(null);
+      setSelectedToken(null);
+      setPopoverAnchor(null);
+      setConfidenceDetailLayer(null);
+      setIsDemoResult(false);
 
-    try {
-      const response = await client.translate({
-        reference: reference.trim(),
-        mode,
-        session_id: settings.sessionId,
-        translator,
-      });
-
-      if (isGateResponse(response)) {
-        navigate("/gate", {
-          state: { gate: response, originalReference: reference.trim() },
+      try {
+        const response = await client.translate({
+          reference: ref,
+          mode,
+          session_id: settings.sessionId,
+          translator,
         });
-      } else {
-        setResult(response);
-        // Sprint 26 (UX1): Sync viewMode to the result's actual mode
-        // so users see traceable view when they requested traceable
-        setViewMode(response.mode === "traceable" ? "traceable" : "readable");
-        // Sprint 17: Save successful translation to recent refs
-        saveToRecent(reference.trim());
-        // Sync URL with translated state
-        updateUrlParams(reference.trim(), mode, translator);
+
+        if (isGateResponse(response)) {
+          navigate("/gate", {
+            state: { gate: response, originalReference: ref },
+          });
+        } else {
+          setResult(response);
+          // Sprint 26 (UX1): Sync viewMode to the result's actual mode
+          // so users see traceable view when they requested traceable
+          setViewMode(response.mode === "traceable" ? "traceable" : "readable");
+          // Sprint 17: Save successful translation to recent refs
+          saveToRecent(ref);
+          // Sync URL with translated state
+          updateUrlParams(ref, mode, translator);
+        }
+      } catch (err) {
+        setError(createApiErrorDetail("POST", "/translate", err));
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      setError(createApiErrorDetail("POST", "/translate", err));
-    } finally {
-      setLoading(false);
-    }
-  }, [
-    client,
-    reference,
-    mode,
-    translator,
-    settings.sessionId,
-    navigate,
-    saveToRecent,
-    updateUrlParams,
-  ]);
+    },
+    [
+      client,
+      reference,
+      mode,
+      translator,
+      settings.sessionId,
+      navigate,
+      saveToRecent,
+      updateUrlParams,
+    ],
+  );
 
   // S8: Effect to re-translate after nudge acceptance
   useEffect(() => {
@@ -860,12 +950,6 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nudgeAccepted]);
-
-  // Sprint 17: Select from recent or example refs
-  const handleSelectRef = useCallback((ref: string) => {
-    setReference(ref);
-    setShowRecentDropdown(false);
-  }, []);
 
   // Token click handler (rendering tokens)
   const handleTokenClick = useCallback(
@@ -898,16 +982,51 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
   // UX2.5: Global keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      const tagName = (e.target as HTMLElement)?.tagName;
+      const isInInput = ["INPUT", "SELECT", "TEXTAREA"].includes(tagName);
+      const isRefInput =
+        (e.target as HTMLElement)?.dataset?.testid === "ref-input";
+
       // `/` focuses ref input (when not in an input/select/textarea)
-      if (
-        e.key === "/" &&
-        !["INPUT", "SELECT", "TEXTAREA"].includes(
-          (e.target as HTMLElement)?.tagName,
-        )
-      ) {
+      if (e.key === "/" && !isInInput) {
         e.preventDefault();
-        refInputRef.current?.focus();
+        (
+          document.querySelector('[data-testid="ref-input"]') as HTMLElement
+        )?.focus();
       }
+
+      // Cmd/Ctrl+L focuses ref input and selects all text
+      const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+      const modKey = isMac ? e.metaKey : e.ctrlKey;
+      if (modKey && e.key === "l" && (!isInInput || isRefInput)) {
+        e.preventDefault();
+        const input = document.querySelector(
+          '[data-testid="ref-input"]',
+        ) as HTMLInputElement;
+        input?.focus();
+        input?.select();
+      }
+
+      // Alt+Left -> Previous verse (not when in input/textarea, except ref-input)
+      if (e.altKey && e.key === "ArrowLeft" && (!isInInput || isRefInput)) {
+        e.preventDefault();
+        const prev = prevRef(reference);
+        if (prev) {
+          setReference(prev);
+          handleTranslate(prev);
+        }
+      }
+
+      // Alt+Right -> Next verse (not when in input/textarea, except ref-input)
+      if (e.altKey && e.key === "ArrowRight" && (!isInInput || isRefInput)) {
+        e.preventDefault();
+        const next = nextRef(reference);
+        if (next) {
+          setReference(next);
+          handleTranslate(next);
+        }
+      }
+
       // Esc closes compare modal or token popover
       if (e.key === "Escape") {
         if (showCompareModal) {
@@ -919,7 +1038,13 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [showCompareModal, selectedToken, handleClosePopover]);
+  }, [
+    showCompareModal,
+    selectedToken,
+    handleClosePopover,
+    reference,
+    handleTranslate,
+  ]);
 
   // UX4.4: Compute next-action guidance for each evidence tab
   const getNextAction = useCallback(
@@ -937,17 +1062,28 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
       }
 
       if (tab === "receipts") {
-        if (
-          result.mode === "readable" &&
-          (!result.ledger || result.ledger.length === 0)
-        ) {
+        if (!result.ledger || result.ledger.length === 0) {
+          const reasons: string[] = [];
+          if (result.mode !== "traceable")
+            reasons.push("mode was " + result.mode);
+          if (result.translator_type !== "traceable")
+            reasons.push(
+              result.translator_type + " translator lacks per-token data",
+            );
+          const explanation =
+            reasons.length > 0
+              ? reasons.join("; ") + "."
+              : "No per-token data returned.";
           return {
-            text: "Re-translate in Traceable mode for per-token receipts.",
+            text:
+              explanation +
+              " Re-translate with Traceable mode + translator for receipts.",
             action: () => {
               setMode("traceable");
+              setTranslator("traceable");
               setTimeout(() => handleTranslate(), 50);
             },
-            label: "Re-translate in Traceable",
+            label: "Re-translate as Traceable",
           };
         }
         if (
@@ -1009,196 +1145,178 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
 
   return (
     <div style={containerStyle}>
-      {/* Toolbar */}
-      <div style={toolbarStyle}>
-        {/* Reference input with recent refs dropdown + nav buttons */}
-        <div style={{ ...inputGroupStyle, position: "relative" }}>
-          <label style={labelStyle}>Reference</label>
-          <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
-            <Tooltip
-              content={(() => {
-                const prev = prevRef(reference);
-                if (!prev) {
-                  return isAtChapterStart(reference) === true
-                    ? "At verse 1. Chapter boundary navigation not yet supported."
-                    : "No previous verse available.";
-                }
-                return `Previous: ${prev}`;
-              })()}
-              position="bottom"
-              wrapFocus={!prevRef(reference)}
-            >
-              <button
-                data-testid="prev-btn"
-                aria-label={`Previous verse${prevRef(reference) ? `: ${prevRef(reference)}` : ""}`}
-                style={{
-                  ...toggleButtonStyle,
-                  padding: "8px 10px",
-                  fontSize: "var(--rl-fs-base)",
-                  opacity: prevRef(reference) ? 1 : 0.3,
-                }}
-                onClick={() => {
-                  const prev = prevRef(reference);
-                  if (prev) setReference(prev);
-                }}
-                disabled={!prevRef(reference)}
-              >
-                &#8592;
-              </button>
-            </Tooltip>
-            <Tooltip
-              content="Enter a passage like 'John 3:16' or a range like 'John 3:16-19'. Press Enter to translate."
-              position="bottom"
-            >
-              <input
-                ref={refInputRef}
-                data-testid="ref-input"
-                type="text"
-                style={{
-                  ...inputStyle,
-                  borderColor:
-                    reference.trim() && validateRef(reference)
-                      ? "var(--rl-error)"
-                      : "var(--rl-border-strong)",
-                }}
-                placeholder="e.g., John 1:1 (press Enter)"
-                aria-label="Scripture reference"
-                value={reference}
-                onChange={(e) => setReference(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !loading && reference.trim()) {
-                    handleTranslate();
-                  }
-                }}
-                onFocus={() =>
-                  recentRefs.length > 0 && setShowRecentDropdown(true)
-                }
-                onBlur={() =>
-                  setTimeout(() => setShowRecentDropdown(false), 200)
-                }
-              />
-            </Tooltip>
-            <Tooltip
-              content={(() => {
-                const next = nextRef(reference);
-                if (!next) {
-                  return isAtChapterEnd(reference) === true
-                    ? "At last verse of chapter. Chapter boundary navigation not yet supported."
-                    : "No next verse available.";
-                }
-                return `Next: ${next}`;
-              })()}
-              position="bottom"
-              wrapFocus={!nextRef(reference)}
-            >
-              <button
-                style={{
-                  ...toggleButtonStyle,
-                  padding: "8px 10px",
-                  fontSize: "var(--rl-fs-base)",
-                  opacity: nextRef(reference) ? 1 : 0.3,
-                }}
-                onClick={() => {
-                  const next = nextRef(reference);
-                  if (next) setReference(next);
-                }}
-                data-testid="next-btn"
-                aria-label={`Next verse${nextRef(reference) ? `: ${nextRef(reference)}` : ""}`}
-                disabled={!nextRef(reference)}
-              >
-                &#8594;
-              </button>
-            </Tooltip>
+      <div
+        style={{
+          position: "relative",
+          zIndex: 1,
+          display: "flex",
+          flexDirection: "column" as const,
+          flex: 1,
+          overflow: "hidden",
+        }}
+      >
+        {/* Toolbar */}
+        <div style={toolbarStyle}>
+          {/* Reference input with recent refs dropdown + nav buttons */}
+          <div
+            style={{
+              ...inputGroupStyle,
+              position: "relative",
+              minWidth: "280px",
+            }}
+          >
+            <label style={labelStyle}>Reference</label>
+            <ReferenceBar
+              reference={reference}
+              onReferenceChange={setReference}
+              onNavigate={(ref) => handleTranslate(ref)}
+              loading={loading}
+              recentRefs={recentRefs}
+            />
           </div>
-          {/* Validation hint */}
-          {reference.trim() && validateRef(reference) && (
+
+          {/* A.1: Study Mode chips — primary control */}
+          <div style={inputGroupStyle} data-testid="study-mode-chips">
+            <label style={labelStyle}>Study Mode</label>
+            <div style={{ display: "flex", gap: "2px" }}>
+              {(
+                Object.entries(STUDY_MODE_PRESETS) as [
+                  Exclude<StudyMode, "">,
+                  (typeof STUDY_MODE_PRESETS)[Exclude<StudyMode, "">],
+                ][]
+              ).map(([key, preset]) => (
+                <Tooltip
+                  key={key}
+                  content={preset.description}
+                  position="bottom"
+                >
+                  <button
+                    data-testid={`study-chip-${key}`}
+                    aria-label={`${preset.label} study mode`}
+                    aria-pressed={studyMode === key}
+                    style={{
+                      padding: "6px 14px",
+                      fontSize: "var(--rl-fs-sm)",
+                      fontWeight: 500,
+                      border: "1px solid",
+                      cursor: "pointer",
+                      borderColor:
+                        studyMode === key
+                          ? "var(--rl-link)"
+                          : "var(--rl-border-strong)",
+                      backgroundColor:
+                        studyMode === key
+                          ? "var(--rl-link)"
+                          : "var(--rl-border-strong)",
+                      color:
+                        studyMode === key ? "white" : "var(--rl-text-muted)",
+                      borderRadius:
+                        key === "reader"
+                          ? "var(--rl-radius-sm) 0 0 var(--rl-radius-sm)"
+                          : key === "text-critic"
+                            ? "0"
+                            : "0",
+                      transition:
+                        "background-color var(--rl-transition-fast), border-color var(--rl-transition-fast)",
+                    }}
+                    onClick={() => handleStudyModeChange(key)}
+                  >
+                    {preset.label}
+                  </button>
+                </Tooltip>
+              ))}
+              <Tooltip
+                content="Manual control over request mode and translator."
+                position="bottom"
+              >
+                <button
+                  data-testid="study-chip-custom"
+                  aria-label="Custom study mode"
+                  aria-pressed={studyMode === ""}
+                  style={{
+                    padding: "6px 14px",
+                    fontSize: "var(--rl-fs-sm)",
+                    fontWeight: 500,
+                    border: "1px solid",
+                    cursor: "pointer",
+                    borderColor:
+                      studyMode === ""
+                        ? "var(--rl-link)"
+                        : "var(--rl-border-strong)",
+                    backgroundColor:
+                      studyMode === ""
+                        ? "var(--rl-link)"
+                        : "var(--rl-border-strong)",
+                    color: studyMode === "" ? "white" : "var(--rl-text-muted)",
+                    borderRadius: "0 var(--rl-radius-sm) var(--rl-radius-sm) 0",
+                    transition:
+                      "background-color var(--rl-transition-fast), border-color var(--rl-transition-fast)",
+                  }}
+                  onClick={() => handleStudyModeChange("")}
+                >
+                  Custom
+                </button>
+              </Tooltip>
+            </div>
+          </div>
+
+          {/* A.1: Request Mode + Translator dropdowns — only visible in Custom mode */}
+          {studyMode === "" && (
             <div
               style={{
-                fontSize: "var(--rl-fs-xs)",
-                color: "var(--rl-error)",
-                marginTop: "2px",
+                display: "flex",
+                gap: "12px",
+                alignItems: "flex-end",
+                flexWrap: "wrap",
               }}
+              data-testid="toolbar-controls-group"
             >
-              {validateRef(reference)}
-            </div>
-          )}
-          {/* Recent refs dropdown */}
-          {showRecentDropdown && recentRefs.length > 0 && (
-            <div style={recentDropdownStyle}>
-              <div
-                style={{
-                  padding: "6px 12px",
-                  fontSize: "var(--rl-fs-xs)",
-                  color: "var(--rl-text-dim)",
-                  textTransform: "uppercase",
-                  borderBottom: "1px solid var(--rl-border-strong)",
-                }}
-              >
-                Recent
-              </div>
-              {recentRefs.map((ref) => (
-                <div
-                  key={ref}
-                  style={recentItemStyle}
-                  onMouseDown={() => handleSelectRef(ref)}
+              <div style={inputGroupStyle}>
+                <label style={labelStyle}>Request Mode</label>
+                <Tooltip
+                  content="Controls what the backend generates. Traceable includes token ledger and receipts but may be slower."
+                  position="bottom"
                 >
-                  {ref}
-                </div>
-              ))}
+                  <select
+                    data-testid="request-mode-select"
+                    style={selectStyle}
+                    value={mode}
+                    onChange={(e) =>
+                      handleManualModeChange(e.target.value as TranslationMode)
+                    }
+                    aria-label="Request mode"
+                  >
+                    <option value="readable">Readable</option>
+                    <option value="traceable">Traceable</option>
+                  </select>
+                </Tooltip>
+              </div>
+
+              <div style={inputGroupStyle}>
+                <label style={labelStyle}>Translator</label>
+                <Tooltip
+                  content="Select the translator profile. Literal preserves word order; Fluent prioritizes natural English."
+                  position="bottom"
+                >
+                  <select
+                    data-testid="translator-select"
+                    style={selectStyle}
+                    value={translator}
+                    onChange={(e) =>
+                      handleManualTranslatorChange(
+                        e.target.value as TranslatorType,
+                      )
+                    }
+                    aria-label="Translator type"
+                  >
+                    <option value="literal">Literal</option>
+                    <option value="fluent">Fluent</option>
+                    <option value="traceable">Traceable</option>
+                  </select>
+                </Tooltip>
+              </div>
             </div>
           )}
-        </div>
-
-        {/* Sprint 26 (UX3): Controls group — wraps together at narrow widths */}
-        <div
-          style={{
-            display: "flex",
-            gap: "12px",
-            alignItems: "flex-end",
-            flexWrap: "wrap",
-          }}
-          data-testid="toolbar-controls-group"
-        >
-          <div style={inputGroupStyle}>
-            <label style={labelStyle}>Request Mode</label>
-            <Tooltip
-              content="Controls what the backend generates. Traceable includes token ledger and receipts but may be slower."
-              position="bottom"
-            >
-              <select
-                data-testid="request-mode-select"
-                style={selectStyle}
-                value={mode}
-                onChange={(e) => setMode(e.target.value as TranslationMode)}
-                aria-label="Request mode"
-              >
-                <option value="readable">Readable</option>
-                <option value="traceable">Traceable</option>
-              </select>
-            </Tooltip>
-          </div>
-
-          <div style={inputGroupStyle}>
-            <label style={labelStyle}>Translator</label>
-            <Tooltip
-              content="Select the translator profile. Literal preserves word order; Fluent prioritizes natural English."
-              position="bottom"
-            >
-              <select
-                data-testid="translator-select"
-                style={selectStyle}
-                value={translator}
-                onChange={(e) =>
-                  setTranslator(e.target.value as TranslatorType)
-                }
-                aria-label="Translator type"
-              >
-                <option value="literal">Literal</option>
-                <option value="fluent">Fluent</option>
-                <option value="traceable">Traceable</option>
-              </select>
-            </Tooltip>
-          </div>
 
           <Tooltip
             content="Translate the selected reference using the current settings."
@@ -1206,7 +1324,7 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
             wrapFocus={!client || loading || !reference.trim()}
           >
             <button
-              data-testid="translate-btn"
+              data-testid="primary-cta"
               aria-label="Translate"
               style={{
                 ...buttonStyle,
@@ -1219,1602 +1337,1900 @@ export function PassageWorkspace({ client }: PassageWorkspaceProps) {
                     }
                   : {}),
               }}
-              onClick={handleTranslate}
+              onClick={() => handleTranslate()}
               disabled={!client || loading || !reference.trim()}
             >
               {loading ? "Translating..." : "Translate"}
             </button>
           </Tooltip>
-        </div>
-        {/* end toolbar-controls-group */}
 
-        {/* UX4.5: Study Mode Presets */}
-        <div style={inputGroupStyle}>
-          <label style={labelStyle}>Study Mode</label>
-          <Tooltip
-            content="Preset configurations for different study workflows. Reader for reading, Translator for token work, Text Critic for variant analysis."
-            position="bottom"
-          >
-            <select
-              data-testid="study-mode-select"
-              style={{ ...selectStyle, width: "130px" }}
-              value={studyMode}
-              onChange={(e) =>
-                handleStudyModeChange(e.target.value as StudyMode)
+          <div style={{ marginLeft: "auto", display: "flex", gap: "8px" }}>
+            <Tooltip
+              content={
+                result
+                  ? "Compare two renderings side-by-side (e.g., different translators)."
+                  : "Translate a passage first to enable compare."
               }
-              aria-label="Study mode preset"
+              position="bottom"
+              wrapFocus={!result}
             >
-              <option value="">Manual</option>
-              <option value="reader" data-testid="study-mode-reader">
-                Reader
-              </option>
-              <option value="translator" data-testid="study-mode-translator">
-                Translator
-              </option>
-              <option value="text-critic" data-testid="study-mode-text-critic">
-                Text Critic
-              </option>
-            </select>
-          </Tooltip>
-        </div>
-
-        <div style={{ marginLeft: "auto", display: "flex", gap: "8px" }}>
-          <Tooltip
-            content={
-              result
-                ? "Compare two renderings side-by-side (e.g., different translators)."
-                : "Translate a passage first to enable compare."
-            }
-            position="bottom"
-            wrapFocus={!result}
-          >
-            <button
-              ref={compareBtnRef}
-              data-testid="compare-btn"
-              aria-label="Compare translations"
-              style={
-                !result
-                  ? disabledToggleStyle
-                  : showCompareModal
-                    ? toggleActiveStyle
-                    : toggleButtonStyle
-              }
-              onClick={() => result && setShowCompareModal(true)}
-              disabled={!result}
-            >
-              Compare
-            </button>
-          </Tooltip>
-          <Tooltip
-            content={
-              result
-                ? "Highlight tokens by confidence risk. Red = low confidence."
-                : "Translate a passage first to enable heatmap."
-            }
-            position="bottom"
-            wrapFocus={!result}
-          >
-            <button
-              data-testid="heatmap-btn"
-              aria-label="Toggle confidence heatmap"
-              aria-pressed={heatmapMode}
-              style={
-                !result
-                  ? disabledToggleStyle
-                  : heatmapMode
-                    ? toggleActiveStyle
-                    : toggleButtonStyle
-              }
-              onClick={() => result && setHeatmapMode(!heatmapMode)}
-              disabled={!result}
-            >
-              Heatmap
-            </button>
-          </Tooltip>
-        </div>
-      </div>
-
-      {/* Error display */}
-      {error && (
-        <ApiErrorPanel
-          error={error}
-          onRetry={handleTranslate}
-          onDismiss={() => setError(null)}
-        />
-      )}
-
-      {/* UX4.1: Orientation Strip — always-visible ref + mode context */}
-      {result && (
-        <div
-          data-testid="orientation-strip"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
-            padding: "8px 16px",
-            marginBottom: "8px",
-            backgroundColor: "var(--rl-bg-card)",
-            borderRadius: "6px",
-            fontSize: "var(--rl-fs-base)",
-            flexWrap: "wrap",
-          }}
-        >
-          <span
-            data-testid="orientation-ref"
-            style={{
-              color: "var(--rl-text)",
-              fontWeight: 600,
-              fontSize: "15px",
-              letterSpacing: "0.01em",
-            }}
-          >
-            {result.reference}
-          </span>
-          <span
-            data-testid="orientation-mode"
-            style={{
-              ...styleChipStyle,
-              backgroundColor:
-                result.mode === "traceable"
-                  ? "var(--rl-success)"
-                  : "var(--rl-primary)",
-            }}
-          >
-            {result.mode}
-          </span>
-          <span style={styleChipStyle}>{result.translator_type}</span>
-          {/* Spacer */}
-          <div style={{ flex: 1 }} />
-          {/* Recent refs button */}
-          {recentRefs.length > 0 && (
-            <div ref={stripRecentRef} style={{ position: "relative" }}>
               <button
-                data-testid="recent-refs-btn"
-                aria-label="Recent references"
-                aria-expanded={showStripRecent}
-                style={{
-                  ...toggleButtonStyle,
-                  padding: "4px 10px",
-                  fontSize: "var(--rl-fs-xs)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "4px",
-                }}
-                onClick={() => setShowStripRecent(!showStripRecent)}
-                onKeyDown={(e) => {
-                  if (e.key === "Escape") setShowStripRecent(false);
-                }}
+                ref={compareBtnRef}
+                data-testid="compare-btn"
+                aria-label="Compare translations"
+                style={
+                  !result
+                    ? disabledToggleStyle
+                    : showCompareModal
+                      ? toggleActiveStyle
+                      : toggleButtonStyle
+                }
+                onClick={() => result && setShowCompareModal(true)}
+                disabled={!result}
               >
-                Recent
-                <span style={{ fontSize: "9px" }}>
-                  {showStripRecent ? "\u25B2" : "\u25BC"}
-                </span>
+                Compare
               </button>
-              {showStripRecent && (
-                <div
-                  data-testid="recent-refs-menu"
-                  role="menu"
-                  style={{
-                    position: "absolute",
-                    top: "100%",
-                    right: 0,
-                    backgroundColor: "var(--rl-bg-card)",
-                    border: "1px solid var(--rl-border-strong)",
-                    borderRadius: "4px",
-                    marginTop: "4px",
-                    zIndex: 20,
-                    minWidth: "180px",
-                    maxHeight: "200px",
-                    overflow: "auto",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
-                  }}
-                >
-                  {recentRefs.map((ref, i) => (
-                    <div
-                      key={ref}
-                      data-testid={`recent-refs-item-${i}`}
-                      role="menuitem"
-                      tabIndex={0}
-                      style={{
-                        ...recentItemStyle,
-                        backgroundColor:
-                          ref === result.reference
-                            ? "rgba(96, 165, 250, 0.15)"
-                            : "transparent",
-                      }}
-                      onClick={() => {
-                        setReference(ref);
-                        setShowStripRecent(false);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          setReference(ref);
-                          setShowStripRecent(false);
-                        }
-                      }}
-                    >
-                      {ref}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Legends */}
-      {(compareMode || heatmapMode) && result && (
-        <div style={{ marginBottom: "12px", display: "flex", gap: "16px" }}>
-          {compareMode && (
-            <div style={legendStyle}>
-              <span>Diff:</span>
-              <div style={legendItemStyle}>
-                <span
-                  style={{
-                    width: "12px",
-                    height: "12px",
-                    backgroundColor: getChangeTypeColor("lexical"),
-                    borderRadius: "2px",
-                  }}
-                />
-                <span>Lexical</span>
-              </div>
-              <div style={legendItemStyle}>
-                <span
-                  style={{
-                    width: "12px",
-                    height: "12px",
-                    backgroundColor: getChangeTypeColor("syntactic"),
-                    borderRadius: "2px",
-                  }}
-                />
-                <span>Syntactic</span>
-              </div>
-              <div style={legendItemStyle}>
-                <span
-                  style={{
-                    width: "12px",
-                    height: "12px",
-                    backgroundColor: getChangeTypeColor("interpretive"),
-                    borderRadius: "2px",
-                  }}
-                />
-                <span>Interpretive</span>
-              </div>
-            </div>
-          )}
-          {heatmapMode && (
-            <div style={legendStyle}>
-              <span>Risk:</span>
-              {HEATMAP_LEGEND.map((item) => (
-                <div key={item.label} style={legendItemStyle}>
-                  <span
-                    style={{
-                      width: "12px",
-                      height: "4px",
-                      backgroundColor:
-                        item.risk < 0.2
-                          ? "transparent"
-                          : item.risk < 0.4
-                            ? "#facc15"
-                            : item.risk < 0.6
-                              ? "#fb923c"
-                              : "#f87171",
-                      border:
-                        item.risk < 0.2
-                          ? "1px solid var(--rl-border-strong)"
-                          : "none",
-                    }}
-                  />
-                  <span>{item.label}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Main workspace */}
-      {result ? (
-        <div style={workspaceStyle} data-testid="explore-ready">
-          {/* Left: Greek Panel */}
-          <div style={panelStyle} role="region" aria-label="Greek text">
-            <div style={panelHeaderStyle}>Greek (SBLGNT)</div>
-            <div style={panelContentStyle}>
-              <GreekTokenDisplay
-                sblgntText={result.sblgnt_text}
-                ledger={result.ledger}
-                selectedPosition={selectedTokenPosition}
-                highlightedPositions={highlightedPositions}
-                onTokenClick={handleGreekTokenClick}
-                requestMode={result.mode}
-                translatorType={result.translator_type}
-              />
-            </div>
+            </Tooltip>
+            <Tooltip
+              content={
+                result
+                  ? "Highlight tokens by confidence risk. Red = low confidence."
+                  : "Translate a passage first to enable heatmap."
+              }
+              position="bottom"
+              wrapFocus={!result}
+            >
+              <button
+                data-testid="heatmap-btn"
+                aria-label="Toggle confidence heatmap"
+                aria-pressed={heatmapMode}
+                style={
+                  !result
+                    ? disabledToggleStyle
+                    : heatmapMode
+                      ? toggleActiveStyle
+                      : toggleButtonStyle
+                }
+                onClick={() => result && setHeatmapMode(!heatmapMode)}
+                disabled={!result}
+              >
+                Heatmap
+              </button>
+            </Tooltip>
           </div>
+        </div>
 
-          {/* Center: Renderings + Token Dock */}
+        {/* Error display */}
+        {error && (
+          <ApiErrorPanel
+            error={error}
+            onRetry={handleTranslate}
+            onDismiss={() => setError(null)}
+          />
+        )}
+
+        {/* UX4.1: Orientation Strip — always-visible ref + mode context */}
+        {result && (
           <div
+            data-testid="orientation-strip"
             style={{
               display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
-              minHeight: 0,
+              alignItems: "center",
+              gap: "12px",
+              padding: "8px 16px",
+              marginBottom: "8px",
+              backgroundColor: "var(--rl-bg-card)",
+              borderRadius: "var(--rl-radius-md)",
+              fontSize: "var(--rl-fs-base)",
+              flexWrap: "wrap",
             }}
           >
-            <div
-              style={{ ...panelStyle, flex: 1, minHeight: 0 }}
-              role="region"
-              aria-label="Translation rendering"
+            <span
+              data-testid="orientation-ref"
+              style={{
+                color: "var(--rl-text)",
+                fontWeight: 600,
+                fontSize: "15px",
+                letterSpacing: "0.01em",
+              }}
             >
-              <div
-                style={{
-                  ...panelHeaderStyle,
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <span>Rendering ({result.translator_type})</span>
-                {/* UX2.1: Density toggle + View toggle */}
-                <div
-                  style={{ display: "flex", gap: "8px", alignItems: "center" }}
+              {result.reference}
+            </span>
+            <span
+              data-testid="orientation-mode"
+              style={{
+                ...styleChipStyle,
+                backgroundColor:
+                  result.mode === "traceable"
+                    ? "var(--rl-success)"
+                    : "var(--rl-link)",
+              }}
+            >
+              {result.mode}
+            </span>
+            <span style={styleChipStyle}>{result.translator_type}</span>
+            {/* Spacer */}
+            <div style={{ flex: 1 }} />
+            {/* Recent refs button */}
+            {recentRefs.length > 0 && (
+              <div ref={stripRecentRef} style={{ position: "relative" }}>
+                <button
+                  data-testid="recent-refs-btn"
+                  aria-label="Recent references"
+                  aria-expanded={showStripRecent}
+                  style={{
+                    ...toggleButtonStyle,
+                    padding: "4px 10px",
+                    fontSize: "var(--rl-fs-xs)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                  }}
+                  onClick={() => setShowStripRecent(!showStripRecent)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") setShowStripRecent(false);
+                  }}
                 >
-                  {viewMode === "traceable" && (
-                    <div
-                      data-testid="density-toggle"
-                      style={{ display: "flex", gap: "2px" }}
-                    >
-                      <Tooltip
-                        content="Compact token spacing for faster scanning."
-                        position="bottom"
-                      >
-                        <button
-                          data-testid="density-compact-btn"
-                          aria-label="Compact density"
-                          aria-pressed={tokenDensity === "compact"}
-                          style={{
-                            padding: "3px 8px",
-                            fontSize: "var(--rl-fs-xs)",
-                            border: "1px solid var(--rl-border-strong)",
-                            borderRadius: "3px 0 0 3px",
-                            cursor: "pointer",
-                            backgroundColor:
-                              tokenDensity === "compact"
-                                ? "var(--rl-primary)"
-                                : "var(--rl-border-strong)",
-                            color:
-                              tokenDensity === "compact"
-                                ? "white"
-                                : "var(--rl-text-muted)",
-                            borderColor:
-                              tokenDensity === "compact"
-                                ? "var(--rl-primary)"
-                                : "var(--rl-border-strong)",
-                          }}
-                          onClick={() => handleDensityChange("compact")}
-                        >
-                          Compact
-                        </button>
-                      </Tooltip>
-                      <Tooltip
-                        content="Comfortable token spacing with more whitespace."
-                        position="bottom"
-                      >
-                        <button
-                          data-testid="density-comfortable-btn"
-                          aria-label="Comfortable density"
-                          aria-pressed={tokenDensity === "comfortable"}
-                          style={{
-                            padding: "3px 8px",
-                            fontSize: "var(--rl-fs-xs)",
-                            border: "1px solid var(--rl-border-strong)",
-                            borderRadius: "0 3px 3px 0",
-                            cursor: "pointer",
-                            backgroundColor:
-                              tokenDensity === "comfortable"
-                                ? "var(--rl-primary)"
-                                : "var(--rl-border-strong)",
-                            color:
-                              tokenDensity === "comfortable"
-                                ? "white"
-                                : "var(--rl-text-muted)",
-                            borderColor:
-                              tokenDensity === "comfortable"
-                                ? "var(--rl-primary)"
-                                : "var(--rl-border-strong)",
-                          }}
-                          onClick={() => handleDensityChange("comfortable")}
-                        >
-                          Comfortable
-                        </button>
-                      </Tooltip>
-                    </div>
-                  )}
-                  <Tooltip
-                    content="Switch how results are displayed. Traceable shows token-by-token mapping and receipts."
-                    position="bottom"
-                  >
-                    <div style={{ display: "flex", gap: "4px" }}>
-                      <button
-                        style={{
-                          padding: "3px 10px",
-                          fontSize: "var(--rl-fs-xs)",
-                          border: "1px solid var(--rl-border-strong)",
-                          borderRadius: "3px 0 0 3px",
-                          cursor: "pointer",
-                          backgroundColor:
-                            viewMode === "readable"
-                              ? "var(--rl-primary)"
-                              : "var(--rl-border-strong)",
-                          color:
-                            viewMode === "readable"
-                              ? "white"
-                              : "var(--rl-text-muted)",
-                          borderColor:
-                            viewMode === "readable"
-                              ? "var(--rl-primary)"
-                              : "var(--rl-border-strong)",
-                        }}
-                        data-testid="view-readable-btn"
-                        aria-label="Readable view"
-                        aria-pressed={viewMode === "readable"}
-                        onClick={() => setViewMode("readable")}
-                      >
-                        Readable
-                      </button>
-                      <button
-                        style={{
-                          padding: "3px 10px",
-                          fontSize: "var(--rl-fs-xs)",
-                          border: "1px solid var(--rl-border-strong)",
-                          borderRadius: "0 3px 3px 0",
-                          cursor: "pointer",
-                          backgroundColor:
-                            viewMode === "traceable"
-                              ? "var(--rl-primary)"
-                              : "var(--rl-border-strong)",
-                          color:
-                            viewMode === "traceable"
-                              ? "white"
-                              : "var(--rl-text-muted)",
-                          borderColor:
-                            viewMode === "traceable"
-                              ? "var(--rl-primary)"
-                              : "var(--rl-border-strong)",
-                        }}
-                        data-testid="view-traceable-btn"
-                        aria-label="Traceable view"
-                        aria-pressed={viewMode === "traceable"}
-                        onClick={() => setViewMode("traceable")}
-                      >
-                        Traceable
-                      </button>
-                    </div>
-                  </Tooltip>
-                </div>
-              </div>
-              <div style={panelContentStyle}>
-                {/* Primary rendering card */}
-                <div style={renderingCardStyle}>
-                  {/* Sprint 26 (UX1): Simplified chip display — max 2 chips */}
+                  Recent
+                  <span style={{ fontSize: "9px" }}>
+                    {showStripRecent ? "\u25B2" : "\u25BC"}
+                  </span>
+                </button>
+                {showStripRecent && (
                   <div
-                    style={{ marginBottom: "8px" }}
-                    data-testid="rendering-chips"
-                  >
-                    <span style={styleChipStyle}>{result.translator_type}</span>
-                    {viewMode !== result.mode ? (
-                      <Tooltip
-                        content={
-                          viewMode === "traceable" && result.mode === "readable"
-                            ? "Viewing as Traceable, but data was generated as Readable. Token evidence may be missing. Re-translate in Traceable mode for full data."
-                            : `Viewing as ${viewMode}, but data was generated as ${result.mode}.`
-                        }
-                        position="bottom"
-                      >
-                        <span
-                          style={{
-                            ...styleChipStyle,
-                            backgroundColor: "var(--rl-warning)",
-                            color: "var(--rl-bg-app)",
-                          }}
-                        >
-                          viewing as: {viewMode}
-                        </span>
-                      </Tooltip>
-                    ) : (
-                      <span
-                        style={{
-                          ...styleChipStyle,
-                          backgroundColor: "var(--rl-success)",
-                        }}
-                      >
-                        {result.mode}
-                      </span>
-                    )}
-                  </div>
-                  {/* S4.1: Stale-result CTA when viewing traceable but generated readable */}
-                  {viewMode === "traceable" &&
-                    result.mode === "readable" &&
-                    (!result.ledger || result.ledger.length === 0) && (
-                      <div
-                        style={{
-                          fontSize: "var(--rl-fs-xs)",
-                          color: "var(--rl-warning)",
-                          marginBottom: "8px",
-                          padding: "6px 10px",
-                          backgroundColor: "rgba(245, 158, 11, 0.1)",
-                          borderRadius: "4px",
-                          border: "1px solid rgba(245, 158, 11, 0.2)",
-                        }}
-                      >
-                        No token data available. These results were generated in
-                        Readable mode.{" "}
-                        <span
-                          style={{
-                            color: "var(--rl-primary)",
-                            cursor: "pointer",
-                            textDecoration: "underline",
-                          }}
-                          onClick={() => {
-                            setMode("traceable");
-                            setTimeout(() => handleTranslate(), 50);
-                          }}
-                        >
-                          Re-translate in Traceable
-                        </span>
-                      </div>
-                    )}
-
-                  <div
+                    data-testid="recent-refs-menu"
+                    role="menu"
                     style={{
-                      fontSize: "var(--rl-fs-md)",
-                      color: "var(--rl-text)",
-                      lineHeight: 1.8,
+                      position: "absolute",
+                      top: "100%",
+                      right: 0,
+                      backgroundColor: "var(--rl-bg-card)",
+                      border: "1px solid var(--rl-border)",
+                      borderRadius: "var(--rl-radius-md)",
+                      marginTop: "4px",
+                      zIndex: 20,
+                      minWidth: "180px",
+                      maxHeight: "200px",
+                      overflow: "auto",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
                     }}
                   >
-                    {viewMode === "traceable" &&
-                    result.ledger &&
-                    result.ledger.length > 0
-                      ? result.ledger.map((vl) => (
-                          <div
-                            key={vl.verse_id}
-                            style={{ marginBottom: "12px" }}
-                          >
-                            {renderInteractiveTranslation(vl.tokens)}
-                          </div>
-                        ))
-                      : result.translation_text}
-                  </div>
-
-                  {viewMode === "traceable" &&
-                    result.ledger &&
-                    result.ledger.length > 0 && (
-                      <ConfidenceSummary
-                        tokens={result.ledger.flatMap((l) => l.tokens)}
-                      />
-                    )}
-
-                  {/* Readable mode hint when traceable data available */}
-                  {viewMode === "readable" &&
-                    result.ledger &&
-                    result.ledger.length > 0 && (
+                    {recentRefs.map((ref, i) => (
                       <div
+                        key={ref}
+                        data-testid={`recent-refs-item-${i}`}
+                        role="menuitem"
+                        tabIndex={0}
                         style={{
-                          marginTop: "12px",
-                          fontSize: "var(--rl-fs-xs)",
-                          color: "var(--rl-text-dim)",
+                          ...recentItemStyle,
+                          backgroundColor:
+                            ref === result.reference
+                              ? "rgba(96, 165, 250, 0.15)"
+                              : "transparent",
+                        }}
+                        onClick={() => {
+                          setReference(ref);
+                          setShowStripRecent(false);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            setReference(ref);
+                            setShowStripRecent(false);
+                          }
                         }}
                       >
-                        Token-level evidence available.{" "}
-                        <span
-                          style={{
-                            color: "var(--rl-primary)",
-                            cursor: "pointer",
-                            textDecoration: "underline",
-                          }}
-                          onClick={() => setViewMode("traceable")}
-                        >
-                          Switch to Traceable view
-                        </span>{" "}
-                        to see per-token receipts and confidence.
+                        {ref}
                       </div>
-                    )}
-                </div>
-
-                {/* UX4.3: Compact confidence indicator — full details in Evidence panel */}
-                {result.confidence && (
-                  <div
-                    style={{
-                      ...renderingCardStyle,
-                      backgroundColor: "var(--rl-bg-app)",
-                      padding: "8px 12px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      cursor: "pointer",
-                    }}
-                    onClick={() => setActiveTab("confidence")}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        setActiveTab("confidence");
-                      }
-                    }}
-                  >
-                    <span
-                      style={{
-                        color: "var(--rl-text-muted)",
-                        fontSize: "var(--rl-fs-xs)",
-                        fontWeight: 500,
-                      }}
-                    >
-                      Confidence
-                    </span>
-                    <div
-                      style={{
-                        flex: 1,
-                        height: "4px",
-                        backgroundColor: "var(--rl-border-strong)",
-                        borderRadius: "2px",
-                        overflow: "hidden",
-                        maxWidth: "120px",
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: `${(result.confidence.composite * 100).toFixed(0)}%`,
-                          height: "100%",
-                          backgroundColor:
-                            result.confidence.composite >= 0.8
-                              ? "var(--rl-success)"
-                              : result.confidence.composite >= 0.6
-                                ? "var(--rl-warning)"
-                                : "var(--rl-error)",
-                          borderRadius: "2px",
-                        }}
-                      />
-                    </div>
-                    <span
-                      style={{
-                        color: "var(--rl-text)",
-                        fontWeight: 600,
-                        fontSize: "var(--rl-fs-base)",
-                      }}
-                    >
-                      {(result.confidence.composite * 100).toFixed(0)}%
-                    </span>
-                    <span
-                      style={{
-                        color: "var(--rl-primary)",
-                        fontSize: "var(--rl-fs-xs)",
-                        marginLeft: "auto",
-                      }}
-                    >
-                      Details &rarr;
-                    </span>
+                    ))}
                   </div>
                 )}
               </div>
-            </div>
-            {/* UX3.1: Token Inspector Dock */}
-            {viewMode === "traceable" && (
-              <TokenInspectorDock
-                token={selectedToken}
-                onClear={handleClosePopover}
-              />
             )}
           </div>
+        )}
 
-          {/* Right: Evidence Panel (UX4.3: unified Confidence + Receipts + Variants) */}
+        {/* A.3: Ambiguities strip — tokens with low lexical confidence */}
+        {result && ambiguousTokens.length > 0 && studyMode !== "reader" && (
           <div
-            style={panelStyle}
-            role="region"
-            aria-label="Evidence"
-            data-testid="evidence-panel"
+            data-testid="ambiguities-strip"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "6px 12px",
+              marginBottom: "8px",
+              backgroundColor: "rgba(251, 191, 36, 0.06)",
+              border: "1px solid rgba(251, 191, 36, 0.2)",
+              borderRadius: "var(--rl-radius-md)",
+              fontSize: "var(--rl-fs-xs)",
+              flexWrap: "wrap",
+            }}
           >
-            <div style={tabBarStyle}>
-              <Tooltip
-                content="Overall translation confidence with layer breakdown."
-                position="bottom"
+            <span
+              style={{
+                color: "var(--rl-warning-text)",
+                fontWeight: 600,
+                whiteSpace: "nowrap",
+              }}
+            >
+              Ambiguities
+            </span>
+            {ambiguousTokens.map((token) => (
+              <button
+                key={token.position}
+                data-testid={`ambiguity-pill-${token.position}`}
+                onClick={() => handleAmbiguityPillClick(token)}
+                style={{
+                  padding: "3px 10px",
+                  fontSize: "var(--rl-fs-xs)",
+                  backgroundColor: "rgba(251, 191, 36, 0.12)",
+                  color: "var(--rl-text)",
+                  border: "1px solid rgba(251, 191, 36, 0.3)",
+                  borderRadius: "var(--rl-radius-full)",
+                  cursor: "pointer",
+                  transition: "background-color var(--rl-transition-fast)",
+                  whiteSpace: "nowrap",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor =
+                    "rgba(251, 191, 36, 0.25)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor =
+                    "rgba(251, 191, 36, 0.12)";
+                }}
               >
-                <div
-                  data-testid="evidence-tab-confidence"
-                  style={activeTab === "confidence" ? tabActiveStyle : tabStyle}
-                  onClick={() => setActiveTab("confidence")}
-                  role="tab"
-                  tabIndex={0}
-                  onKeyDown={(e) =>
-                    e.key === "Enter" && setActiveTab("confidence")
-                  }
+                <span style={{ fontWeight: 500 }}>
+                  {token.gloss.replace(/^\[|\]$/g, "")}
+                </span>
+                <span
+                  style={{
+                    marginLeft: "4px",
+                    color: "var(--rl-text-dim)",
+                  }}
                 >
-                  Confidence
-                </div>
-              </Tooltip>
-              <Tooltip
-                content="Evidence for how the rendering was produced: sources, rules, and token decisions."
-                position="bottom"
-              >
-                <div
-                  data-testid="evidence-tab-receipts"
-                  style={activeTab === "receipts" ? tabActiveStyle : tabStyle}
-                  onClick={() => setActiveTab("receipts")}
-                  role="tab"
-                  tabIndex={0}
-                  onKeyDown={(e) =>
-                    e.key === "Enter" && setActiveTab("receipts")
-                  }
+                  {token.lemma || token.surface}
+                </span>
+                <span
+                  style={{
+                    marginLeft: "4px",
+                    color: "var(--rl-warning)",
+                    fontWeight: 600,
+                  }}
                 >
-                  Receipts
+                  {(token.confidence.lexical * 100).toFixed(0)}%
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Legends */}
+        {(compareMode || heatmapMode) && result && (
+          <div style={{ marginBottom: "12px", display: "flex", gap: "16px" }}>
+            {compareMode && (
+              <div style={legendStyle}>
+                <span>Diff:</span>
+                <div style={legendItemStyle}>
+                  <span
+                    style={{
+                      width: "12px",
+                      height: "12px",
+                      backgroundColor: getChangeTypeColor("lexical"),
+                      borderRadius: "2px",
+                    }}
+                  />
+                  <span>Lexical</span>
                 </div>
-              </Tooltip>
-              <Tooltip
-                content="Textual variants from selected witnesses (when available)."
-                position="bottom"
-              >
+                <div style={legendItemStyle}>
+                  <span
+                    style={{
+                      width: "12px",
+                      height: "12px",
+                      backgroundColor: getChangeTypeColor("syntactic"),
+                      borderRadius: "2px",
+                    }}
+                  />
+                  <span>Syntactic</span>
+                </div>
+                <div style={legendItemStyle}>
+                  <span
+                    style={{
+                      width: "12px",
+                      height: "12px",
+                      backgroundColor: getChangeTypeColor("interpretive"),
+                      borderRadius: "2px",
+                    }}
+                  />
+                  <span>Interpretive</span>
+                </div>
+              </div>
+            )}
+            {heatmapMode && (
+              <div style={legendStyle}>
+                <span>Risk:</span>
+                {HEATMAP_LEGEND.map((item) => (
+                  <div key={item.label} style={legendItemStyle}>
+                    <span
+                      style={{
+                        width: "12px",
+                        height: "4px",
+                        backgroundColor:
+                          item.risk < 0.2
+                            ? "transparent"
+                            : item.risk < 0.4
+                              ? "var(--rl-confidence-high)"
+                              : item.risk < 0.6
+                                ? "var(--rl-confidence-mid)"
+                                : "var(--rl-confidence-low)",
+                        border:
+                          item.risk < 0.2
+                            ? "1px solid var(--rl-border-strong)"
+                            : "none",
+                      }}
+                    />
+                    <span>{item.label}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Main workspace */}
+        {result ? (
+          <div style={workspaceStyle} data-testid="explore-ready">
+            {/* Left: Greek Panel */}
+            <div style={panelStyle} role="region" aria-label="Greek text">
+              <div style={panelHeaderStyle}>
+                <span>Greek Source</span>
                 <div
-                  data-testid="evidence-tab-variants"
-                  style={activeTab === "variants" ? tabActiveStyle : tabStyle}
-                  onClick={() => setActiveTab("variants")}
-                  role="tab"
-                  tabIndex={0}
-                  onKeyDown={(e) =>
-                    e.key === "Enter" && setActiveTab("variants")
-                  }
+                  style={{
+                    fontSize: "var(--rl-fs-xs)",
+                    fontWeight: 400,
+                    color: "var(--rl-text-dim)",
+                    textTransform: "none",
+                    marginTop: "2px",
+                  }}
                 >
-                  Variants ({result.variants.length})
+                  {PANEL_MICROCOPY[studyMode].greek}
                 </div>
-              </Tooltip>
+              </div>
+              <div style={panelContentStyle}>
+                <GreekTokenDisplay
+                  sblgntText={result.sblgnt_text}
+                  ledger={result.ledger}
+                  selectedPosition={selectedTokenPosition}
+                  highlightedPositions={highlightedPositions}
+                  onTokenClick={handleGreekTokenClick}
+                  requestMode={result.mode}
+                  translatorType={result.translator_type}
+                />
+              </div>
             </div>
-            <div style={{ ...panelContentStyle, padding: 0 }}>
-              {/* Confidence tab */}
-              {activeTab === "confidence" && (
-                <div style={{ padding: "16px" }}>
-                  {(() => {
-                    const na = getNextAction("confidence");
-                    if (!na) return null;
-                    return (
+
+            {/* Center: Renderings + Token Dock */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+                minHeight: 0,
+              }}
+            >
+              <div
+                style={{ ...panelStyle, flex: 1, minHeight: 0 }}
+                role="region"
+                aria-label="Translation rendering"
+              >
+                <div
+                  style={{
+                    ...panelHeaderStyle,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <div>
+                    <span>Rendering</span>
+                    <div
+                      style={{
+                        fontSize: "var(--rl-fs-xs)",
+                        fontWeight: 400,
+                        color: "var(--rl-text-dim)",
+                        textTransform: "none",
+                        marginTop: "2px",
+                      }}
+                    >
+                      {PANEL_MICROCOPY[studyMode].rendering}
+                    </div>
+                  </div>
+                  {/* UX2.1: Density toggle + View toggle */}
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "8px",
+                      alignItems: "center",
+                    }}
+                  >
+                    {viewMode === "traceable" && (
                       <div
-                        data-testid="evidence-next-action"
-                        style={{
-                          padding: "8px 12px",
-                          marginBottom: "12px",
-                          backgroundColor: "rgba(96, 165, 250, 0.08)",
-                          border: "1px solid rgba(96, 165, 250, 0.2)",
-                          borderRadius: "4px",
-                          fontSize: "var(--rl-fs-sm)",
-                          color: "var(--rl-text-muted)",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          flexWrap: "wrap",
-                        }}
+                        data-testid="density-toggle"
+                        style={{ display: "flex", gap: "2px" }}
                       >
-                        <span>{na.text}</span>
+                        <Tooltip
+                          content="Compact token spacing for faster scanning."
+                          position="bottom"
+                        >
+                          <button
+                            data-testid="density-compact-btn"
+                            aria-label="Compact density"
+                            aria-pressed={tokenDensity === "compact"}
+                            style={{
+                              padding: "3px 8px",
+                              fontSize: "var(--rl-fs-xs)",
+                              border: "1px solid var(--rl-border-strong)",
+                              borderRadius:
+                                "var(--rl-radius-sm) 0 0 var(--rl-radius-sm)",
+                              cursor: "pointer",
+                              backgroundColor:
+                                tokenDensity === "compact"
+                                  ? "var(--rl-link)"
+                                  : "var(--rl-border-strong)",
+                              color:
+                                tokenDensity === "compact"
+                                  ? "white"
+                                  : "var(--rl-text-muted)",
+                              borderColor:
+                                tokenDensity === "compact"
+                                  ? "var(--rl-link)"
+                                  : "var(--rl-border-strong)",
+                            }}
+                            onClick={() => handleDensityChange("compact")}
+                          >
+                            Compact
+                          </button>
+                        </Tooltip>
+                        <Tooltip
+                          content="Comfortable token spacing with more whitespace."
+                          position="bottom"
+                        >
+                          <button
+                            data-testid="density-comfortable-btn"
+                            aria-label="Comfortable density"
+                            aria-pressed={tokenDensity === "comfortable"}
+                            style={{
+                              padding: "3px 8px",
+                              fontSize: "var(--rl-fs-xs)",
+                              border: "1px solid var(--rl-border-strong)",
+                              borderRadius:
+                                "0 var(--rl-radius-sm) var(--rl-radius-sm) 0",
+                              cursor: "pointer",
+                              backgroundColor:
+                                tokenDensity === "comfortable"
+                                  ? "var(--rl-link)"
+                                  : "var(--rl-border-strong)",
+                              color:
+                                tokenDensity === "comfortable"
+                                  ? "white"
+                                  : "var(--rl-text-muted)",
+                              borderColor:
+                                tokenDensity === "comfortable"
+                                  ? "var(--rl-link)"
+                                  : "var(--rl-border-strong)",
+                            }}
+                            onClick={() => handleDensityChange("comfortable")}
+                          >
+                            Comfortable
+                          </button>
+                        </Tooltip>
                       </div>
-                    );
-                  })()}
-                  {result.confidence ? (
-                    <div>
-                      {/* Composite confidence with progress bar */}
-                      <Tooltip
-                        content="Overall confidence based on available evidence. Higher = more certain."
-                        position="bottom"
-                      >
-                        <div
-                          data-testid="confidence-composite"
-                          style={{ marginBottom: "10px", cursor: "default" }}
-                        >
-                          <div
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              marginBottom: "6px",
-                            }}
-                          >
-                            <span
-                              style={{
-                                color: "var(--rl-text-muted)",
-                                fontSize: "var(--rl-fs-sm)",
-                                fontWeight: 500,
-                              }}
-                            >
-                              Composite Confidence
-                            </span>
-                            <span
-                              style={{
-                                color: "var(--rl-text)",
-                                fontWeight: 600,
-                                fontSize: "15px",
-                              }}
-                            >
-                              {(result.confidence.composite * 100).toFixed(0)}%
-                            </span>
-                          </div>
-                          <div
-                            data-testid="confidence-composite-bar"
-                            style={{
-                              height: "6px",
-                              backgroundColor: "var(--rl-border-strong)",
-                              borderRadius: "3px",
-                              overflow: "hidden",
-                            }}
-                          >
-                            <div
-                              style={{
-                                width: `${(result.confidence.composite * 100).toFixed(0)}%`,
-                                height: "100%",
-                                backgroundColor:
-                                  result.confidence.composite >= 0.8
-                                    ? "var(--rl-success)"
-                                    : result.confidence.composite >= 0.6
-                                      ? "var(--rl-warning)"
-                                      : "var(--rl-error)",
-                                transition: "width 0.3s",
-                                borderRadius: "3px",
-                              }}
-                            />
-                          </div>
-                        </div>
-                      </Tooltip>
-
-                      {/* Layer breakdown */}
-                      {result.confidence.layers &&
-                      Object.values(result.confidence.layers).some(
-                        (s) => s && typeof s.score === "number",
-                      ) ? (
-                        <div
+                    )}
+                    <Tooltip
+                      content="Switch how results are displayed. Traceable shows token-by-token mapping and receipts."
+                      position="bottom"
+                    >
+                      <div style={{ display: "flex", gap: "4px" }}>
+                        <button
                           style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "4px",
-                          }}
-                        >
-                          {(
-                            [
-                              "textual",
-                              "grammatical",
-                              "lexical",
-                              "interpretive",
-                            ] as const
-                          ).map((layer) => {
-                            const score = result.confidence!.layers[layer];
-                            if (!score || typeof score.score !== "number")
-                              return null;
-                            const pct = (score.score * 100).toFixed(0);
-                            const isWeakest =
-                              result.confidence!.weakest_layer === layer;
-                            const barColor =
-                              score.score >= 0.8
-                                ? "var(--rl-success)"
-                                : score.score >= 0.6
-                                  ? "var(--rl-warning)"
-                                  : "var(--rl-error)";
-
-                            return (
-                              <div
-                                key={layer}
-                                data-testid={`confidence-layer-${layer}`}
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "8px",
-                                  cursor: "pointer",
-                                  padding: "2px 0",
-                                  borderRadius: "3px",
-                                  backgroundColor:
-                                    confidenceDetailLayer === layer
-                                      ? "rgba(96, 165, 250, 0.1)"
-                                      : "transparent",
-                                }}
-                                onClick={() =>
-                                  setConfidenceDetailLayer(
-                                    confidenceDetailLayer === layer
-                                      ? null
-                                      : layer,
-                                  )
-                                }
-                                role="button"
-                                tabIndex={0}
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter" || e.key === " ") {
-                                    e.preventDefault();
-                                    setConfidenceDetailLayer(
-                                      confidenceDetailLayer === layer
-                                        ? null
-                                        : layer,
-                                    );
-                                  }
-                                }}
-                              >
-                                <span
-                                  style={{
-                                    fontSize: "var(--rl-fs-xs)",
-                                    color: isWeakest
-                                      ? "var(--rl-warning)"
-                                      : "var(--rl-text-dim)",
-                                    width: "80px",
-                                    textTransform: "capitalize",
-                                    fontWeight: isWeakest ? 600 : 400,
-                                  }}
-                                >
-                                  {layer}
-                                  {isWeakest ? " *" : ""}
-                                </span>
-                                <div
-                                  style={{
-                                    flex: 1,
-                                    height: "4px",
-                                    backgroundColor: "var(--rl-border-strong)",
-                                    borderRadius: "2px",
-                                    overflow: "hidden",
-                                  }}
-                                >
-                                  <div
-                                    style={{
-                                      width: `${pct}%`,
-                                      height: "100%",
-                                      backgroundColor: barColor,
-                                      transition: "width 0.3s",
-                                    }}
-                                  />
-                                </div>
-                                <span
-                                  style={{
-                                    fontSize: "var(--rl-fs-xs)",
-                                    color: isWeakest
-                                      ? "var(--rl-warning)"
-                                      : "var(--rl-text-muted)",
-                                    width: "32px",
-                                    textAlign: "right",
-                                    fontWeight: isWeakest ? 600 : 400,
-                                  }}
-                                >
-                                  {pct}%
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <div
-                          style={{
+                            padding: "3px 10px",
                             fontSize: "var(--rl-fs-xs)",
-                            color: "var(--rl-text-dim)",
-                            fontStyle: "italic",
-                            marginTop: "4px",
+                            border: "1px solid var(--rl-border-strong)",
+                            borderRadius:
+                              "var(--rl-radius-sm) 0 0 var(--rl-radius-sm)",
+                            cursor: "pointer",
+                            backgroundColor:
+                              viewMode === "readable"
+                                ? "var(--rl-link)"
+                                : "var(--rl-border-strong)",
+                            color:
+                              viewMode === "readable"
+                                ? "white"
+                                : "var(--rl-text-muted)",
+                            borderColor:
+                              viewMode === "readable"
+                                ? "var(--rl-link)"
+                                : "var(--rl-border-strong)",
+                          }}
+                          data-testid="view-readable-btn"
+                          aria-label="Readable view"
+                          aria-pressed={viewMode === "readable"}
+                          onClick={() => setViewMode("readable")}
+                        >
+                          Readable
+                        </button>
+                        <button
+                          style={{
+                            padding: "3px 10px",
+                            fontSize: "var(--rl-fs-xs)",
+                            border: "1px solid var(--rl-border-strong)",
+                            borderRadius:
+                              "0 var(--rl-radius-sm) var(--rl-radius-sm) 0",
+                            cursor: "pointer",
+                            backgroundColor:
+                              viewMode === "traceable"
+                                ? "var(--rl-link)"
+                                : "var(--rl-border-strong)",
+                            color:
+                              viewMode === "traceable"
+                                ? "white"
+                                : "var(--rl-text-muted)",
+                            borderColor:
+                              viewMode === "traceable"
+                                ? "var(--rl-link)"
+                                : "var(--rl-border-strong)",
+                          }}
+                          data-testid="view-traceable-btn"
+                          aria-label="Traceable view"
+                          aria-pressed={viewMode === "traceable"}
+                          onClick={() => setViewMode("traceable")}
+                        >
+                          Traceable
+                        </button>
+                      </div>
+                    </Tooltip>
+                  </div>
+                </div>
+                <div style={panelContentStyle}>
+                  {/* Primary rendering card */}
+                  <div style={renderingCardStyle}>
+                    {/* Sprint 26 (UX1): Simplified chip display — max 2 chips */}
+                    <div
+                      style={{ marginBottom: "8px" }}
+                      data-testid="rendering-chips"
+                    >
+                      <span style={styleChipStyle}>
+                        {result.translator_type}
+                      </span>
+                      {viewMode !== result.mode ? (
+                        <Tooltip
+                          content={
+                            viewMode === "traceable" &&
+                            result.mode === "readable"
+                              ? "Viewing as Traceable, but data was generated as Readable. Token evidence may be missing. Re-translate in Traceable mode for full data."
+                              : `Viewing as ${viewMode}, but data was generated as ${result.mode}.`
+                          }
+                          position="bottom"
+                        >
+                          <span
+                            style={{
+                              ...styleChipStyle,
+                              backgroundColor: "var(--rl-warning)",
+                              color: "var(--rl-bg-app)",
+                            }}
+                          >
+                            viewing as: {viewMode}
+                          </span>
+                        </Tooltip>
+                      ) : (
+                        <span
+                          style={{
+                            ...styleChipStyle,
+                            backgroundColor: "var(--rl-success)",
                           }}
                         >
-                          Layer scores not provided by backend.
-                        </div>
+                          {result.mode}
+                        </span>
                       )}
-
-                      {result.confidence.weakest_layer && (
+                    </div>
+                    {/* S4.1: Stale-result CTA when viewing traceable but generated readable */}
+                    {viewMode === "traceable" &&
+                      result.mode === "readable" &&
+                      (!result.ledger || result.ledger.length === 0) && (
                         <div
                           style={{
                             fontSize: "var(--rl-fs-xs)",
                             color: "var(--rl-warning)",
-                            marginTop: "6px",
+                            marginBottom: "8px",
+                            padding: "6px 10px",
+                            backgroundColor: "var(--rl-warning-bg)",
+                            borderRadius: "var(--rl-radius-md)",
+                            border: "1px solid var(--rl-warning)",
                           }}
                         >
-                          Weakest: {result.confidence.weakest_layer}
+                          No token data available. These results were generated
+                          in Readable mode.{" "}
+                          <span
+                            style={{
+                              color: "var(--rl-link)",
+                              cursor: "pointer",
+                              textDecoration: "underline",
+                            }}
+                            onClick={() => {
+                              setMode("traceable");
+                              setTranslator("traceable");
+                              setTimeout(() => handleTranslate(), 50);
+                            }}
+                          >
+                            Re-translate as Traceable
+                          </span>
                         </div>
                       )}
 
-                      {/* Confidence detail panel */}
-                      {confidenceDetailLayer &&
-                        result.ledger &&
-                        result.ledger.length > 0 && (
-                          <ConfidenceDetailPanel
-                            layer={confidenceDetailLayer}
-                            ledger={result.ledger}
-                            onTokenSelect={(pos) => {
-                              setSelectedTokenPosition(pos);
-                              for (const v of result.ledger!) {
-                                const t = v.tokens.find(
-                                  (tk) => tk.position === pos,
-                                );
-                                if (t) {
-                                  setSelectedToken(t);
-                                  break;
-                                }
-                              }
-                            }}
-                            onClose={() => setConfidenceDetailLayer(null)}
-                          />
-                        )}
-                      {confidenceDetailLayer &&
-                        (!result.ledger || result.ledger.length === 0) && (
-                          <div
-                            data-testid="confidence-detail-panel"
-                            style={{
-                              fontSize: "var(--rl-fs-sm)",
-                              color: "var(--rl-text-dim)",
-                              fontStyle: "italic",
-                              padding: "12px 8px",
-                              textAlign: "center",
-                              marginTop: "8px",
-                              backgroundColor: "var(--rl-bg-app)",
-                              borderRadius: "6px",
-                            }}
-                          >
-                            Token data requires Traceable mode. Re-translate in
-                            Traceable to see per-token confidence.
-                          </div>
-                        )}
-                    </div>
-                  ) : (
                     <div
                       style={{
-                        color: "var(--rl-text-dim)",
-                        fontSize: "var(--rl-fs-base)",
-                        textAlign: "center",
-                        padding: "24px",
+                        fontSize: "var(--rl-fs-md)",
+                        color: "var(--rl-text)",
+                        lineHeight: 1.8,
                       }}
                     >
-                      No confidence data available for this translation.
+                      {viewMode === "traceable" &&
+                      result.ledger &&
+                      result.ledger.length > 0
+                        ? result.ledger.map((vl) => (
+                            <div
+                              key={vl.verse_id}
+                              style={{ marginBottom: "12px" }}
+                            >
+                              {renderInteractiveTranslation(vl.tokens)}
+                            </div>
+                          ))
+                        : result.translation_text}
                     </div>
-                  )}
-                </div>
-              )}
 
-              {/* Receipts tab */}
-              {activeTab === "receipts" && (
-                <div style={{ padding: "16px" }}>
-                  {(() => {
-                    const na = getNextAction("receipts");
-                    if (!na) return null;
-                    return (
-                      <div
-                        data-testid="evidence-next-action"
+                    {viewMode === "traceable" &&
+                      result.ledger &&
+                      result.ledger.length > 0 && (
+                        <ConfidenceSummary
+                          tokens={result.ledger.flatMap((l) => l.tokens)}
+                        />
+                      )}
+
+                    {/* Readable mode hint when traceable data available */}
+                    {viewMode === "readable" &&
+                      result.ledger &&
+                      result.ledger.length > 0 && (
+                        <div
+                          style={{
+                            marginTop: "12px",
+                            fontSize: "var(--rl-fs-xs)",
+                            color: "var(--rl-text-dim)",
+                          }}
+                        >
+                          Token-level evidence available.{" "}
+                          <span
+                            style={{
+                              color: "var(--rl-link)",
+                              cursor: "pointer",
+                              textDecoration: "underline",
+                            }}
+                            onClick={() => setViewMode("traceable")}
+                          >
+                            Switch to Traceable view
+                          </span>{" "}
+                          to see per-token receipts and confidence.
+                        </div>
+                      )}
+                  </div>
+
+                  {/* UX4.3: Compact confidence indicator — full details in Evidence panel */}
+                  {result.confidence && (
+                    <div
+                      style={{
+                        ...renderingCardStyle,
+                        backgroundColor: "var(--rl-bg-app)",
+                        padding: "8px 12px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        cursor: "pointer",
+                      }}
+                      onClick={() => setActiveTab("confidence")}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setActiveTab("confidence");
+                        }
+                      }}
+                    >
+                      <span
                         style={{
-                          padding: "8px 12px",
-                          marginBottom: "12px",
-                          backgroundColor: "rgba(96, 165, 250, 0.08)",
-                          border: "1px solid rgba(96, 165, 250, 0.2)",
-                          borderRadius: "4px",
-                          fontSize: "var(--rl-fs-sm)",
                           color: "var(--rl-text-muted)",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          flexWrap: "wrap",
+                          fontSize: "var(--rl-fs-xs)",
+                          fontWeight: 500,
                         }}
                       >
-                        <span>{na.text}</span>
-                        {na.action && (
-                          <button
-                            data-testid="evidence-next-action-btn"
-                            style={{
-                              padding: "3px 10px",
-                              fontSize: "var(--rl-fs-xs)",
-                              backgroundColor: "transparent",
-                              color: "var(--rl-primary)",
-                              border: "1px solid var(--rl-primary)",
-                              borderRadius: "3px",
-                              cursor: "pointer",
-                              whiteSpace: "nowrap",
-                            }}
-                            onClick={na.action}
-                          >
-                            {na.label}
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })()}
-                  {viewMode === "readable" &&
-                  result.ledger &&
-                  result.ledger.length > 0 ? (
-                    <div
-                      style={{
-                        color: "var(--rl-text-dim)",
-                        fontSize: "var(--rl-fs-base)",
-                        padding: "16px",
-                      }}
-                    >
-                      <div style={{ marginBottom: "8px" }}>
-                        Receipts are visible in Traceable view.
+                        Confidence
+                      </span>
+                      <div
+                        style={{
+                          flex: 1,
+                          height: "4px",
+                          backgroundColor: "var(--rl-border-strong)",
+                          borderRadius: "2px",
+                          overflow: "hidden",
+                          maxWidth: "120px",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: `${(result.confidence.composite * 100).toFixed(0)}%`,
+                            height: "100%",
+                            backgroundColor:
+                              result.confidence.composite >= 0.8
+                                ? "var(--rl-success)"
+                                : result.confidence.composite >= 0.6
+                                  ? "var(--rl-warning)"
+                                  : "var(--rl-error)",
+                            borderRadius: "2px",
+                          }}
+                        />
                       </div>
                       <span
                         style={{
-                          color: "var(--rl-primary)",
-                          cursor: "pointer",
-                          textDecoration: "underline",
-                          fontSize: "var(--rl-fs-sm)",
-                        }}
-                        onClick={() => {
-                          setViewMode("traceable");
+                          color: "var(--rl-text)",
+                          fontWeight: 600,
+                          fontSize: "var(--rl-fs-base)",
                         }}
                       >
-                        Switch to Traceable view
+                        {(result.confidence.composite * 100).toFixed(0)}%
+                      </span>
+                      <span
+                        style={{
+                          color: "var(--rl-link)",
+                          fontSize: "var(--rl-fs-xs)",
+                          marginLeft: "auto",
+                        }}
+                      >
+                        Details &rarr;
                       </span>
                     </div>
-                  ) : result.ledger && result.ledger.length > 0 ? (
-                    <LedgerList ledgers={result.ledger} />
-                  ) : result.mode === "readable" ? (
-                    <div
-                      style={{
-                        color: "var(--rl-text-dim)",
-                        fontSize: "var(--rl-fs-base)",
-                        padding: "16px",
-                      }}
-                    >
-                      <div style={{ marginBottom: "8px" }}>
-                        Token ledger is available in Traceable mode.
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "var(--rl-fs-sm)",
-                          color: "var(--rl-border-strong)",
-                          marginBottom: "12px",
-                        }}
-                      >
-                        Results were generated in Readable mode. Re-translate in
-                        Traceable to see per-token receipts.
-                      </div>
-                      <button
-                        data-testid="receipts-cta-btn"
-                        style={{
-                          padding: "6px 14px",
-                          fontSize: "var(--rl-fs-sm)",
-                          backgroundColor: "transparent",
-                          color: "var(--rl-primary)",
-                          border: "1px solid var(--rl-primary)",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                        }}
-                        onClick={() => {
-                          setMode("traceable");
-                          setTimeout(() => handleTranslate(), 50);
-                        }}
-                      >
-                        Re-translate in Traceable
-                      </button>
-                    </div>
-                  ) : (
-                    <div
-                      style={{
-                        color: "var(--rl-text-dim)",
-                        fontSize: "var(--rl-fs-base)",
-                        padding: "16px",
-                      }}
-                    >
-                      <div style={{ marginBottom: "8px" }}>
-                        No token ledger returned for this translation.
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "var(--rl-fs-sm)",
-                          color: "var(--rl-border-strong)",
-                          marginBottom: "12px",
-                        }}
-                      >
-                        The translator type may not support token-level
-                        evidence. Try the traceable translator for per-token
-                        receipts.
-                      </div>
-                      <button
-                        data-testid="receipts-cta-btn"
-                        style={{
-                          padding: "6px 14px",
-                          fontSize: "var(--rl-fs-sm)",
-                          backgroundColor: "transparent",
-                          color: "var(--rl-primary)",
-                          border: "1px solid var(--rl-primary)",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                        }}
-                        onClick={() => {
-                          setTranslator("traceable");
-                          setMode("traceable");
-                          setTimeout(() => handleTranslate(), 50);
-                        }}
-                      >
-                        Try traceable translator
-                      </button>
-                    </div>
                   )}
                 </div>
-              )}
-
-              {/* Variants tab */}
-              {activeTab === "variants" && (
-                <div style={{ padding: "16px" }}>
-                  {(() => {
-                    const na = getNextAction("variants");
-                    if (!na) return null;
-                    return (
-                      <div
-                        data-testid="evidence-next-action"
-                        style={{
-                          padding: "8px 12px",
-                          marginBottom: "12px",
-                          backgroundColor: "rgba(96, 165, 250, 0.08)",
-                          border: "1px solid rgba(96, 165, 250, 0.2)",
-                          borderRadius: "4px",
-                          fontSize: "var(--rl-fs-sm)",
-                          color: "var(--rl-text-muted)",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        <span>{na.text}</span>
-                        {na.link && (
-                          <Link
-                            to={na.link}
-                            data-testid="evidence-next-action-btn"
-                            style={{
-                              padding: "3px 10px",
-                              fontSize: "var(--rl-fs-xs)",
-                              backgroundColor: "transparent",
-                              color: "var(--rl-primary)",
-                              border: "1px solid var(--rl-primary)",
-                              borderRadius: "3px",
-                              textDecoration: "none",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {na.label}
-                          </Link>
-                        )}
-                      </div>
-                    );
-                  })()}
-                  {result.variants.length === 0 && (
-                    <div
-                      style={{
-                        color: "var(--rl-text-dim)",
-                        fontSize: "var(--rl-fs-base)",
-                        padding: "12px",
-                        backgroundColor: "var(--rl-bg-app)",
-                        borderRadius: "6px",
-                        marginBottom: "12px",
-                      }}
-                    >
-                      <div
-                        style={{
-                          marginBottom: "6px",
-                          fontWeight: 500,
-                          color: "var(--rl-text-muted)",
-                        }}
-                      >
-                        No textual variants at this reference
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "var(--rl-fs-sm)",
-                          marginBottom: "12px",
-                        }}
-                      >
-                        This passage has no variant readings in the installed
-                        source packs. The SBLGNT spine text is the only attested
-                        reading
-                        {result.provenance?.sources_used?.length > 0
-                          ? ` across ${result.provenance.sources_used.length} source(s): ${result.provenance.sources_used.join(", ")}.`
-                          : "."}
-                      </div>
-                      <Link
-                        to="/sources"
-                        data-testid="variants-cta-btn"
-                        style={{
-                          display: "inline-block",
-                          padding: "6px 14px",
-                          fontSize: "var(--rl-fs-sm)",
-                          backgroundColor: "transparent",
-                          color: "var(--rl-primary)",
-                          border: "1px solid var(--rl-primary)",
-                          borderRadius: "4px",
-                          textDecoration: "none",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Manage Sources
-                      </Link>
-                    </div>
-                  )}
-                  <DossierPanel
-                    client={client}
-                    reference={result.reference}
-                    sessionId={settings.sessionId}
-                    defaultExpanded={true}
-                  />
-                </div>
+              </div>
+              {/* UX3.1: Token Inspector Dock */}
+              {viewMode === "traceable" && (
+                <TokenInspectorDock
+                  token={selectedToken}
+                  onClear={handleClosePopover}
+                />
               )}
             </div>
-          </div>
-        </div>
-      ) : (
-        /* Sprint 17: Enhanced empty state with example chips and loading */
-        <div style={workspaceStyle}>
-          <div
-            style={{
-              ...panelStyle,
-              gridColumn:
-                layoutMode === "mobile"
-                  ? "span 1"
-                  : layoutMode === "tablet"
-                    ? "span 2"
-                    : "span 3",
-              position: "relative",
-            }}
-          >
-            {loading ? (
-              <div style={emptyStateStyle}>
-                <div
-                  style={{
-                    fontSize: "var(--rl-fs-xl)",
-                    marginBottom: "16px",
-                    animation: "pulse 1.5s ease-in-out infinite",
-                  }}
-                >
-                  Translating...
-                </div>
-                <div
-                  style={{ color: "var(--rl-primary)", fontSize: "var(--rl-fs-base)" }}
-                >
-                  {reference}
-                </div>
-              </div>
-            ) : !client ? (
-              <div style={emptyStateStyle}>
-                <div
-                  style={{ fontSize: "var(--rl-fs-lg)", marginBottom: "12px" }}
-                >
-                  Not Connected
-                </div>
-                <div style={{ marginBottom: "16px" }}>
-                  Connect to the backend to start exploring Greek texts.
-                </div>
-                <Link
-                  to="/settings"
-                  style={{
-                    ...buttonStyle,
-                    textDecoration: "none",
-                    display: "inline-block",
-                  }}
-                >
-                  Check Connection
-                </Link>
-              </div>
-            ) : (
-              <div style={emptyStateStyle}>
-                <div
-                  style={{
-                    fontSize: "32px",
-                    marginBottom: "12px",
-                    opacity: 0.5,
-                  }}
-                >
-                  {/* Greek alpha-omega glyph */}
-                  &#x0391;&#x03A9;
-                </div>
-                <div
-                  style={{
-                    fontSize: "var(--rl-fs-lg)",
-                    fontWeight: 600,
-                    color: "var(--rl-text)",
-                    marginBottom: "8px",
-                  }}
-                >
-                  Explore Greek New Testament
-                </div>
-                <div
-                  style={{
-                    color: "var(--rl-text-muted)",
-                    fontSize: "var(--rl-fs-base)",
-                    marginBottom: "20px",
-                    lineHeight: 1.5,
-                  }}
-                >
-                  Enter a scripture reference above and press Enter to
-                  translate.
-                </div>
 
-                {/* S8: Try a demo button */}
+            {/* Right: Evidence Panel (UX4.3: unified Confidence + Receipts + Variants) */}
+            <div
+              style={panelStyle}
+              role="region"
+              aria-label="Evidence"
+              data-testid="evidence-panel"
+            >
+              <div style={tabBarStyle}>
                 <Tooltip
-                  content="Load an example passage to see how Explore works."
+                  content="Overall translation confidence with layer breakdown."
                   position="bottom"
                 >
-                  <button
-                    data-testid="demo-btn"
-                    style={{
-                      ...buttonStyle,
-                      marginBottom: "24px",
-                    }}
-                    onClick={handleDemo}
-                  >
-                    Try a demo ({DEMO_REF})
-                  </button>
-                </Tooltip>
-
-                {/* Example chips */}
-                <div style={{ marginBottom: "16px" }}>
                   <div
-                    style={{
-                      fontSize: "var(--rl-fs-xs)",
-                      color: "var(--rl-text-dim)",
-                      marginBottom: "8px",
-                      textTransform: "uppercase",
-                    }}
+                    data-testid="evidence-tab-confidence"
+                    style={
+                      activeTab === "confidence" ? tabActiveStyle : tabStyle
+                    }
+                    onClick={() => setActiveTab("confidence")}
+                    role="tab"
+                    tabIndex={0}
+                    onKeyDown={(e) =>
+                      e.key === "Enter" && setActiveTab("confidence")
+                    }
                   >
-                    Try an example
+                    Confidence
                   </div>
-                  <div style={exampleChipsStyle}>
-                    {EXAMPLE_REFS.map((ref) => (
-                      <button
-                        key={ref}
-                        style={chipStyle}
-                        onClick={() => {
-                          setReference(ref);
-                          // Auto-translate after selecting
-                          setTimeout(() => handleTranslate(), 100);
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor =
-                            "var(--rl-border-strong)";
-                          e.currentTarget.style.color = "var(--rl-text)";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor =
-                            "var(--rl-border-strong)";
-                          e.currentTarget.style.color = "var(--rl-text-muted)";
-                        }}
-                      >
-                        {ref}
-                      </button>
-                    ))}
+                </Tooltip>
+                <Tooltip
+                  content="Evidence for how the rendering was produced: sources, rules, and token decisions."
+                  position="bottom"
+                >
+                  <div
+                    data-testid="evidence-tab-receipts"
+                    style={activeTab === "receipts" ? tabActiveStyle : tabStyle}
+                    onClick={() => setActiveTab("receipts")}
+                    role="tab"
+                    tabIndex={0}
+                    onKeyDown={(e) =>
+                      e.key === "Enter" && setActiveTab("receipts")
+                    }
+                  >
+                    Receipts
                   </div>
-                </div>
-
-                {/* Recent refs if available */}
-                {recentRefs.length > 0 && (
-                  <div>
-                    <div
-                      style={{
-                        fontSize: "var(--rl-fs-xs)",
-                        color: "var(--rl-text-dim)",
-                        marginBottom: "8px",
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      Recent
-                    </div>
-                    <div style={exampleChipsStyle}>
-                      {recentRefs.slice(0, 3).map((ref) => (
-                        <button
-                          key={ref}
-                          style={{ ...chipStyle, borderColor: "var(--rl-primary)" }}
-                          onClick={() => {
-                            setReference(ref);
-                            setTimeout(() => handleTranslate(), 100);
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor =
-                              "var(--rl-primary)";
-                            e.currentTarget.style.color = "white";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor =
-                              "var(--rl-border-strong)";
-                            e.currentTarget.style.color =
-                              "var(--rl-text-muted)";
+                </Tooltip>
+                <Tooltip
+                  content="Manuscript/readings differences (apparatus), not alternate interpretations."
+                  position="bottom"
+                >
+                  <div
+                    data-testid="evidence-tab-variants"
+                    style={activeTab === "variants" ? tabActiveStyle : tabStyle}
+                    onClick={() => setActiveTab("variants")}
+                    role="tab"
+                    tabIndex={0}
+                    onKeyDown={(e) =>
+                      e.key === "Enter" && setActiveTab("variants")
+                    }
+                  >
+                    Textual Variants ({result.variants.length})
+                  </div>
+                </Tooltip>
+              </div>
+              <div style={{ ...panelContentStyle, padding: 0 }}>
+                {/* Confidence tab */}
+                {activeTab === "confidence" && (
+                  <div style={{ padding: "16px" }}>
+                    {(() => {
+                      const na = getNextAction("confidence");
+                      if (!na) return null;
+                      return (
+                        <div
+                          data-testid="evidence-next-action"
+                          style={{
+                            padding: "8px 12px",
+                            marginBottom: "12px",
+                            backgroundColor: "rgba(96, 165, 250, 0.08)",
+                            border: "1px solid rgba(96, 165, 250, 0.2)",
+                            borderRadius: "var(--rl-radius-md)",
+                            fontSize: "var(--rl-fs-sm)",
+                            color: "var(--rl-text-muted)",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            flexWrap: "wrap",
                           }}
                         >
-                          {ref}
+                          <span>{na.text}</span>
+                        </div>
+                      );
+                    })()}
+                    {result.confidence ? (
+                      <div>
+                        {/* Composite confidence with progress bar */}
+                        <Tooltip
+                          content="Overall confidence based on available evidence. Higher = more certain."
+                          position="bottom"
+                        >
+                          <div
+                            data-testid="confidence-composite"
+                            style={{ marginBottom: "10px", cursor: "default" }}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                marginBottom: "6px",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  color: "var(--rl-text-muted)",
+                                  fontSize: "var(--rl-fs-sm)",
+                                  fontWeight: 500,
+                                }}
+                              >
+                                Composite Confidence
+                              </span>
+                              <span
+                                style={{
+                                  color: "var(--rl-text)",
+                                  fontWeight: 600,
+                                  fontSize: "15px",
+                                }}
+                              >
+                                {(result.confidence.composite * 100).toFixed(0)}
+                                %
+                              </span>
+                            </div>
+                            <div
+                              data-testid="confidence-composite-bar"
+                              style={{
+                                height: "6px",
+                                backgroundColor: "var(--rl-border-strong)",
+                                borderRadius: "var(--rl-radius-sm)",
+                                overflow: "hidden",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  width: `${(result.confidence.composite * 100).toFixed(0)}%`,
+                                  height: "100%",
+                                  backgroundColor:
+                                    result.confidence.composite >= 0.8
+                                      ? "var(--rl-success)"
+                                      : result.confidence.composite >= 0.6
+                                        ? "var(--rl-warning)"
+                                        : "var(--rl-error)",
+                                  transition: "width 0.3s",
+                                  borderRadius: "var(--rl-radius-sm)",
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </Tooltip>
+
+                        {/* Layer breakdown */}
+                        {result.confidence.layers &&
+                        Object.values(result.confidence.layers).some(
+                          (s) => s && typeof s.score === "number",
+                        ) ? (
+                          <div
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "4px",
+                            }}
+                          >
+                            {(
+                              [
+                                "textual",
+                                "grammatical",
+                                "lexical",
+                                "interpretive",
+                              ] as const
+                            ).map((layer) => {
+                              const score = result.confidence!.layers[layer];
+                              if (!score || typeof score.score !== "number")
+                                return null;
+                              const pct = (score.score * 100).toFixed(0);
+                              const isWeakest =
+                                result.confidence!.weakest_layer === layer;
+                              const barColor =
+                                score.score >= 0.8
+                                  ? "var(--rl-success)"
+                                  : score.score >= 0.6
+                                    ? "var(--rl-warning)"
+                                    : "var(--rl-error)";
+
+                              return (
+                                <div
+                                  key={layer}
+                                  data-testid={`confidence-layer-${layer}`}
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "8px",
+                                    cursor: "pointer",
+                                    padding: "2px 0",
+                                    borderRadius: "var(--rl-radius-sm)",
+                                    backgroundColor:
+                                      confidenceDetailLayer === layer
+                                        ? "rgba(96, 165, 250, 0.1)"
+                                        : "transparent",
+                                  }}
+                                  onClick={() =>
+                                    setConfidenceDetailLayer(
+                                      confidenceDetailLayer === layer
+                                        ? null
+                                        : layer,
+                                    )
+                                  }
+                                  role="button"
+                                  tabIndex={0}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter" || e.key === " ") {
+                                      e.preventDefault();
+                                      setConfidenceDetailLayer(
+                                        confidenceDetailLayer === layer
+                                          ? null
+                                          : layer,
+                                      );
+                                    }
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      fontSize: "var(--rl-fs-xs)",
+                                      color: isWeakest
+                                        ? "var(--rl-warning)"
+                                        : "var(--rl-text-dim)",
+                                      width: "80px",
+                                      textTransform: "capitalize",
+                                      fontWeight: isWeakest ? 600 : 400,
+                                    }}
+                                  >
+                                    {layer}
+                                    {isWeakest ? " *" : ""}
+                                  </span>
+                                  <div
+                                    style={{
+                                      flex: 1,
+                                      height: "4px",
+                                      backgroundColor:
+                                        "var(--rl-border-strong)",
+                                      borderRadius: "2px",
+                                      overflow: "hidden",
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        width: `${pct}%`,
+                                        height: "100%",
+                                        backgroundColor: barColor,
+                                        transition: "width 0.3s",
+                                      }}
+                                    />
+                                  </div>
+                                  <span
+                                    style={{
+                                      fontSize: "var(--rl-fs-xs)",
+                                      color: isWeakest
+                                        ? "var(--rl-warning)"
+                                        : "var(--rl-text-muted)",
+                                      width: "32px",
+                                      textAlign: "right",
+                                      fontWeight: isWeakest ? 600 : 400,
+                                    }}
+                                  >
+                                    {pct}%
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div
+                            style={{
+                              fontSize: "var(--rl-fs-xs)",
+                              color: "var(--rl-text-dim)",
+                              fontStyle: "italic",
+                              marginTop: "4px",
+                            }}
+                          >
+                            Layer scores not provided by backend.
+                          </div>
+                        )}
+
+                        {result.confidence.weakest_layer && (
+                          <div
+                            style={{
+                              fontSize: "var(--rl-fs-xs)",
+                              color: "var(--rl-warning)",
+                              marginTop: "6px",
+                            }}
+                          >
+                            Weakest: {result.confidence.weakest_layer}
+                          </div>
+                        )}
+
+                        {/* Confidence detail panel */}
+                        {confidenceDetailLayer &&
+                          result.ledger &&
+                          result.ledger.length > 0 && (
+                            <ConfidenceDetailPanel
+                              layer={confidenceDetailLayer}
+                              ledger={result.ledger}
+                              onTokenSelect={(pos) => {
+                                setSelectedTokenPosition(pos);
+                                for (const v of result.ledger!) {
+                                  const t = v.tokens.find(
+                                    (tk) => tk.position === pos,
+                                  );
+                                  if (t) {
+                                    setSelectedToken(t);
+                                    break;
+                                  }
+                                }
+                              }}
+                              onClose={() => setConfidenceDetailLayer(null)}
+                            />
+                          )}
+                        {confidenceDetailLayer &&
+                          (!result.ledger || result.ledger.length === 0) && (
+                            <div
+                              data-testid="confidence-detail-panel"
+                              style={{
+                                fontSize: "var(--rl-fs-sm)",
+                                color: "var(--rl-text-dim)",
+                                fontStyle: "italic",
+                                padding: "12px 8px",
+                                textAlign: "center",
+                                marginTop: "8px",
+                                backgroundColor: "var(--rl-bg-app)",
+                                borderRadius: "var(--rl-radius-md)",
+                              }}
+                            >
+                              {result.mode === "traceable" &&
+                              result.translator_type !== "traceable" ? (
+                                <>
+                                  The {result.translator_type} translator does
+                                  not provide per-token data.{" "}
+                                  <span
+                                    style={{
+                                      color: "var(--rl-link)",
+                                      cursor: "pointer",
+                                      textDecoration: "underline",
+                                      fontStyle: "normal",
+                                    }}
+                                    onClick={() => {
+                                      setTranslator("traceable");
+                                      setTimeout(() => handleTranslate(), 50);
+                                    }}
+                                  >
+                                    Switch to Traceable translator
+                                  </span>
+                                </>
+                              ) : (
+                                <>
+                                  {result.mode !== "traceable" &&
+                                    "This result was generated in " +
+                                      result.mode +
+                                      " mode. "}
+                                  Per-token data requires Traceable mode and
+                                  translator.{" "}
+                                  <span
+                                    style={{
+                                      color: "var(--rl-link)",
+                                      cursor: "pointer",
+                                      textDecoration: "underline",
+                                      fontStyle: "normal",
+                                    }}
+                                    onClick={() => {
+                                      setMode("traceable");
+                                      setTranslator("traceable");
+                                      setTimeout(() => handleTranslate(), 50);
+                                    }}
+                                  >
+                                    Re-translate as Traceable
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          )}
+                      </div>
+                    ) : (
+                      <div
+                        style={{
+                          color: "var(--rl-text-dim)",
+                          fontSize: "var(--rl-fs-base)",
+                          textAlign: "center",
+                          padding: "24px",
+                        }}
+                      >
+                        No confidence data available for this translation.
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Receipts tab */}
+                {activeTab === "receipts" && (
+                  <div style={{ padding: "16px" }}>
+                    {(() => {
+                      const na = getNextAction("receipts");
+                      if (!na) return null;
+                      return (
+                        <div
+                          data-testid="evidence-next-action"
+                          style={{
+                            padding: "8px 12px",
+                            marginBottom: "12px",
+                            backgroundColor: "rgba(96, 165, 250, 0.08)",
+                            border: "1px solid rgba(96, 165, 250, 0.2)",
+                            borderRadius: "var(--rl-radius-md)",
+                            fontSize: "var(--rl-fs-sm)",
+                            color: "var(--rl-text-muted)",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <span>{na.text}</span>
+                          {na.action && (
+                            <button
+                              data-testid="evidence-next-action-btn"
+                              style={{
+                                padding: "3px 10px",
+                                fontSize: "var(--rl-fs-xs)",
+                                backgroundColor: "transparent",
+                                color: "var(--rl-link)",
+                                border: "1px solid var(--rl-link)",
+                                borderRadius: "var(--rl-radius-sm)",
+                                cursor: "pointer",
+                                whiteSpace: "nowrap",
+                              }}
+                              onClick={na.action}
+                            >
+                              {na.label}
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })()}
+                    {viewMode === "readable" &&
+                    result.ledger &&
+                    result.ledger.length > 0 ? (
+                      <div
+                        style={{
+                          color: "var(--rl-text-dim)",
+                          fontSize: "var(--rl-fs-base)",
+                          padding: "16px",
+                        }}
+                      >
+                        <div style={{ marginBottom: "8px" }}>
+                          Receipts are visible in Traceable view.
+                        </div>
+                        <span
+                          style={{
+                            color: "var(--rl-link)",
+                            cursor: "pointer",
+                            textDecoration: "underline",
+                            fontSize: "var(--rl-fs-sm)",
+                          }}
+                          onClick={() => {
+                            setViewMode("traceable");
+                          }}
+                        >
+                          Switch to Traceable view
+                        </span>
+                      </div>
+                    ) : result.ledger && result.ledger.length > 0 ? (
+                      <LedgerList ledgers={result.ledger} />
+                    ) : result.mode === "readable" ? (
+                      <div
+                        style={{
+                          color: "var(--rl-text-dim)",
+                          fontSize: "var(--rl-fs-base)",
+                          padding: "16px",
+                        }}
+                      >
+                        <div style={{ marginBottom: "8px" }}>
+                          Token ledger is available in Traceable mode.
+                        </div>
+                        <div
+                          style={{
+                            fontSize: "var(--rl-fs-sm)",
+                            color: "var(--rl-border-strong)",
+                            marginBottom: "12px",
+                          }}
+                        >
+                          Results were generated in Readable mode. Re-translate
+                          with Traceable mode and translator for per-token
+                          receipts.
+                        </div>
+                        <button
+                          data-testid="receipts-cta-btn"
+                          style={{
+                            padding: "6px 14px",
+                            fontSize: "var(--rl-fs-sm)",
+                            backgroundColor: "transparent",
+                            color: "var(--rl-link)",
+                            border: "1px solid var(--rl-link)",
+                            borderRadius: "var(--rl-radius-md)",
+                            cursor: "pointer",
+                          }}
+                          onClick={() => {
+                            setMode("traceable");
+                            setTranslator("traceable");
+                            setTimeout(() => handleTranslate(), 50);
+                          }}
+                        >
+                          Re-translate as Traceable
                         </button>
-                      ))}
-                    </div>
+                      </div>
+                    ) : (
+                      <div
+                        style={{
+                          color: "var(--rl-text-dim)",
+                          fontSize: "var(--rl-fs-base)",
+                          padding: "16px",
+                        }}
+                      >
+                        <div style={{ marginBottom: "8px" }}>
+                          No token ledger returned for this translation.
+                        </div>
+                        <div
+                          style={{
+                            fontSize: "var(--rl-fs-sm)",
+                            color: "var(--rl-border-strong)",
+                            marginBottom: "12px",
+                          }}
+                        >
+                          The translator type may not support token-level
+                          evidence. Try the traceable translator for per-token
+                          receipts.
+                        </div>
+                        <button
+                          data-testid="receipts-cta-btn"
+                          style={{
+                            padding: "6px 14px",
+                            fontSize: "var(--rl-fs-sm)",
+                            backgroundColor: "transparent",
+                            color: "var(--rl-link)",
+                            border: "1px solid var(--rl-link)",
+                            borderRadius: "var(--rl-radius-md)",
+                            cursor: "pointer",
+                          }}
+                          onClick={() => {
+                            setTranslator("traceable");
+                            setMode("traceable");
+                            setTimeout(() => handleTranslate(), 50);
+                          }}
+                        >
+                          Try traceable translator
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Variants tab */}
+                {activeTab === "variants" && (
+                  <div style={{ padding: "16px" }}>
+                    {(() => {
+                      const na = getNextAction("variants");
+                      if (!na) return null;
+                      return (
+                        <div
+                          data-testid="evidence-next-action"
+                          style={{
+                            padding: "8px 12px",
+                            marginBottom: "12px",
+                            backgroundColor: "rgba(96, 165, 250, 0.08)",
+                            border: "1px solid rgba(96, 165, 250, 0.2)",
+                            borderRadius: "var(--rl-radius-md)",
+                            fontSize: "var(--rl-fs-sm)",
+                            color: "var(--rl-text-muted)",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <span>{na.text}</span>
+                          {na.link && (
+                            <Link
+                              to={na.link}
+                              data-testid="evidence-next-action-btn"
+                              style={{
+                                padding: "3px 10px",
+                                fontSize: "var(--rl-fs-xs)",
+                                backgroundColor: "transparent",
+                                color: "var(--rl-link)",
+                                border: "1px solid var(--rl-link)",
+                                borderRadius: "var(--rl-radius-sm)",
+                                textDecoration: "none",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {na.label}
+                            </Link>
+                          )}
+                        </div>
+                      );
+                    })()}
+                    {result.variants.length === 0 && (
+                      <div
+                        style={{
+                          color: "var(--rl-text-dim)",
+                          fontSize: "var(--rl-fs-base)",
+                          padding: "12px",
+                          backgroundColor: "var(--rl-bg-app)",
+                          borderRadius: "var(--rl-radius-md)",
+                          marginBottom: "12px",
+                        }}
+                      >
+                        <div
+                          style={{
+                            marginBottom: "6px",
+                            fontWeight: 500,
+                            color: "var(--rl-text-muted)",
+                          }}
+                        >
+                          No textual variants at this reference
+                        </div>
+                        <div
+                          style={{
+                            fontSize: "var(--rl-fs-sm)",
+                            marginBottom: "12px",
+                          }}
+                        >
+                          This passage has no variant readings in the installed
+                          source packs. The SBLGNT spine text is the only
+                          attested reading
+                          {result.provenance?.sources_used?.length > 0
+                            ? ` across ${result.provenance.sources_used.length} source(s): ${result.provenance.sources_used.join(", ")}.`
+                            : "."}
+                        </div>
+                        <Link
+                          to="/sources"
+                          data-testid="variants-cta-btn"
+                          style={{
+                            display: "inline-block",
+                            padding: "6px 14px",
+                            fontSize: "var(--rl-fs-sm)",
+                            backgroundColor: "transparent",
+                            color: "var(--rl-link)",
+                            border: "1px solid var(--rl-link)",
+                            borderRadius: "var(--rl-radius-md)",
+                            textDecoration: "none",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Manage Sources
+                        </Link>
+                      </div>
+                    )}
+                    <DossierPanel
+                      client={client}
+                      reference={result.reference}
+                      sessionId={settings.sessionId}
+                      defaultExpanded={true}
+                    />
                   </div>
                 )}
               </div>
-            )}
+            </div>
           </div>
-        </div>
-      )}
-
-      {/* Token Receipt Popover */}
-      {selectedToken && (
-        <div data-testid="token-popover">
-          <TokenReceiptPopover
-            token={selectedToken}
-            anchorEl={popoverAnchor}
-            onClose={handleClosePopover}
-            onViewFullLedger={handleViewFullLedger}
-          />
-        </div>
-      )}
-
-      {/* S8: Demo nudge — appears once after demo, suggests Traceable */}
-      {result &&
-        isDemoResult &&
-        !demoNudgeDismissed &&
-        viewMode === "readable" && (
-          <div
-            data-testid="demo-nudge"
-            style={{
-              position: "fixed",
-              bottom: "24px",
-              right: "24px",
-              backgroundColor: "var(--rl-bg-card)",
-              border: "1px solid var(--rl-primary)",
-              borderRadius: "8px",
-              padding: "16px 20px",
-              boxShadow: "0 4px 20px rgba(0, 0, 0, 0.4)",
-              zIndex: 1500,
-              maxWidth: "340px",
-            }}
-          >
+        ) : (
+          /* Sprint 17: Enhanced empty state with example chips and loading */
+          <div style={workspaceStyle}>
             <div
               style={{
-                fontSize: "var(--rl-fs-base)",
-                color: "var(--rl-text)",
-                marginBottom: "12px",
+                ...panelStyle,
+                gridColumn:
+                  layoutMode === "mobile"
+                    ? "span 1"
+                    : layoutMode === "tablet"
+                      ? "span 2"
+                      : "span 3",
+                position: "relative",
               }}
             >
-              Want to see how each word was translated? Switch to{" "}
-              <strong>Traceable</strong> to see token mapping and receipts.
-            </div>
-            <div style={{ display: "flex", gap: "8px" }}>
-              <Tooltip
-                content="Switch to Traceable to see token mapping and receipts."
-                position="top"
-              >
-                <button
-                  data-testid="demo-nudge-accept"
-                  style={{
-                    padding: "6px 14px",
-                    fontSize: "var(--rl-fs-sm)",
-                    backgroundColor: "var(--rl-primary)",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                  }}
-                  onClick={handleAcceptNudge}
-                >
-                  Switch to Traceable
-                </button>
-              </Tooltip>
-              <button
-                data-testid="demo-nudge-dismiss"
-                style={{
-                  padding: "6px 14px",
-                  fontSize: "var(--rl-fs-sm)",
-                  backgroundColor: "transparent",
-                  color: "var(--rl-text-muted)",
-                  border: "1px solid var(--rl-border-strong)",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                }}
-                onClick={handleDismissNudge}
-              >
-                Maybe later
-              </button>
+              {loading ? (
+                <div style={emptyStateStyle}>
+                  <div
+                    style={{
+                      fontSize: "var(--rl-fs-xl)",
+                      marginBottom: "16px",
+                      animation: "pulse 1.5s ease-in-out infinite",
+                    }}
+                  >
+                    Translating...
+                  </div>
+                  <div
+                    style={{
+                      color: "var(--rl-link)",
+                      fontSize: "var(--rl-fs-base)",
+                    }}
+                  >
+                    {reference}
+                  </div>
+                </div>
+              ) : !client ? (
+                <div style={emptyStateStyle}>
+                  <div
+                    style={{
+                      fontSize: "var(--rl-fs-lg)",
+                      marginBottom: "12px",
+                    }}
+                  >
+                    Not Connected
+                  </div>
+                  <div style={{ marginBottom: "16px" }}>
+                    Connect to the backend to start exploring Greek texts.
+                  </div>
+                  <Link
+                    to="/settings"
+                    style={{
+                      ...buttonStyle,
+                      textDecoration: "none",
+                      display: "inline-block",
+                    }}
+                  >
+                    Check Connection
+                  </Link>
+                </div>
+              ) : (
+                <div style={emptyStateStyle} data-testid="empty-state">
+                  {/* A.4: 3-step onboarding */}
+                  {!onboardingDismissed ? (
+                    <>
+                      <div
+                        aria-hidden="true"
+                        style={{
+                          fontSize: "24px",
+                          marginBottom: "8px",
+                          color: "var(--rl-text-muted)",
+                          opacity: 0.6,
+                        }}
+                      >
+                        &#x0391;&#x03A9;
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "var(--rl-fs-lg)",
+                          fontWeight: 600,
+                          color: "var(--rl-text)",
+                          marginBottom: "16px",
+                        }}
+                      >
+                        Explore Greek New Testament
+                      </div>
+
+                      {/* 3-step guide */}
+                      <div
+                        data-testid="onboarding-steps"
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "12px",
+                          width: "100%",
+                          maxWidth: "380px",
+                          marginBottom: "20px",
+                        }}
+                      >
+                        {[
+                          {
+                            step: 1,
+                            title: "Type a reference",
+                            hint: 'e.g., "John 3:16" or "Rom 8:28"',
+                            done: reference.trim().length > 0,
+                          },
+                          {
+                            step: 2,
+                            title: "Choose a study mode",
+                            hint: "Reader, Translator, or Text Critic",
+                            done: studyMode !== "",
+                          },
+                          {
+                            step: 3,
+                            title: "Click Translate",
+                            hint: "Or press Enter in the reference field",
+                            done: false,
+                          },
+                        ].map((s) => (
+                          <div
+                            key={s.step}
+                            data-testid={`onboarding-step-${s.step}`}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "12px",
+                              padding: "10px 14px",
+                              backgroundColor: s.done
+                                ? "rgba(52, 211, 153, 0.08)"
+                                : "var(--rl-bg-card)",
+                              border: `1px solid ${s.done ? "var(--rl-success)" : "var(--rl-border)"}`,
+                              borderRadius: "var(--rl-radius-md)",
+                              textAlign: "left",
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: "28px",
+                                height: "28px",
+                                borderRadius: "50%",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: "var(--rl-fs-sm)",
+                                fontWeight: 600,
+                                flexShrink: 0,
+                                backgroundColor: s.done
+                                  ? "var(--rl-success)"
+                                  : "var(--rl-border-strong)",
+                                color: s.done
+                                  ? "white"
+                                  : "var(--rl-text-muted)",
+                              }}
+                            >
+                              {s.done ? "\u2713" : s.step}
+                            </div>
+                            <div>
+                              <div
+                                style={{
+                                  fontSize: "var(--rl-fs-base)",
+                                  fontWeight: 500,
+                                  color: "var(--rl-text)",
+                                }}
+                              >
+                                {s.title}
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: "var(--rl-fs-xs)",
+                                  color: "var(--rl-text-dim)",
+                                }}
+                              >
+                                {s.hint}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Demo + example chips */}
+                      <Tooltip
+                        content="Load an example passage to see how Explore works."
+                        position="bottom"
+                      >
+                        <button
+                          data-testid="demo-btn"
+                          style={{
+                            ...buttonStyle,
+                            marginBottom: "16px",
+                          }}
+                          onClick={handleDemo}
+                        >
+                          Try a demo ({DEMO_REF})
+                        </button>
+                      </Tooltip>
+
+                      <div style={{ marginBottom: "16px" }}>
+                        <div
+                          style={{
+                            fontSize: "var(--rl-fs-xs)",
+                            color: "var(--rl-text-dim)",
+                            marginBottom: "8px",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          Or try an example
+                        </div>
+                        <div style={exampleChipsStyle}>
+                          {EXAMPLE_REFS.map((ref) => (
+                            <button
+                              key={ref}
+                              style={chipStyle}
+                              onClick={() => {
+                                setReference(ref);
+                                setTimeout(() => handleTranslate(), 100);
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor =
+                                  "var(--rl-border-strong)";
+                                e.currentTarget.style.color = "var(--rl-text)";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor =
+                                  "var(--rl-border-strong)";
+                                e.currentTarget.style.color =
+                                  "var(--rl-text-muted)";
+                              }}
+                            >
+                              {ref}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Recent refs */}
+                      {recentRefs.length > 0 && (
+                        <div style={{ marginBottom: "12px" }}>
+                          <div
+                            style={{
+                              fontSize: "var(--rl-fs-xs)",
+                              color: "var(--rl-text-dim)",
+                              marginBottom: "8px",
+                              textTransform: "uppercase",
+                            }}
+                          >
+                            Recent
+                          </div>
+                          <div style={exampleChipsStyle}>
+                            {recentRefs.slice(0, 3).map((ref) => (
+                              <button
+                                key={ref}
+                                style={{
+                                  ...chipStyle,
+                                  borderColor: "var(--rl-link)",
+                                }}
+                                onClick={() => {
+                                  setReference(ref);
+                                  setTimeout(() => handleTranslate(), 100);
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor =
+                                    "var(--rl-link)";
+                                  e.currentTarget.style.color = "white";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor =
+                                    "var(--rl-border-strong)";
+                                  e.currentTarget.style.color =
+                                    "var(--rl-text-muted)";
+                                }}
+                              >
+                                {ref}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Don't show again */}
+                      <button
+                        data-testid="onboarding-dismiss"
+                        onClick={handleDismissOnboarding}
+                        style={{
+                          fontSize: "var(--rl-fs-xs)",
+                          color: "var(--rl-text-dim)",
+                          backgroundColor: "transparent",
+                          border: "none",
+                          cursor: "pointer",
+                          padding: "4px 8px",
+                          textDecoration: "underline",
+                        }}
+                      >
+                        Don&apos;t show this guide again
+                      </button>
+                    </>
+                  ) : (
+                    /* Minimal empty state after onboarding dismissed */
+                    <>
+                      <div
+                        style={{
+                          fontSize: "var(--rl-fs-lg)",
+                          fontWeight: 600,
+                          color: "var(--rl-text)",
+                          marginBottom: "8px",
+                        }}
+                      >
+                        Enter a reference to begin
+                      </div>
+                      <Tooltip
+                        content="Load an example passage to see how Explore works."
+                        position="bottom"
+                      >
+                        <button
+                          data-testid="demo-btn"
+                          style={{
+                            ...buttonStyle,
+                            marginBottom: "16px",
+                          }}
+                          onClick={handleDemo}
+                        >
+                          Try a demo ({DEMO_REF})
+                        </button>
+                      </Tooltip>
+                      <div style={exampleChipsStyle}>
+                        {EXAMPLE_REFS.map((ref) => (
+                          <button
+                            key={ref}
+                            style={chipStyle}
+                            onClick={() => {
+                              setReference(ref);
+                              setTimeout(() => handleTranslate(), 100);
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor =
+                                "var(--rl-border-strong)";
+                              e.currentTarget.style.color = "var(--rl-text)";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor =
+                                "var(--rl-border-strong)";
+                              e.currentTarget.style.color =
+                                "var(--rl-text-muted)";
+                            }}
+                          >
+                            {ref}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
 
-      {/* S7: Compare Modal */}
-      {showCompareModal && result && client && (
-        <CompareModal
-          client={client}
-          reference={result.reference}
-          sessionId={settings.sessionId}
-          resultA={result}
-          onClose={() => {
-            setShowCompareModal(false);
-            // UX3.5: Return focus to Compare button
-            requestAnimationFrame(() => compareBtnRef.current?.focus());
-          }}
-        />
-      )}
+        {/* Token Receipt Popover */}
+        {selectedToken && (
+          <div data-testid="token-popover">
+            <TokenReceiptPopover
+              token={selectedToken}
+              anchorEl={popoverAnchor}
+              onClose={handleClosePopover}
+              onViewFullLedger={handleViewFullLedger}
+            />
+          </div>
+        )}
+
+        {/* S8: Demo nudge — appears once after demo, suggests Traceable */}
+        {result &&
+          isDemoResult &&
+          !demoNudgeDismissed &&
+          viewMode === "readable" && (
+            <div
+              data-testid="demo-nudge"
+              style={{
+                position: "fixed",
+                bottom: "24px",
+                right: "24px",
+                backgroundColor: "var(--rl-bg-card)",
+                border: "1px solid var(--rl-link)",
+                borderRadius: "var(--rl-radius-lg)",
+                padding: "16px 20px",
+                boxShadow: "0 4px 20px rgba(0, 0, 0, 0.4)",
+                zIndex: 1500,
+                maxWidth: "340px",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "var(--rl-fs-base)",
+                  color: "var(--rl-text)",
+                  marginBottom: "12px",
+                }}
+              >
+                Want to see how each word was translated? Switch to{" "}
+                <strong>Traceable</strong> to see token mapping and receipts.
+              </div>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <Tooltip
+                  content="Switch to Traceable to see token mapping and receipts."
+                  position="top"
+                >
+                  <button
+                    data-testid="demo-nudge-accept"
+                    style={{
+                      padding: "6px 14px",
+                      fontSize: "var(--rl-fs-sm)",
+                      backgroundColor: "var(--rl-primary)",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "var(--rl-radius-md)",
+                      cursor: "pointer",
+                    }}
+                    onClick={handleAcceptNudge}
+                  >
+                    Switch to Traceable
+                  </button>
+                </Tooltip>
+                <button
+                  data-testid="demo-nudge-dismiss"
+                  style={{
+                    padding: "6px 14px",
+                    fontSize: "var(--rl-fs-sm)",
+                    backgroundColor: "transparent",
+                    color: "var(--rl-text-muted)",
+                    border: "1px solid var(--rl-border-strong)",
+                    borderRadius: "var(--rl-radius-md)",
+                    cursor: "pointer",
+                  }}
+                  onClick={handleDismissNudge}
+                >
+                  Maybe later
+                </button>
+              </div>
+            </div>
+          )}
+
+        {/* S7: Compare Modal */}
+        {showCompareModal && result && client && (
+          <CompareModal
+            client={client}
+            reference={result.reference}
+            sessionId={settings.sessionId}
+            resultA={result}
+            onClose={() => {
+              setShowCompareModal(false);
+              // UX3.5: Return focus to Compare button
+              requestAnimationFrame(() => compareBtnRef.current?.focus());
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 }

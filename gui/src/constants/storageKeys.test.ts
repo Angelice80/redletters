@@ -4,6 +4,7 @@ import {
   RECENT_REFS_KEY,
   BOOTSTRAP_COMPLETED_KEY,
   AUTH_TOKEN_KEY,
+  ONBOARDING_DISMISSED_KEY,
 } from "./storageKeys";
 
 describe("storageKeys constants", () => {
@@ -23,12 +24,17 @@ describe("storageKeys constants", () => {
     expect(AUTH_TOKEN_KEY).toBe("redletters_auth_token");
   });
 
+  it("ONBOARDING_DISMISSED_KEY is the canonical onboarding key", () => {
+    expect(ONBOARDING_DISMISSED_KEY).toBe("redletters_onboarding_dismissed");
+  });
+
   it("all keys use the redletters_ prefix", () => {
     const keys = [
       DEMO_NUDGE_DISMISSED_KEY,
       RECENT_REFS_KEY,
       BOOTSTRAP_COMPLETED_KEY,
       AUTH_TOKEN_KEY,
+      ONBOARDING_DISMISSED_KEY,
     ];
     for (const key of keys) {
       expect(key).toMatch(/^redletters_/);
